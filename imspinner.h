@@ -191,6 +191,46 @@ namespace ImGui
         return true;
     }
 
+    bool LoadingHorizontal(const char *label, int thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3)
+    {
+      ImGuiWindow *window = GetCurrentWindow();
+      if (window->SkipItems)
+        return false;
+
+      ImGuiContext &g = *GImGui;
+      const ImGuiStyle &style = g.Style;
+      const ImGuiID id = window->GetID(label);
+
+      const float nextItemKoeff = 2.5f;
+      const float heightKoeff = 2.f;
+      const float heightSpeed = 0.8;
+      ImVec2 pos = window->DC.CursorPos;
+      ImVec2 size( (thickness * nextItemKoeff) * dots + style.FramePadding.x, thickness * 4 * heightKoeff + style.FramePadding.y);
+
+      const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+      ItemSize(bb, style.FramePadding.y);
+      if (!ItemAdd(bb, id))
+        return false;
+
+      const ImVec2 centre = bb.GetCenter();
+
+      // Render
+      float start = g.Time * speed;
+
+      const float offset = IM_PI / dots;
+      for (int i = 0; i < dots; i++)
+      {
+        float a = start + (IM_PI - i * offset);
+        float sina = ImSin(a * heightSpeed);
+        float y = centre.y + sina * thickness * heightKoeff;
+        if (y > centre.y)
+          y = centre.y;
+        window->DrawList->AddCircleFilled(ImVec2(pos.x + style.FramePadding.x  + i * (thickness * nextItemKoeff), y), thickness, color, 8);
+      }
+      
+      return true;
+    }
+
     void demoSpinners() {
       static int hue = 0;
       static float nextdot = 0;
@@ -214,6 +254,8 @@ namespace ImGui
 
       ImGui::SameLine();
       ImGui::SpinnerVDots("SpinnerVDots", 16, 4, ImColor(255, 255, 255), 1);
+
+      ImGui::LoadingHorizontal("LoadingHor", 6, ImColor(255, 255, 255), 6, 3);
     }
 }
 
