@@ -4,7 +4,7 @@
 #include <array>
 namespace ImGui
 {
-    bool Spinner(const char *label, float radius, int thickness, const ImColor &color)
+    bool Spinner(const char *label, float radius, float thickness, const ImColor &color)
     {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
@@ -26,7 +26,7 @@ namespace ImGui
         window->DrawList->PathClear();
 
         int num_segments = 30;
-        int start = fabs(ImSin(g.Time * 1.8f) * (num_segments - 5));
+        float start = fabsf(ImSin((float)g.Time * 1.8f) * (num_segments - 5));
 
         const float a_min = IM_PI * 2.0f * ((float)start) / (float)num_segments;
         const float a_max = IM_PI * 2.0f * ((float)num_segments - 3) / (float)num_segments;
@@ -36,15 +36,15 @@ namespace ImGui
         for (int i = 0; i < num_segments; i++)
         {
             const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
-            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a + g.Time * 8) * radius,
-                                         centre.y + ImSin(a + g.Time * 8) * radius));
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a + (float)g.Time * 8) * radius,
+                                         centre.y + ImSin(a + (float)g.Time * 8) * radius));
         }
 
         window->DrawList->PathStroke(color, false, thickness);
         return true;
     }
 
-    bool SpinnerAng(const char *label, float radius, int thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI)
+    bool SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI)
     {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
@@ -66,7 +66,7 @@ namespace ImGui
         window->DrawList->PathClear();
 
         int num_segments = 30;
-        float start = g.Time * speed;
+        float start = (float)g.Time * speed;
 
         const ImVec2 centre = ImVec2(pos.x + radius, pos.y + radius + style.FramePadding.y);
 
@@ -96,7 +96,7 @@ namespace ImGui
     return (mid < end);
     };*/
 
-    bool SpinnerDots(const char *label, float &nextdot, float radius, int thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6)
+    bool SpinnerDots(const char *label, float &nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6)
     {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
@@ -115,24 +115,24 @@ namespace ImGui
             return false;
 
         // Render
-        float start = g.Time * speed;
+        float start = (float)g.Time * speed;
         const ImVec2 centre = ImVec2(pos.x + radius, pos.y + radius + style.FramePadding.y);
 
         const float bg_angle_offset = IM_PI * 2.f / dots;
         dots = std::min<size_t>(dots, 32);
 
         if (nextdot < 0.f)
-            nextdot = dots;
+            nextdot = (float)dots;
 
         auto thcorrect = [&thickness, &nextdot, &mdots] (int i) {
             return  std::max<float>(thickness / 2.f, ImSin(((i - nextdot) / mdots) * IM_PI) * thickness);
         };
 
-        for (int i = 0; i <= dots; i++)
+        for (size_t i = 0; i <= dots; i++)
         {
             float a = start + (i * bg_angle_offset);
-            a = fmod(a, 2 * IM_PI);
-            float th = thickness / 2;
+            a = fmodf(a, 2 * IM_PI);
+            float th = thickness / 2.f;
 
             if (nextdot + mdots < dots) {
                 if (i > nextdot && i < nextdot + mdots)
@@ -144,9 +144,11 @@ namespace ImGui
 
             window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(-a) * radius, centre.y + ImSin(-a) * radius), th, color, 8);
         }
+
+        return true;
     }
 
-    bool SpinnerVDots(const char *label, float radius, int thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6)
+    bool SpinnerVDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6)
     {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
@@ -165,23 +167,23 @@ namespace ImGui
             return false;
 
         // Render
-        float start = g.Time * speed;
+        float start = (float)g.Time * speed;
         const ImVec2 centre = ImVec2(pos.x + radius, pos.y + radius + style.FramePadding.y);
 
         const float bg_angle_offset = IM_PI * 2.f / dots;
         dots = std::min<size_t>(dots, 32);
 
-        for (int i = 0; i <= dots; i++)
+        for (size_t i = 0; i <= dots; i++)
         {
             float a = start + (i * bg_angle_offset);
-            a = fmod(a, 2 * IM_PI);
+            a = fmodf(a, 2 * IM_PI);
             window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(-a) * radius, centre.y + ImSin(-a) * radius), thickness / 2, color, 8);
         }
         window->DrawList->PathClear();
 
         const float d_ang = (mdots / (float)dots) * 2 * IM_PI;
         const float angle_offset = (d_ang) / dots;
-        for (int i = 0; i < dots; i++)
+        for (size_t i = 0; i < dots; i++)
         {
             const float a = start + (i * angle_offset);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
@@ -191,7 +193,7 @@ namespace ImGui
         return true;
     }
 
-    bool SpinnerBounceDots(const char *label, int thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3)
+    bool SpinnerBounceDots(const char *label, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3)
     {
       ImGuiWindow *window = GetCurrentWindow();
       if (window->SkipItems)
@@ -203,7 +205,7 @@ namespace ImGui
 
       const float nextItemKoeff = 2.5f;
       const float heightKoeff = 2.f;
-      const float heightSpeed = 0.8;
+      const float heightSpeed = 0.8f;
       ImVec2 pos = window->DC.CursorPos;
       ImVec2 size( (thickness * nextItemKoeff) * dots + style.FramePadding.x, thickness * 4 * heightKoeff + style.FramePadding.y);
 
@@ -215,10 +217,10 @@ namespace ImGui
       const ImVec2 centre = bb.GetCenter();
 
       // Render
-      float start = g.Time * speed;
+      float start = (float)g.Time * speed;
 
       const float offset = IM_PI / dots;
-      for (int i = 0; i < dots; i++)
+      for (size_t i = 0; i < dots; i++)
       {
         float a = start + (IM_PI - i * offset);
         float sina = ImSin(a * heightSpeed);
@@ -231,7 +233,7 @@ namespace ImGui
       return true;
     }
 
-    bool SpinnerFadeDots(const char *label, int thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3)
+    bool SpinnerFadeDots(const char *label, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3)
     {
       ImGuiWindow *window = GetCurrentWindow();
       if (window->SkipItems)
@@ -243,7 +245,7 @@ namespace ImGui
 
       const float nextItemKoeff = 2.5f;
       const float heightKoeff = 2.f;
-      const float heightSpeed = 0.8;
+      const float heightSpeed = 0.8f;
       ImVec2 pos = window->DC.CursorPos;
       ImVec2 size( (thickness * nextItemKoeff) * dots + style.FramePadding.x, thickness * 4 * heightKoeff + style.FramePadding.y);
 
@@ -255,14 +257,52 @@ namespace ImGui
       const ImVec2 centre = bb.GetCenter();
 
       // Render
-      float start = g.Time * speed;
+      float start = (float)g.Time * speed;
 
       const float offset = IM_PI / dots;
-      for (int i = 0; i < dots; i++)
+      for (size_t i = 0; i < dots; i++)
       {
         float a = start + (IM_PI - i * offset);
         ImColor c = color;
-        c.Value.w = std::max<float>(0.1, ImSin(a * heightSpeed));
+        c.Value.w = std::max<float>(0.1f, ImSin(a * heightSpeed));
+        window->DrawList->AddCircleFilled(ImVec2(pos.x + style.FramePadding.x  + i * (thickness * nextItemKoeff), centre.y), thickness, c, 8);
+      }
+
+      return true;
+    }
+
+    bool SpinnerMovingDots(const char *label, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3)
+    {
+      ImGuiWindow *window = GetCurrentWindow();
+      if (window->SkipItems)
+        return false;
+
+      ImGuiContext &g = *GImGui;
+      const ImGuiStyle &style = g.Style;
+      const ImGuiID id = window->GetID(label);
+
+      const float nextItemKoeff = 2.5f;
+      const float heightKoeff = 2.f;
+      const float heightSpeed = 0.8f;
+      ImVec2 pos = window->DC.CursorPos;
+      ImVec2 size( (thickness * nextItemKoeff) * dots + style.FramePadding.x, thickness * 4 * heightKoeff + style.FramePadding.y);
+
+      const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+      ItemSize(bb, style.FramePadding.y);
+      if (!ItemAdd(bb, id))
+        return false;
+
+      const ImVec2 centre = bb.GetCenter();
+
+      // Render
+      float start = (float)g.Time * speed;
+
+      const float offset = IM_PI / dots;
+      for (size_t i = 0; i < dots; i++)
+      {
+        float a = start + (IM_PI - i * offset);
+        ImColor c = color;
+        c.Value.w = std::max<float>(0.1f, ImSin(a * heightSpeed));
         window->DrawList->AddCircleFilled(ImVec2(pos.x + style.FramePadding.x  + i * (thickness * nextItemKoeff), centre.y), thickness, c, 8);
       }
 
@@ -273,7 +313,7 @@ namespace ImGui
       static int hue = 0;
       static float nextdot = 0;
       
-      nextdot -= 0.07;
+      nextdot -= 0.07f;
 
       ImGui::Spinner("Spinner", 16, 2, ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f));
       ImGui::SameLine();
