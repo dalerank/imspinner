@@ -351,7 +351,53 @@ namespace ImGui
           th = size.x - offset;
         
         window->DrawList->AddCircleFilled(ImVec2(pos.x + style.FramePadding.x + offset, centre.y), th, color, 8);
-        //offset += th + thickness;
+      }
+
+      return true;
+    }
+
+    bool SpinnerRotateDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int dots = 2)
+    {
+      ImGuiWindow *window = GetCurrentWindow();
+      if (window->SkipItems)
+        return false;
+
+      ImGuiContext &g = *GImGui;
+      const ImGuiStyle &style = g.Style;
+      const ImGuiID id = window->GetID(label);
+
+      ImVec2 pos = window->DC.CursorPos;
+      ImVec2 size((radius) * 2, (radius + style.FramePadding.y) * 2);
+
+      const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+      ItemSize(bb, style.FramePadding.y);
+      if (!ItemAdd(bb, id))
+        return false;
+
+      // Render
+      static float velocity = 0;
+      static float gtime = 0;
+      float dtime = fmodf((float)gtime, IM_PI);
+      float start = (gtime += velocity);
+      if (dtime > 0.f && dtime < IM_PI / 2.f)
+      {
+        velocity += 0.001f * speed;
+      }
+      else if (dtime > IM_PI * 0.9f && dtime < IM_PI)
+      {
+        velocity -= 0.01f * speed;
+      }
+      if (velocity > 0.1f) velocity = 0.1f;
+      if (velocity < 0.01f) velocity = 0.01f;
+
+      const ImVec2 centre = ImVec2(pos.x + radius, pos.y + radius + style.FramePadding.y);
+      window->DrawList->AddCircleFilled(centre, thickness, color, 8);
+
+      const float angle_offset = (2 * IM_PI) / dots;
+      for (int i = 0; i < dots; i++)
+      {
+        const float a = start + (i * angle_offset);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, color, 8);
       }
 
       return true;
@@ -394,6 +440,10 @@ namespace ImGui
       ImGui::SameLine();
 
       ImGui::SpinnerMovingDots("SpinnerMovingDots", 6, ImColor(255, 255, 255), 30, 3);
+      ImGui::SameLine();
+
+      ImGui::Dummy({10, 0}); ImGui::SameLine();
+      ImGui::SpinnerRotateDots("SpinnerRotateDots", 16, 6, ImColor(255, 255, 255), 4, 2);
     }
 }
 
