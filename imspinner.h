@@ -403,6 +403,60 @@ namespace ImGui
       return true;
     }
 
+    bool SpinnerTwinAng(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f)
+    {
+      ImGuiWindow *window = GetCurrentWindow();
+      if (window->SkipItems)
+        return false;
+
+      ImGuiContext &g = *GImGui;
+      const ImGuiStyle &style = g.Style;
+      const ImGuiID id = window->GetID(label);
+
+      ImVec2 pos = window->DC.CursorPos;
+      const float maxradius = std::max<float>(radius1, radius2);
+      ImVec2 size(maxradius * 2, (maxradius + style.FramePadding.y) * 2);
+
+      const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
+      const float angle = IM_PI;
+      ItemSize(bb, style.FramePadding.y);
+      if (!ItemAdd(bb, id))
+        return false;
+
+      // Render
+      window->DrawList->PathClear();
+
+      const int num_segments = 30;
+      const float start = fmodf((float)g.Time * speed, IM_PI * 2.f);
+      const float aoffset = fmodf((float)g.Time, 1.5f * IM_PI);
+      const float bofsset = (aoffset > IM_PI) ? IM_PI : aoffset;
+
+      const ImVec2 centre = ImVec2(pos.x + maxradius, pos.y + maxradius + style.FramePadding.y);
+
+      const float angle_offset = IM_PI * 2.f / num_segments;
+      for (int i = 0; i <= 2 * num_segments; i++)
+      {
+        const float a = start + (i * angle_offset);
+        if (i * angle_offset > 2 * bofsset)
+          break;
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1));
+      }
+      window->DrawList->PathStroke(color1, false, thickness);
+
+      window->DrawList->PathClear();
+
+      for (int i = 0; i < num_segments / 2; i++)
+      {
+        const float a = start + (i * angle_offset);
+        if (i * angle_offset > bofsset)
+          break;
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2));
+      }
+
+      window->DrawList->PathStroke(color2, false, thickness);
+      return true;
+    }
+
     void demoSpinners() {
       static int hue = 0;
       static float nextdot = 0;
@@ -442,8 +496,11 @@ namespace ImGui
       ImGui::SpinnerMovingDots("SpinnerMovingDots", 6, ImColor(255, 255, 255), 30, 3);
       ImGui::SameLine();
 
-      ImGui::Dummy({10, 0}); ImGui::SameLine();
+      ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
       ImGui::SpinnerRotateDots("SpinnerRotateDots", 16, 6, ImColor(255, 255, 255), 4, 2);
+
+      ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
+      ImGui::SpinnerTwinAng("SpinnerTwinAng", 16, 16, 6, ImColor(255, 255, 255), ImColor(255, 0, 0), 4);
     }
 }
 
