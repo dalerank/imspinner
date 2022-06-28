@@ -384,6 +384,52 @@ namespace ImGui
       return true;
     }
 
+    bool SpinnerTwinAng180(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f)
+    {
+      const float radius = std::max<float>(radius1, radius2);
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      window->DrawList->PathClear();
+      const int num_segments = 30;
+      const float start = fmodf((float)g.Time * speed, IM_PI * 2.f);
+      const float aoffset = fmodf((float)g.Time, 2.f * IM_PI);
+      const float bofsset = (aoffset > IM_PI) ? IM_PI : aoffset;
+
+      const float angle_offset = IM_PI * 2.f / num_segments;
+      window->DrawList->PathClear();
+      float ared_min = 0, ared = 0;
+      if (aoffset > IM_PI)
+        ared_min = aoffset - IM_PI;
+
+      for (int i = 0; i <= num_segments / 2 + 1; i++)
+      {
+        ared = start + (i * angle_offset);
+
+        if (i * angle_offset < ared_min)
+          continue;
+
+        if (i * angle_offset > bofsset)
+          break;
+
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ared) * radius2, centre.y + ImSin(ared) * radius2));
+      }
+      window->DrawList->PathStroke(color2, false, thickness);
+
+      for (int i = 0; i <= 2 * num_segments + 1; i++)
+      {
+        const float a = ared + ared_min + (i * angle_offset);
+        if (i * angle_offset < ared_min)
+          continue;
+
+        if (i * angle_offset > bofsset)
+          break;
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1));
+      }
+      window->DrawList->PathStroke(color1, false, thickness);
+      return true;
+    }
+
     void demoSpinners() {
       static int hue = 0;
       static float nextdot = 0;
@@ -428,6 +474,8 @@ namespace ImGui
 
       ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
       ImGui::SpinnerTwinAng("SpinnerTwinAng", 16, 16, 6, ImColor(255, 255, 255), ImColor(255, 0, 0), 4);
+
+      ImGui::SpinnerTwinAng180("SpinnerTwinAng", 16, 12, 4, ImColor(255, 255, 255), ImColor(255, 0, 0), 4);
     }
 }
 
