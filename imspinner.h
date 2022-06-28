@@ -4,23 +4,38 @@
 #include <array>
 namespace ImGui
 {
-    bool Spinner(const char *label, float radius, float thickness, const ImColor &color)
-    {
+    namespace detail {
+      bool SpinnerBegin(const char *label, float radius, ImVec2 &pos, ImVec2 &size, ImVec2 &centre) {
         ImGuiWindow *window = GetCurrentWindow();
         if (window->SkipItems)
-            return false;
+          return false;
 
         ImGuiContext &g = *GImGui;
         const ImGuiStyle &style = g.Style;
         const ImGuiID id = window->GetID(label);
 
-        ImVec2 pos = window->DC.CursorPos;
-        ImVec2 size((radius) * 2, (radius + style.FramePadding.y) * 2);
+        pos = window->DC.CursorPos;
+        size = ImVec2((radius) * 2, (radius + style.FramePadding.y) * 2);
 
         const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
         ItemSize(bb, style.FramePadding.y);
+
+        centre = bb.GetCenter();
         if (!ItemAdd(bb, id))
-            return false;
+          return false;
+
+        return true;
+      }
+    }
+
+#define SPINNER_HEADER(pos, size, centre) ImVec2 pos, size, centre; \
+    if (!detail::SpinnerBegin(label, radius, pos, size, centre)) { return false; } \
+    ImGuiContext &g = *GImGui; \
+    ImGuiWindow *window = GetCurrentWindow();
+
+    bool Spinner(const char *label, float radius, float thickness, const ImColor &color)
+    {
+        SPINNER_HEADER(pos, size, centre);
 
         // Render
         window->DrawList->PathClear();
@@ -30,8 +45,6 @@ namespace ImGui
 
         const float a_min = IM_PI * 2.0f * ((float)start) / (float)num_segments;
         const float a_max = IM_PI * 2.0f * ((float)num_segments - 3) / (float)num_segments;
-
-        const ImVec2 centre = ImVec2(pos.x + radius, pos.y + radius + style.FramePadding.y);
 
         for (int i = 0; i < num_segments; i++)
         {
@@ -46,30 +59,12 @@ namespace ImGui
 
     bool SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI)
     {
-        ImGuiWindow *window = GetCurrentWindow();
-        if (window->SkipItems)
-            return false;
-
-        ImGuiContext &g = *GImGui;
-        const ImGuiStyle &style = g.Style;
-        const ImGuiID id = window->GetID(label);
-
-        ImVec2 pos = window->DC.CursorPos;
-        ImVec2 size((radius) * 2, (radius + style.FramePadding.y) * 2);
-
-        const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
-        ItemSize(bb, style.FramePadding.y);
-        if (!ItemAdd(bb, id))
-            return false;
+        SPINNER_HEADER(pos, size, centre);
 
         // Render
         window->DrawList->PathClear();
-
         int num_segments = 30;
         float start = (float)g.Time * speed;
-
-        const ImVec2 centre = ImVec2(pos.x + radius, pos.y + radius + style.FramePadding.y);
-
         const float bg_angle_offset = IM_PI * 2.f / num_segments;
         for (int i = 0; i <= num_segments; i++)
         {
@@ -79,14 +74,12 @@ namespace ImGui
         window->DrawList->PathStroke(bg, false, thickness);
 
         window->DrawList->PathClear();
-
         const float angle_offset = angle / num_segments;
         for (int i = 0; i < num_segments; i++)
         {
             const float a = start + (i * angle_offset);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
         }
-
         window->DrawList->PathStroke(color, false, thickness);
         return true;
     }
@@ -98,26 +91,10 @@ namespace ImGui
 
     bool SpinnerDots(const char *label, float &nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6)
     {
-        ImGuiWindow *window = GetCurrentWindow();
-        if (window->SkipItems)
-            return false;
-
-        ImGuiContext &g = *GImGui;
-        const ImGuiStyle &style = g.Style;
-        const ImGuiID id = window->GetID(label);
-
-        ImVec2 pos = window->DC.CursorPos;
-        ImVec2 size((radius) * 2, (radius + style.FramePadding.y) * 2);
-
-        const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
-        ItemSize(bb, style.FramePadding.y);
-        if (!ItemAdd(bb, id))
-            return false;
+        SPINNER_HEADER(pos, size, centre);
 
         // Render
         float start = (float)g.Time * speed;
-        const ImVec2 centre = ImVec2(pos.x + radius, pos.y + radius + style.FramePadding.y);
-
         const float bg_angle_offset = IM_PI * 2.f / dots;
         dots = std::min<size_t>(dots, 32);
 
@@ -150,26 +127,10 @@ namespace ImGui
 
     bool SpinnerVDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6)
     {
-        ImGuiWindow *window = GetCurrentWindow();
-        if (window->SkipItems)
-            return false;
-
-        ImGuiContext &g = *GImGui;
-        const ImGuiStyle &style = g.Style;
-        const ImGuiID id = window->GetID(label);
-
-        ImVec2 pos = window->DC.CursorPos;
-        ImVec2 size((radius) * 2, (radius + style.FramePadding.y) * 2);
-
-        const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
-        ItemSize(bb, style.FramePadding.y);
-        if (!ItemAdd(bb, id))
-            return false;
+        SPINNER_HEADER(pos, size, centre);
 
         // Render
         float start = (float)g.Time * speed;
-        const ImVec2 centre = ImVec2(pos.x + radius, pos.y + radius + style.FramePadding.y);
-
         const float bg_angle_offset = IM_PI * 2.f / dots;
         dots = std::min<size_t>(dots, 32);
 
@@ -179,8 +140,8 @@ namespace ImGui
             a = fmodf(a, 2 * IM_PI);
             window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(-a) * radius, centre.y + ImSin(-a) * radius), thickness / 2, color, 8);
         }
-        window->DrawList->PathClear();
 
+        window->DrawList->PathClear();
         const float d_ang = (mdots / (float)dots) * 2 * IM_PI;
         const float angle_offset = (d_ang) / dots;
         for (size_t i = 0; i < dots; i++)
@@ -358,21 +319,8 @@ namespace ImGui
 
     bool SpinnerRotateDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int dots = 2)
     {
-      ImGuiWindow *window = GetCurrentWindow();
-      if (window->SkipItems)
-        return false;
-
-      ImGuiContext &g = *GImGui;
-      const ImGuiStyle &style = g.Style;
-      const ImGuiID id = window->GetID(label);
-
-      ImVec2 pos = window->DC.CursorPos;
-      ImVec2 size((radius) * 2, (radius + style.FramePadding.y) * 2);
-
-      const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
-      ItemSize(bb, style.FramePadding.y);
-      if (!ItemAdd(bb, id))
-        return false;
+      SPINNER_HEADER(pos, size, centre);
+      (void)g;
 
       // Render
       static float velocity = 0;
@@ -390,7 +338,6 @@ namespace ImGui
       if (velocity > 0.1f) velocity = 0.1f;
       if (velocity < 0.01f) velocity = 0.01f;
 
-      const ImVec2 centre = ImVec2(pos.x + radius, pos.y + radius + style.FramePadding.y);
       window->DrawList->AddCircleFilled(centre, thickness, color, 8);
 
       const float angle_offset = (2 * IM_PI) / dots;
@@ -405,33 +352,15 @@ namespace ImGui
 
     bool SpinnerTwinAng(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f)
     {
-      ImGuiWindow *window = GetCurrentWindow();
-      if (window->SkipItems)
-        return false;
-
-      ImGuiContext &g = *GImGui;
-      const ImGuiStyle &style = g.Style;
-      const ImGuiID id = window->GetID(label);
-
-      ImVec2 pos = window->DC.CursorPos;
-      const float maxradius = std::max<float>(radius1, radius2);
-      ImVec2 size(maxradius * 2, (maxradius + style.FramePadding.y) * 2);
-
-      const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
-      const float angle = IM_PI;
-      ItemSize(bb, style.FramePadding.y);
-      if (!ItemAdd(bb, id))
-        return false;
+      const float radius = std::max<float>(radius1, radius2);
+      SPINNER_HEADER(pos, size, centre);
 
       // Render
       window->DrawList->PathClear();
-
       const int num_segments = 30;
       const float start = fmodf((float)g.Time * speed, IM_PI * 2.f);
       const float aoffset = fmodf((float)g.Time, 1.5f * IM_PI);
       const float bofsset = (aoffset > IM_PI) ? IM_PI : aoffset;
-
-      const ImVec2 centre = ImVec2(pos.x + maxradius, pos.y + maxradius + style.FramePadding.y);
 
       const float angle_offset = IM_PI * 2.f / num_segments;
       for (int i = 0; i <= 2 * num_segments; i++)
@@ -444,7 +373,6 @@ namespace ImGui
       window->DrawList->PathStroke(color1, false, thickness);
 
       window->DrawList->PathClear();
-
       for (int i = 0; i < num_segments / 2; i++)
       {
         const float a = start + (i * angle_offset);
@@ -452,7 +380,6 @@ namespace ImGui
           break;
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2));
       }
-
       window->DrawList->PathStroke(color2, false, thickness);
       return true;
     }
