@@ -501,6 +501,27 @@ namespace ImGui
       return true;
     }
 
+    bool SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      float start = (float)g.Time * speed;
+      float astart = fmodf(start, IM_PI / dots);
+      start -= astart;
+      const float bg_angle_offset = IM_PI / dots;
+      dots = std::min<size_t>(dots, 32);
+
+      for (size_t i = 0; i <= dots; i++)
+      {
+        float a = start + (i * bg_angle_offset);
+        float th = thickness * std::max<float>(0.1f, i / (float)dots);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), th, color, 8);
+      }
+
+      return true;
+    }
+
     void demoSpinners() {
       static int hue = 0;
       static float nextdot = 0, nextdot2;
@@ -560,6 +581,9 @@ namespace ImGui
       ImGui::SameLine();
       nextdot2 -= 0.2 * velocity;
       ImGui::SpinnerDots("SpinnerDots", nextdot2, 16, 4, ImColor(255, 255, 255), 0.3, 12, 6, 0.f);
+
+      ImGui::SameLine();
+      ImGui::SpinnerIncScaleDots("SpinnerIncScaleDots", 16, 4, ImColor(255, 255, 255), 6.6f, 6);
     }
 }
 
