@@ -87,7 +87,7 @@ namespace ImGui
     return (mid < end);
     };*/
 
-    bool SpinnerDots(const char *label, float &nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6)
+    bool SpinnerDots(const char *label, float &nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6, float minth = -1.f)
     {
         SPINNER_HEADER(pos, size, centre);
 
@@ -99,15 +99,16 @@ namespace ImGui
         if (nextdot < 0.f)
             nextdot = (float)dots;
 
-        auto thcorrect = [&thickness, &nextdot, &mdots] (int i) {
-            return  std::max<float>(thickness / 2.f, ImSin(((i - nextdot) / mdots) * IM_PI) * thickness);
+        auto thcorrect = [&thickness, &nextdot, &mdots, &minth] (int i) {
+            const float nth = minth < 0.f ? thickness / 2.f : minth;
+            return  std::max<float>(nth, ImSin(((i - nextdot) / mdots) * IM_PI) * thickness);
         };
 
         for (size_t i = 0; i <= dots; i++)
         {
             float a = start + (i * bg_angle_offset);
             a = fmodf(a, 2 * IM_PI);
-            float th = thickness / 2.f;
+            float th = minth < 0 ? thickness / 2.f : minth;
 
             if (nextdot + mdots < dots) {
                 if (i > nextdot && i < nextdot + mdots)
@@ -502,7 +503,7 @@ namespace ImGui
 
     void demoSpinners() {
       static int hue = 0;
-      static float nextdot = 0;
+      static float nextdot = 0, nextdot2;
       
       nextdot -= 0.07f;
 
@@ -510,37 +511,36 @@ namespace ImGui
       ImGui::SliderFloat("Speed", &velocity, 0.0f, 10.0f, "velocity = %.3f");
 
       ImGui::Spinner("Spinner", 16, 2, ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f), 8 * velocity);
-      ImGui::SameLine();
 
+      ImGui::SameLine();
       ImGui::SpinnerAng("SpinnerAng", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 128), 6 * velocity);
-      ImGui::SameLine();
       
+      ImGui::SameLine();
       ImGui::SpinnerDots("SpinnerDots", nextdot, 16, 4, ImColor(255, 255, 255), 1 * velocity);
-      ImGui::SameLine();
 
+      ImGui::SameLine();
       ImGui::SpinnerAng("SpinnerAngNoBg", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 6 * velocity);
-      ImGui::SameLine();
 
+      ImGui::SameLine();
       ImGui::SpinnerAng("SpinnerAng270", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 128), 6 * velocity, 270.f / 360.f * 2 * IM_PI);
-      ImGui::SameLine();
 
+      ImGui::SameLine();
       ImGui::SpinnerAng("SpinnerAng270NoBg", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 6 * velocity, 270.f / 360.f * 2 * IM_PI );
-      ImGui::SameLine();
 
-      ImGui::SpinnerVDots("SpinnerVDots", 16, 4, ImColor(255, 255, 255), 2.7 * velocity);
+      ImGui::SameLine();
+      ImGui::SpinnerVDots("SpinnerVDots", 16, 4, ImColor(255, 255, 255), 2.7f * velocity);
 
       // Next Line
       ImGui::SpinnerBounceDots("SpinnerBounceDots", 6, ImColor(255, 255, 255), 6 * velocity, 3);
-      ImGui::SameLine();
 
+      ImGui::SameLine();
       ImGui::SpinnerFadeDots("SpinnerFadeDots", 6, ImColor(255, 255, 255), 8 * velocity, 3);
-      ImGui::SameLine();
 
+      ImGui::SameLine();
       ImGui::SpinnerScaleDots("SpinnerMovingDots", 6, ImColor(255, 255, 255), 7 * velocity, 3);
-      ImGui::SameLine();
 
-      ImGui::SpinnerMovingDots("SpinnerMovingDots", 6, ImColor(255, 255, 255), 30 * velocity, 3);
       ImGui::SameLine();
+      ImGui::SpinnerMovingDots("SpinnerMovingDots", 6, ImColor(255, 255, 255), 30 * velocity, 3);
 
       ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
       ImGui::SpinnerRotateDots("SpinnerRotateDots", 16, 6, ImColor(255, 255, 255), 4 * velocity, 2);
@@ -548,13 +548,18 @@ namespace ImGui
       ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
       ImGui::SpinnerTwinAng("SpinnerTwinAng", 16, 16, 6, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity);
 
+      // next line
       ImGui::SpinnerTwinAng180("SpinnerTwinAng", 16, 12, 4, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity);
 
       ImGui::SameLine();
       ImGui::SpinnerTwinAng360("SpinnerTwinAng360", 16, 11, 4, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity);
 
       ImGui::SameLine();
-      ImGui::SpinnerIncDots("SpinnerIncDots", 16, 4, ImColor(255, 255, 255), 5.6, 6);
+      ImGui::SpinnerIncDots("SpinnerIncDots", 16, 4, ImColor(255, 255, 255), 5.6f, 6);
+
+      ImGui::SameLine();
+      nextdot2 -= 0.2 * velocity;
+      ImGui::SpinnerDots("SpinnerDots", nextdot2, 16, 4, ImColor(255, 255, 255), 0.3, 12, 6, 0.f);
     }
 }
 
