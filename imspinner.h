@@ -169,7 +169,7 @@ namespace ImSpinner
       const ImVec2 centre = bb.GetCenter();
 
       // Render
-      float start = (float)g.Time * speed;
+      float start = (float)ImGui::GetTime() * speed;
 
       const float offset = IM_PI / dots;
       for (size_t i = 0; i < dots; i++)
@@ -207,7 +207,7 @@ namespace ImSpinner
       const ImVec2 centre = bb.GetCenter();
 
       // Render
-      float start = (float)g.Time * speed;
+      float start = (float)ImGui::GetTime() * speed;
 
       const float offset = IM_PI / dots;
       for (size_t i = 0; i < dots; i++)
@@ -243,7 +243,7 @@ namespace ImSpinner
       const ImVec2 centre = bb.GetCenter();
 
       // Render
-      float start = (float)g.Time * speed;
+      float start = (float)ImGui::GetTime() * speed;
 
       const float offset = IM_PI / dots;
       for (size_t i = 0; i < dots; i++)
@@ -281,7 +281,7 @@ namespace ImSpinner
       const ImVec2 centre = bb.GetCenter();
 
       // Render
-      float start = ImFmod((float)g.Time * speed, size.x);
+      float start = ImFmod((float)ImGui::GetTime() * speed, size.x);
 
       float offset = 0;
       for (size_t i = 0; i < dots; i++)
@@ -484,6 +484,31 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerFadeBars(const char *label, float w, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t bars = 3)
+    {
+      float radius = (w * 0.5f) * bars;
+      SPINNER_HEADER(pos, size, centre);
+
+      ImGuiContext &g = *GImGui;
+      const ImGuiStyle &style = g.Style;
+      const float nextItemKoeff = 1.5f;
+      const float yOffsetKoeftt = 0.8f;
+      const float heightSpeed = 0.8f;
+
+      // Render
+      float start = (float)ImGui::GetTime() * speed;
+
+      const float offset = IM_PI / bars;
+      for (size_t i = 0; i < bars; i++)
+      {
+        float a = start + (IM_PI - i * offset);
+        ImColor c = color;
+        c.Value.w = std::max<float>(0.1f, ImSin(a * heightSpeed));
+        window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) - w / 2, centre.y - size.y / 2 * yOffsetKoeftt),
+                                        ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) + w / 2, centre.y + size.y / 2 * yOffsetKoeftt), c);
+      }
+    }
+
 #ifdef IMSPINNER_DEMO
     void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6)
     {
@@ -572,6 +597,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerAng("SpinnerAng90", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 8.5f * velocity, IM_PI / 2.f);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerFadeBars("SpinnerFadeBars", 10, ImColor(255, 255, 255), 6.8f, 3);
     }
 #endif // IMSPINNER_DEMO
 }
