@@ -484,6 +484,7 @@ namespace ImSpinner
       }
     }
 
+#ifdef IMSPINNER_DEMO
     void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6)
     {
       SPINNER_HEADER(pos, size, centre);
@@ -565,7 +566,14 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerIncScaleDots("SpinnerIncScaleDots", 16, 4, ImColor(255, 255, 255), 6.6f, 6);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerAng("SpinnerAng90", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 128), 8.f * velocity, IM_PI / 2.f);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerAng("SpinnerAng90", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 8.5f * velocity, IM_PI / 2.f);
     }
+#endif // IMSPINNER_DEMO
 }
 
 #endif // _IMSPINNER_H_
