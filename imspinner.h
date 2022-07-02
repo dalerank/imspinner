@@ -509,6 +509,27 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerBarsRotateFade(const char *label, float rmin, float rmax , float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t bars = 6)
+    {
+      float radius = rmax;
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      float start = (float)ImGui::GetTime() * speed;
+      float astart = ImFmod(start, IM_PI / bars);
+      start -= astart;
+      const float bg_angle_offset = IM_PI / bars;
+      bars = std::min<size_t>(bars, 32);
+
+      for (size_t i = 0; i <= bars; i++)
+      {
+        float a = start + (i * bg_angle_offset);
+        ImColor c = color;
+        c.Value.w = std::max<float>(0.1f, i / (float)bars);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin), ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax), c, thickness);
+      }
+    }
+
 #ifdef IMSPINNER_DEMO
     void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6)
     {
@@ -600,6 +621,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerFadeBars("SpinnerFadeBars", 10, ImColor(255, 255, 255), 6.8f, 3);
+
+      // Next line
+      ImSpinner::SpinnerBarsRotateFade("SpinnerBarsRotateFade", 8, 18, 4, ImColor(255, 255, 255), 7.6f, 6);
     }
 #endif // IMSPINNER_DEMO
 }
