@@ -97,7 +97,7 @@ namespace ImSpinner
 
         auto thcorrect = [&thickness, &nextdot, &mdots, &minth] (int i) {
             const float nth = minth < 0.f ? thickness / 2.f : minth;
-            return fmaxf(nth, ImSin(((i - nextdot) / mdots) * IM_PI) * thickness);
+            return ImMax(nth, ImSin(((i - nextdot) / mdots) * IM_PI) * thickness);
         };
 
         for (size_t i = 0; i <= dots; i++)
@@ -214,7 +214,7 @@ namespace ImSpinner
       {
         float a = start + (IM_PI - i * offset);
         ImColor c = color;
-        c.Value.w = std::max<float>(0.1f, ImSin(a * heightSpeed));
+        c.Value.w = ImMax(0.1f, ImSin(a * heightSpeed));
         window->DrawList->AddCircleFilled(ImVec2(pos.x + style.FramePadding.x  + i * (thickness * nextItemKoeff), centre.y), thickness, c, 8);
       }
     }
@@ -340,7 +340,7 @@ namespace ImSpinner
 
     void SpinnerTwinAng(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f)
     {
-      const float radius = std::max<float>(radius1, radius2);
+      const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre);
 
       // Render
@@ -373,7 +373,7 @@ namespace ImSpinner
 
     void SpinnerTwinAng180(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f)
     {
-      const float radius = std::max<float>(radius1, radius2);
+      const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre);
 
       // Render
@@ -418,7 +418,7 @@ namespace ImSpinner
 
     void SpinnerTwinAng360(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed1 = 2.8f, float speed2 = 2.5f)
     {
-      const float radius = std::max<float>(radius1, radius2);
+      const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre);
 
       // Render
@@ -473,13 +473,13 @@ namespace ImSpinner
       float astart = ImFmod(start, IM_PI / dots);
       start -= astart;
       const float bg_angle_offset = IM_PI / dots;
-      dots = std::min<size_t>(dots, 32);
+      dots = ImMin<size_t>(dots, 32);
 
       for (size_t i = 0; i <= dots; i++)
       {
         float a = start + (i * bg_angle_offset);
         ImColor c = color;
-        c.Value.w = std::max<float>(0.1f, i / (float)dots);
+        c.Value.w = ImMax(0.1f, i / (float)dots);
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, c, 8);
       }
     }
@@ -503,7 +503,7 @@ namespace ImSpinner
       {
         float a = start + (IM_PI - i * offset);
         ImColor c = color;
-        c.Value.w = std::max<float>(0.1f, ImSin(a * heightSpeed));
+        c.Value.w = ImMax(0.1f, ImSin(a * heightSpeed));
         window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) - w / 2, centre.y - size.y / 2 * yOffsetKoeftt),
                                         ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) + w / 2, centre.y + size.y / 2 * yOffsetKoeftt), c);
       }
@@ -519,13 +519,13 @@ namespace ImSpinner
       float astart = ImFmod(start, IM_PI / bars);
       start -= astart;
       const float bg_angle_offset = IM_PI / bars;
-      bars = std::min<size_t>(bars, 32);
+      bars = ImMin<size_t>(bars, 32);
 
       for (size_t i = 0; i <= bars; i++)
       {
         float a = start + (i * bg_angle_offset);
         ImColor c = color;
-        c.Value.w = std::max<float>(0.1f, i / (float)bars);
+        c.Value.w = ImMax(0.1f, i / (float)bars);
         window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin), ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax), c, thickness);
       }
     }
@@ -545,7 +545,7 @@ namespace ImSpinner
       for (size_t i = 0; i <= dots; i++)
       {
         float a = start + (i * bg_angle_offset);
-        float th = thickness * max(0.1f, i / (float)dots);
+        float th = thickness * ImMax(0.1f, i / (float)dots);
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), th, color, 8);
       }
     }
