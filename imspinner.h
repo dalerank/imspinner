@@ -484,7 +484,7 @@ namespace ImSpinner
       }
     }
 
-    void SpinnerFadeBars(const char *label, float w, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t bars = 3)
+    void SpinnerFadeBars(const char *label, float w, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t bars = 3, bool scale = false)
     {
       float radius = (w * 0.5f) * bars;
       SPINNER_HEADER(pos, size, centre);
@@ -504,8 +504,9 @@ namespace ImSpinner
         float a = start + (IM_PI - i * offset);
         ImColor c = color;
         c.Value.w = ImMax(0.1f, ImSin(a * heightSpeed));
-        window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) - w / 2, centre.y - size.y / 2 * yOffsetKoeftt),
-                                        ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) + w / 2, centre.y + size.y / 2 * yOffsetKoeftt), c);
+        float h = (scale ? (0.6f + 0.4f * c.Value.w) : 1.f) * size.y / 2;
+        window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) - w / 2, centre.y - h * yOffsetKoeftt),
+                                        ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) + w / 2, centre.y + h * yOffsetKoeftt), c);
       }
     }
 
@@ -624,6 +625,9 @@ namespace ImSpinner
 
       // Next line
       ImSpinner::SpinnerBarsRotateFade("SpinnerBarsRotateFade", 8, 18, 4, ImColor(255, 255, 255), 7.6f, 6);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerFadeBars("SpinnerFadeScaleBars", 10, ImColor(255, 255, 255), 6.8f, 3, true);
     }
 #endif // IMSPINNER_DEMO
 }
