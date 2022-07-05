@@ -531,6 +531,35 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerBarsScaleMiddle(const char *label, float w, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t bars = 3)
+    {
+      float radius = (w) * bars;
+      SPINNER_HEADER(pos, size, centre);
+
+      ImGuiContext &g = *GImGui;
+      const ImGuiStyle &style = g.Style;
+      const float nextItemKoeff = 1.5f;
+      const float yOffsetKoeftt = 0.8f;
+      const float heightSpeed = 0.8f;
+
+      // Render
+      float start = (float)ImGui::GetTime() * speed;
+
+      const float offset = IM_PI / bars;
+      for (size_t i = 0; i < bars; i++)
+      {
+        float a = start + (IM_PI - i * offset);
+        float h = (0.4f + 0.6f * ImMax(0.1f, ImSin(a * heightSpeed))) * (size.y / 2);
+        window->DrawList->AddRectFilled(ImVec2(centre.x + style.FramePadding.x + i * (w * nextItemKoeff) - w / 2, centre.y - h * yOffsetKoeftt),
+                                        ImVec2(centre.x + style.FramePadding.x + i * (w * nextItemKoeff) + w / 2, centre.y + h * yOffsetKoeftt), color);
+        if (i == 0)
+          continue;
+
+        window->DrawList->AddRectFilled(ImVec2(centre.x + style.FramePadding.x - i * (w * nextItemKoeff) - w / 2, centre.y - h * yOffsetKoeftt),
+                                        ImVec2(centre.x + style.FramePadding.x - i * (w * nextItemKoeff) + w / 2, centre.y + h * yOffsetKoeftt), color);
+      }
+    } 
+
 #ifdef IMSPINNER_DEMO
     void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6)
     {
@@ -628,6 +657,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerFadeBars("SpinnerFadeScaleBars", 10, ImColor(255, 255, 255), 6.8f, 3, true);
+
+      ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
+      ImSpinner::SpinnerBarsScaleMiddle("SpinnerBarsScaleMiddle", 6, ImColor(255, 255, 255), 8.8f, 3);
     }
 #endif // IMSPINNER_DEMO
 }
