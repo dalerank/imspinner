@@ -558,7 +558,39 @@ namespace ImSpinner
         window->DrawList->AddRectFilled(ImVec2(centre.x + style.FramePadding.x - i * (w * nextItemKoeff) - w / 2, centre.y - h * yOffsetKoeftt),
                                         ImVec2(centre.x + style.FramePadding.x - i * (w * nextItemKoeff) + w / 2, centre.y + h * yOffsetKoeftt), color);
       }
-    } 
+    }
+
+    void SpinnerAngTwin(const char *label, float radius1, float radius2, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI, size_t arcs = 1)
+    {
+      float radius = ImMax(radius1, radius2);
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      window->DrawList->PathClear();
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+      float start = (float)ImGui::GetTime()* speed;
+      const float bg_angle_offset = IM_PI * 2.f / num_segments;
+
+      for (size_t i = 0; i <= num_segments; i++)
+      {
+        const float a = start + (i * bg_angle_offset);
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1));
+      }
+      window->DrawList->PathStroke(bg, false, thickness);
+
+      const float angle_offset = angle / num_segments;
+      for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+      {
+          window->DrawList->PathClear();
+          float arc_start = 2 * IM_PI / arcs;
+          for (size_t i = 0; i < num_segments; i++)
+          {
+            const float a = arc_start * arc_num + start + (i * angle_offset);
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2));
+          }
+          window->DrawList->PathStroke(color, false, thickness);
+      }
+    }
 
 #ifdef IMSPINNER_DEMO
     void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6)
@@ -660,6 +692,18 @@ namespace ImSpinner
 
       ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
       ImSpinner::SpinnerBarsScaleMiddle("SpinnerBarsScaleMiddle", 6, ImColor(255, 255, 255), 8.8f, 3);
+
+      ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
+      ImSpinner::SpinnerAngTwin("SpinnerAngTwin1", 16, 13, 2, ImColor(255, 0, 0), ImColor(255, 255, 255), 6 * velocity, IM_PI / 2.f);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerAngTwin("SpinnerAngTwin2", 13, 16, 2, ImColor(255, 0, 0), ImColor(255, 255, 255), 6 * velocity, IM_PI / 2.f);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerAngTwin("SpinnerAngTwin3", 13, 16, 2, ImColor(255, 0, 0), ImColor(255, 255, 255), 6 * velocity, IM_PI / 2.f, 2);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerAngTwin("SpinnerAngTwin4", 16, 13, 2, ImColor(255, 0, 0), ImColor(255, 255, 255), 6 * velocity, IM_PI / 2.f, 2);
     }
 #endif // IMSPINNER_DEMO
 }
