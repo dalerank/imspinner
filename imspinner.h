@@ -592,7 +592,31 @@ namespace ImSpinner
       }
     }
 
-#ifdef IMSPINNER_DEMO
+    void SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      ImGuiStorage* storage = window->DC.StateStorage;
+      const ImGuiID vtimeId = window->GetID("##vtime");
+      const ImGuiID hmaxId = window->GetID("##hmax");
+
+      float vtime = storage->GetFloat(vtimeId, 0.f);
+      float hmax = storage->GetFloat(hmaxId, 1.f);
+
+      vtime += 0.05;
+      hmax += 0.01;
+      float dtime = ImFmod((float)vtime, IM_PI);
+      float maxht = ImMax(ImSin(ImFmod((float)hmax, IM_PI)), 0.7f) * radius;
+
+      float start = ImFmod(ImGui::GetTime() * speed, IM_PI);
+
+      storage->SetFloat(vtimeId, vtime);
+      storage->SetFloat(hmaxId, hmax);
+
+      window->DrawList->AddCircleFilled(ImVec2(centre.x, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, color, 8);
+    }
+
     void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6)
     {
       SPINNER_HEADER(pos, size, centre);
@@ -611,7 +635,7 @@ namespace ImSpinner
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), th, color, 8);
       }
     }
-
+#ifdef IMSPINNER_DEMO
     void demoSpinners() {
       static int hue = 0;
       static float nextdot = 0, nextdot2;
@@ -640,6 +664,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerVDots("SpinnerVDots", 16, 4, ImColor(255, 255, 255), 2.7f * velocity);
+
+      ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
+      ImSpinner::SpinnerBounceBall("SpinnerBounceBall", 16, 6, ImColor(255, 255, 255), 4 * velocity);
 
       // Next Line
       ImSpinner::SpinnerBounceDots("SpinnerBounceDots", 6, ImColor(255, 255, 255), 6 * velocity, 3);
