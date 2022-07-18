@@ -83,6 +83,26 @@ namespace ImSpinner
     return (mid < end);
     };*/
 
+    void SpinnerClock(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      window->DrawList->PathClear();
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+      float start = (float)ImGui::GetTime()* speed;
+      const float bg_angle_offset = IM_PI * 2.f / num_segments;
+      for (size_t i = 0; i <= num_segments; i++)
+      {
+        const float a = start + (i * bg_angle_offset);
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+      }
+      window->DrawList->PathStroke(bg, false, thickness);
+
+      window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(start) * radius, centre.y + ImSin(start) * radius), color, thickness * 2);
+      window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(start * 0.5f) * radius / 2.f, centre.y + ImSin(start * 0.5f) * radius / 2.f), color, thickness * 2);
+    }
+
     void SpinnerDots(const char *label, float &nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6, float minth = -1.f)
     {
         SPINNER_HEADER(pos, size, centre);
@@ -770,6 +790,9 @@ namespace ImSpinner
 
       ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
       ImSpinner::SpinnerTwinAng("SpinnerTwinAng", 16, 16, 6, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerClock("SpinnerClock", 16, 2, ImColor(255, 0, 0), ImColor(255, 255, 255), 4 * velocity);
 
       // next line
       ImSpinner::SpinnerTwinAng180("SpinnerTwinAng", 16, 12, 4, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity);
