@@ -833,6 +833,21 @@ namespace ImSpinner
                                   th * i);
       }
     }
+
+    void SpinnerGooeyBalls(const char *label, float radius, float thickness, const ImColor &color, float speed)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+      const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
+
+      const float radius1 = (0.3f + 0.3f * ImSin(start)) * radius;
+      const float radius2 = radius - radius1;
+
+      window->DrawList->AddCircleFilled(ImVec2(centre.x - radius + radius1, centre.y), radius1, color, num_segments);
+      window->DrawList->AddCircleFilled(ImVec2(centre.x - radius + radius1 * 1.2f + radius2, centre.y), radius2, color, num_segments);
+    }
 #ifdef IMSPINNER_DEMO
     void demoSpinners() {
       static int hue = 0;
@@ -956,6 +971,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerIncFullDots("SpinnerIncFullDots", 16, 4, ImColor(255, 255, 255), 5.6f, 4);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerGooeyBalls("SpinnerGooeyBalls", 16, 0, ImColor(255, 255, 255), 2.f);
     }
 #endif // IMSPINNER_DEMO
 }
