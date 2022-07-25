@@ -103,7 +103,7 @@ namespace ImSpinner
       window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(start * 0.5f) * radius / 2.f, centre.y + ImSin(start * 0.5f) * radius / 2.f), color, thickness * 2);
     }
 
-    void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f)
+    void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f)
     {
       SPINNER_HEADER(pos, size, centre);
 
@@ -834,7 +834,7 @@ namespace ImSpinner
       }
     }
 
-    void SpinnerGooeyBalls(const char *label, float radius, float thickness, const ImColor &color, float speed)
+    void SpinnerGooeyBalls(const char *label, float radius, const ImColor &color, float speed)
     {
       SPINNER_HEADER(pos, size, centre);
 
@@ -847,6 +847,25 @@ namespace ImSpinner
 
       window->DrawList->AddCircleFilled(ImVec2(centre.x - radius + radius1, centre.y), radius1, color, num_segments);
       window->DrawList->AddCircleFilled(ImVec2(centre.x - radius + radius1 * 1.2f + radius2, centre.y), radius2, color, num_segments);
+    }
+
+    void SpinnerRotateGooeyBalls(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+      const float start = ImFmod((float)ImGui::GetTime(), IM_PI);
+      const float rstart = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2);
+
+      const float radius1 = (0.2f + 0.3f * ImSin(start)) * radius;
+      const float angle_offset = IM_PI * 2.f / balls;
+
+      for (int i = 0; i <= balls; i++)
+      {
+        const float a = rstart + (i * angle_offset);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, color, num_segments);
+      }
     }
 #ifdef IMSPINNER_DEMO
     void demoSpinners() {
@@ -928,10 +947,10 @@ namespace ImSpinner
       ImSpinner::SpinnerAng("SpinnerAng90", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 8.5f * velocity, IM_PI / 2.f);
 
       ImGui::SameLine();
-      ImSpinner::SpinnerFadeBars("SpinnerFadeBars", 10, ImColor(255, 255, 255), 0.8f, 3);
+      ImSpinner::SpinnerFadeBars("SpinnerFadeBars", 10, ImColor(255, 255, 255), 4.8f * velocity, 3);
 
       ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
-      ImSpinner::SpinnerPulsar("SpinnerPulsar", 16, 2, ImColor(255, 0, 0), ImColor(255, 255, 255), 1 * velocity);
+      ImSpinner::SpinnerPulsar("SpinnerPulsar", 16, 2, ImColor(255, 255, 255), 1 * velocity);
 
       // Next line
       ImSpinner::SpinnerBarsRotateFade("SpinnerBarsRotateFade", 8, 18, 4, ImColor(255, 255, 255), 7.6f, 6);
@@ -955,7 +974,7 @@ namespace ImSpinner
       ImSpinner::SpinnerAngTwin("SpinnerAngTwin4", 16, 13, 2, ImColor(255, 0, 0), ImColor(255, 255, 255), 6 * velocity, IM_PI / 2.f, 2);
 
       ImGui::SameLine(); 
-      ImSpinner::SpinnerTwinPulsar("SpinnerTwinPulsar", 16, 2, ImColor(255, 255, 255), 0.5 * velocity, 2);
+      ImSpinner::SpinnerTwinPulsar("SpinnerTwinPulsar", 16, 2, ImColor(255, 255, 255), 0.5f * velocity, 2);
 
       // next line
       ImSpinner::SpinnerTwinBall("SpinnerTwinBall", 16, 11, 2, 2.5f, ImColor(255, 0, 0), ImColor(255, 255, 255), 6 * velocity, 2);
@@ -973,7 +992,13 @@ namespace ImSpinner
       ImSpinner::SpinnerIncFullDots("SpinnerIncFullDots", 16, 4, ImColor(255, 255, 255), 5.6f, 4);
 
       ImGui::SameLine();
-      ImSpinner::SpinnerGooeyBalls("SpinnerGooeyBalls", 16, 0, ImColor(255, 255, 255), 2.f);
+      ImSpinner::SpinnerGooeyBalls("SpinnerGooeyBalls", 16, ImColor(255, 255, 255), 2.f);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerRotateGooeyBalls("SpinnerRotateGooeyBalls2", 16, 5, ImColor(255, 255, 255), 6.f, 2);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerRotateGooeyBalls("SpinnerRotateGooeyBalls3", 16, 5, ImColor(255, 255, 255), 6.f, 3);
     }
 #endif // IMSPINNER_DEMO
 }
