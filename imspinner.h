@@ -867,6 +867,61 @@ namespace ImSpinner
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, color, num_segments);
       }
     }
+
+    void SpinnerMoonLine(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+      float start = (float)ImGui::GetTime()* speed;
+
+      const float angle_offset = (angle * 0.5f) / num_segments;
+      const float th = thickness / num_segments;
+
+      window->DrawList->AddCircleFilled(centre, radius, bg, num_segments);
+
+      for (size_t i = 0; i < num_segments; i++)
+      {
+        const float a = start + ((num_segments + i) * angle_offset);
+        const float a1 = start + ((num_segments + i + 1) * angle_offset);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
+                                  ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
+                                  color,
+                                  thickness - th * i);
+      }
+
+      for (size_t i = 0; i < num_segments; i++)
+      {
+        const float a = start + (i * angle_offset);
+        const float a1 = start + ((i+1) * angle_offset);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
+                                  ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
+                                  color,
+                                  th * i);
+      }
+
+      for (size_t i = 0; i < num_segments; i++)
+      {
+        const float a = start + ((num_segments + i) * angle_offset);
+        const float a1 = start + ((num_segments + i + 1) * angle_offset);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
+                                  ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
+                                  color,
+                                  thickness - th * i);
+      }
+
+      const float b_angle_offset = (2.f * IM_PI - angle) / num_segments;
+      for (size_t i = 0; i < num_segments; i++)
+      {
+        const float a = start + num_segments * angle_offset * 2.f + (i * b_angle_offset);
+        const float a1 = start + num_segments * angle_offset * 2.f + ((i + 1) * b_angle_offset);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
+                                  ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
+                                  color,
+                                  1.f);
+      }
+    }
 #ifdef IMSPINNER_DEMO
     void demoSpinners() {
       static int hue = 0;
@@ -999,6 +1054,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerRotateGooeyBalls("SpinnerRotateGooeyBalls3", 16, 5, ImColor(255, 255, 255), 6.f, 3);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerMoonLine("SpinnerMoonLine", 16, 3, ImColor(200, 80, 0), ImColor(80, 80, 80), 5 * velocity);
     }
 #endif // IMSPINNER_DEMO
 }
