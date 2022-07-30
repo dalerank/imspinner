@@ -733,6 +733,30 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerArcRotation(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius) / 2;
+      float start = (float)ImGui::GetTime()* speed;
+
+      for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+      {
+        window->DrawList->PathClear();
+        float arc_angle = 2.f * IM_PI / (float)arcs;
+        const float angle_offset = arc_angle / num_segments;
+        ImColor c = color;
+        c.Value.w = ImMax(0.1f, arc_num / (float)arcs);
+        for (size_t i = 0; i <= num_segments; i++)
+        {
+          const float a = start + arc_angle * arc_num + (i * angle_offset);
+          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+        }
+        window->DrawList->PathStroke(c, false, thickness);
+      }
+    }
+
     void SpinnerTwinBall(const char *label, float radius1, float radius2, float thickness, float b_thickness, const ImColor &ball = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t balls = 2)
     {
       float radius = ImMax(radius1, radius2);
@@ -1100,6 +1124,9 @@ namespace ImSpinner
       ImGui::SameLine(); 
       ImSpinner::SpinnerTwinPulsar("SpinnerTwinPulsar", 16, 2, ImColor(255, 255, 255), 0.5f * velocity, 2);
 
+      ImGui::SameLine();
+      ImSpinner::SpinnerAngTwin("SpinnerAngTwin4", 14, 13, 3, ImColor(255, 0, 0), ImColor(0, 0, 0, 0), 5 * velocity, IM_PI / 1.5f, 2);
+
       // next line
       ImSpinner::SpinnerTwinBall("SpinnerTwinBall", 16, 11, 2, 2.5f, ImColor(255, 0, 0), ImColor(255, 255, 255), 6 * velocity, 2);
 
@@ -1126,6 +1153,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerMoonLine("SpinnerMoonLine", 16, 3, ImColor(200, 80, 0), ImColor(80, 80, 80), 5 * velocity);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerArcRotation("SpinnerArcRotation", 13, 5, ImColor(255, 255, 255), 3 * velocity, 4);
     }
 #endif // IMSPINNER_DEMO
 }
