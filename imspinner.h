@@ -834,6 +834,41 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerIngYang(const char *label, float radius, float thickness, bool reverse, float yang_detlta_r, const ImColor &colorI = 0xffffffff, const ImColor &colorY = 0xffffffff, float speed = 2.8f, float angle = IM_PI * 0.7f)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+      float startI = (float)ImGui::GetTime() * speed;
+      float startY = (float)ImGui::GetTime() * (speed + (yang_detlta_r > 0.f ? ImClamp(yang_detlta_r * 0.5f, 0.5f, 2.f) : 0.f));
+
+      const float angle_offset = angle / num_segments;
+      const float th = thickness / num_segments;
+      for (size_t i = 0; i < num_segments; i++)
+      {
+        const float a = startI + (i * angle_offset);
+        const float a1 = startI + ((i + 1) * angle_offset);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
+                                  ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
+                                  colorI,
+                                  th * i);
+      }
+
+      const float rv = reverse ? -1 : 1;
+      const float yang_radius = (radius - yang_detlta_r);
+      for (size_t i = 0; i < num_segments; i++)
+      {
+        const float a = startY + IM_PI + (i * angle_offset);
+        const float a1 = startY + IM_PI + ((i+1) * angle_offset);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a * rv) * yang_radius, centre.y + ImSin(a * rv) * yang_radius),
+                                  ImVec2(centre.x + ImCos(a1 * rv) * yang_radius, centre.y + ImSin(a1 * rv) * yang_radius),
+                                  colorY,
+                                  th * i);
+      }
+    }
+
+
     void SpinnerGooeyBalls(const char *label, float radius, const ImColor &color, float speed)
     {
       SPINNER_HEADER(pos, size, centre);
@@ -958,6 +993,9 @@ namespace ImSpinner
       ImGui::SameLine();
       ImSpinner::SpinnerAngEclipse("SpinnerAng", 16, 5, ImColor(255, 255, 255), 6 * velocity);
 
+      ImGui::SameLine();
+      ImSpinner::SpinnerIngYang("SpinnerIngYang", 16, 5, false, 0, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
+
       // Next Line
       ImSpinner::SpinnerBounceDots("SpinnerBounceDots", 6, ImColor(255, 255, 255), 6 * velocity, 3);
 
@@ -978,6 +1016,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerClock("SpinnerClock", 16, 2, ImColor(255, 0, 0), ImColor(255, 255, 255), 4 * velocity);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerIngYang("SpinnerIngYangR", 16, 5, true, 0.1f, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
 
       // next line
       ImSpinner::SpinnerTwinAng180("SpinnerTwinAng", 16, 12, 4, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity);
@@ -1006,6 +1047,9 @@ namespace ImSpinner
 
       ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
       ImSpinner::SpinnerPulsar("SpinnerPulsar", 16, 2, ImColor(255, 255, 255), 1 * velocity);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerIngYang("SpinnerIngYangR2", 16, 5, true, 3.f, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
 
       // Next line
       ImSpinner::SpinnerBarsRotateFade("SpinnerBarsRotateFade", 8, 18, 4, ImColor(255, 255, 255), 7.6f, 6);
