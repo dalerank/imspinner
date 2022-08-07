@@ -484,6 +484,53 @@ namespace ImSpinner
       window->DrawList->PathStroke(color2, false, thickness);
     }
 
+    void SpinnerFilling(const char *label, float radius, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2.f);
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius) * 2;
+      window->DrawList->PathClear();
+      const float angle_offset = IM_PI * 2.f / num_segments;
+      for (size_t i = 0; i <= 2 * num_segments; i++)
+      {
+        const float a = (i * angle_offset);
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+      }
+      window->DrawList->PathStroke(color1, false, thickness);
+
+      window->DrawList->PathClear();
+      for (size_t i = 0; i < 2 * num_segments / 2; i++)
+      {
+        const float a = (i * angle_offset);
+        if (a > start)
+          break;
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+      }
+      window->DrawList->PathStroke(color2, false, thickness);
+    }
+
+    void SpinnerTopup(const char *label, float radius1, float radius2, const ImColor &color = 0xff0000ff, const ImColor &fg = 0xffffffff, const ImColor &bg = 0xffffffff, float speed = 2.8f)
+    {
+      const float radius = ImMax(radius1, radius2);
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius) * 2;
+      window->DrawList->AddCircleFilled(centre, radius1, bg, num_segments);
+
+      window->DrawList->PathClear();
+      const float abegin = (IM_PI * 0.5f) - start;
+      const float aend = (IM_PI * 0.5f) + start;
+      const float angle_offset = (aend - abegin) / num_segments;
+      window->DrawList->PathArcTo(centre, radius1, abegin, aend, num_segments * 2);
+      window->DrawList->PathFillConvex(color);
+
+      window->DrawList->AddCircleFilled(centre, radius2, fg, num_segments);
+    }
+
     void SpinnerTwinAng180(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f)
     {
       const float radius = ImMax(radius1, radius2);
@@ -1208,6 +1255,12 @@ namespace ImSpinner
 
       // Next line
       ImSpinner::SpinnerArcFade("SpinnerArcFade", 13, 5, ImColor(255, 255, 255), 3 * velocity, 4);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerFilling("SpinnerFilling", 16, 6, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerTopup("SpinnerTopup", 16, 12, ImColor(255, 0, 0), ImColor(80, 80, 80), ImColor(255, 255, 255), 1 * velocity);
     }
 #endif // IMSPINNER_DEMO
 }
