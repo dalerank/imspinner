@@ -179,7 +179,7 @@ namespace ImSpinner
       window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(start * 0.5f) * radius / 2.f, centre.y + ImSin(start * 0.5f) * radius / 2.f), color, thickness * 2);
     }
 
-    void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f)
+    void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f, bool sequence = true)
     {
       SPINNER_HEADER(pos, size, centre);
 
@@ -203,11 +203,18 @@ namespace ImSpinner
       }
       window->DrawList->PathStroke(bg, false, thickness);
 
-      radius_b -= (0.005f * speed);
-      radius_b = ImMax(radius_k, ImMax(0.8f, radius_b));
+      if (sequence)
+      {
+        radius_b -= (0.005f * speed);
+        radius_b = ImMax(radius_k, ImMax(0.8f, radius_b));
+      } 
+      else 
+      {
+        radius_b = (1 - radius_k);
+      }
       storage->SetFloat(radiusbId, radius_b);
       
-      float radius_tb = ImMax(radius_k, radius_b) * radius;
+      float radius_tb = sequence ? ImMax(radius_k, radius_b) * radius : (radius_b * radius);
       window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments; i++)
       {
@@ -215,6 +222,35 @@ namespace ImSpinner
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius_tb, centre.y + ImSin(a) * radius_tb));
       }
       window->DrawList->PathStroke(bg, false, thickness);
+    }
+
+    void SpinnerDoubleFadePulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      ImGuiStorage* storage = window->DC.StateStorage;
+      const ImGuiID radiusbId = window->GetID("##radiusb");
+      float radius_b = storage->GetFloat(radiusbId, 0.8f);
+
+      // Render
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+      float start = (float)ImGui::GetTime() * speed;
+      const float bg_angle_offset = IM_PI * 2.f / num_segments;
+
+      float start_r = ImFmod(start, IM_PI / 2.f);
+      float radius_k = ImSin(start_r);
+      float radius1 = radius_k * radius;
+      ImColor c = bg;
+      c.Value.w = ImMin(0.1f, radius_k);
+      window->DrawList->AddCircleFilled(centre, radius1, c, num_segments);
+
+      radius_b = (1 - radius_k);
+      storage->SetFloat(radiusbId, radius_b);
+
+      float radius_tb = radius_b * radius;
+      c = bg;
+      c.Value.w = ImMin(0.3f, radius_b);
+      window->DrawList->AddCircleFilled(centre, radius_tb, c, num_segments);
     }
 
     void SpinnerTwinPulsar(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int rings = 2)
@@ -1360,6 +1396,12 @@ namespace ImSpinner
 
       ImGui::SameLine(); 
       ImSpinner::SpinnerFadePulsar("SpinnerFadePulsar2", 16, ImColor(255, 255, 255), 0.9f * velocity, 2);
+
+      ImGui::SameLine(); 
+      ImSpinner::SpinnerPulsar("SpinnerPulsar", 16, 2, ImColor(255, 255, 255), 1 * velocity, false);
+
+      ImGui::SameLine(); 
+      ImSpinner::SpinnerDoubleFadePulsar("SpinnerDoubleFadePulsar", 16, 2, ImColor(255, 255, 255), 2 * velocity);
     }
 #endif // IMSPINNER_DEMO
 }
