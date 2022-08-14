@@ -30,6 +30,30 @@
 
 namespace ImSpinner
 {
+#define DECLPROP(name,type,def) struct name { type value = def; operator type() { return value; } };
+    enum SpinnerTypeT {
+      e_st_rainbow = 0,
+      e_st_angle,
+      e_st_dots,
+
+      e_st_count
+    };
+
+    using float_ptr = float *;
+
+    DECLPROP (SpinnerType, SpinnerTypeT, e_st_rainbow)
+    DECLPROP (Radius, float, 16.f)
+    DECLPROP (Speed, float, 1.f)
+    DECLPROP (Thickness, float, 1.f)
+    DECLPROP (Color, ImColor, 0xffffffff)
+    DECLPROP (BgColor, ImColor, 0xffffffff)
+    DECLPROP (Angle, float, IM_PI)
+    DECLPROP (FloatPtr, float_ptr, nullptr)
+    DECLPROP (Dots, int, 0)
+    DECLPROP (MiddleDots, int, 0)
+    DECLPROP (MinThickness, float, 0.f)
+#undef DECLPROP
+
     namespace detail {
       bool SpinnerBegin(const char *label, float radius, ImVec2 &pos, ImVec2 &size, ImVec2 &centre) {
         ImGuiWindow *window = ImGui::GetCurrentWindow();
@@ -52,11 +76,38 @@ namespace ImSpinner
 
         return true;
       }
+
+#define IMPLRPOP(basetype,type) basetype m_##type; \
+                                void set##type(const basetype& v) { m_##type = v;} \
+                                void set(type h) { m_##type = h.value;} \
+                                template<typename First, typename... Args> \
+                                void set(const type& h, const Args&... args) { set##type(h.value); this->template set<Args...>(args...); }
+      struct SpinnerConfig {
+        SpinnerConfig() {}
+
+        template<typename none = void> void set() {}
+
+        template<typename... Args>
+        SpinnerConfig(const Args&... args) { this->template set<Args...>(args...); }
+
+        IMPLRPOP(SpinnerTypeT, SpinnerType)
+        IMPLRPOP(float, Radius)
+        IMPLRPOP(float, Speed)
+        IMPLRPOP(float, Thickness)
+        IMPLRPOP(ImColor, Color)
+        IMPLRPOP(ImColor, BgColor)
+        IMPLRPOP(float, Angle)
+        IMPLRPOP(float_ptr, FloatPtr)
+        IMPLRPOP(int, Dots)
+        IMPLRPOP(int, MiddleDots)
+        IMPLRPOP(float, MinThickness)
+      };
+#undef IMPLRPOP
     }
 
 #define SPINNER_HEADER(pos, size, centre) ImVec2 pos, size, centre; if (!detail::SpinnerBegin(label, radius, pos, size, centre)) { return; }; ImGuiWindow *window = ImGui::GetCurrentWindow();
 
-    void Spinner(const char *label, float radius, float thickness, const ImColor &color, float speed)
+    void SpinnerRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed)
     {
         SPINNER_HEADER(pos, size, centre);
 
@@ -221,7 +272,7 @@ namespace ImSpinner
       }
     }
 
-    void SpinnerDots(const char *label, float &nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6, float minth = -1.f)
+    void SpinnerDots(const char *label, float *nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6, float minth = -1.f)
     {
         SPINNER_HEADER(pos, size, centre);
 
@@ -230,12 +281,14 @@ namespace ImSpinner
         const float bg_angle_offset = IM_PI * 2.f / dots;
         dots = min(dots, 32);
 
-        if (nextdot < 0.f)
-            nextdot = (float)dots;
+        float def_nextdot = 0;
+        float &ref_nextdot = nextdot ? *nextdot : def_nextdot;
+        if (ref_nextdot < 0.f)
+          ref_nextdot = (float)dots;
 
-        auto thcorrect = [&thickness, &nextdot, &mdots, &minth] (int i) {
+        auto thcorrect = [&thickness, &ref_nextdot, &mdots, &minth] (int i) {
             const float nth = minth < 0.f ? thickness / 2.f : minth;
-            return ImMax(nth, ImSin(((i - nextdot) / mdots) * IM_PI) * thickness);
+            return ImMax(nth, ImSin(((i - ref_nextdot) / mdots) * IM_PI) * thickness);
         };
 
         for (size_t i = 0; i <= dots; i++)
@@ -244,11 +297,11 @@ namespace ImSpinner
             a = ImFmod(a, 2 * IM_PI);
             float th = minth < 0 ? thickness / 2.f : minth;
 
-            if (nextdot + mdots < dots) {
-                if (i > nextdot && i < nextdot + mdots)
+            if (ref_nextdot + mdots < dots) {
+                if (i > ref_nextdot && i < ref_nextdot + mdots)
                     th = thcorrect(i);
             } else {
-                if ((i > nextdot && i < dots) || (i < ((int)(nextdot + mdots)) % dots))
+                if ((i > ref_nextdot && i < dots) || (i < ((int)(ref_nextdot + mdots)) % dots))
                     th = thcorrect(i);
             }
 
@@ -1127,8 +1180,28 @@ namespace ImSpinner
                                   1.f);
       }
     }
+
+    template<SpinnerTypeT Type, typename... Args>
+    void Spinner(const char *label, const Args&... args)
+    {
+      struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); }
+
+      spinner_draw_funcs[e_st_count] = {
+        { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
+        { e_st_angle, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
+        { e_st_dots, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerDots(label, c.m_FloatPtr, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_Dots, c.m_MiddleDots, c.m_MinThickness); } }
+      };
+
+      detail::SpinnerConfig config(SpinnerType{Type}, args...);
+      if (config.m_SpinnerType < sizeof(spinner_draw_funcs))
+      {
+        spinner_draw_funcs[config.m_SpinnerType].func(label, config);
+      }
+    }
+
 #ifdef IMSPINNER_DEMO
     void demoSpinners() {
+
       static int hue = 0;
       static float nextdot = 0, nextdot2;
       
@@ -1137,15 +1210,10 @@ namespace ImSpinner
       static float velocity = 1.f;
       ImGui::SliderFloat("Speed", &velocity, 0.0f, 10.0f, "velocity = %.3f");
 
-      ImSpinner::Spinner("Spinner", 16, 2, ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f), 8 * velocity);
+      ImSpinner::Spinner<e_st_rainbow>("Spinner", Radius{16.f}, Thickness{2.f}, Color{ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f)}, Speed{8 * velocity}); ImGui::SameLine();
+      ImSpinner::Spinner<e_st_angle>("SpinnerAng", Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 128)}, Speed{8 * velocity}, Angle{IM_PI}); ImGui::SameLine();
+      ImSpinner::Spinner<e_st_dots>("SpinnerDots", FloatPtr{&nextdot}, Radius{16}, Thickness{4}, Color{ImColor(255, 255, 255)}, Speed{1 * velocity}, Dots{12}, MiddleDots{6}, MinThickness{-1.f}); ImGui::SameLine();
 
-      ImGui::SameLine();
-      ImSpinner::SpinnerAng("SpinnerAng", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 128), 6 * velocity);
-      
-      ImGui::SameLine();
-      ImSpinner::SpinnerDots("SpinnerDots", nextdot, 16, 4, ImColor(255, 255, 255), 1 * velocity);
-
-      ImGui::SameLine();
       ImSpinner::SpinnerAng("SpinnerAngNoBg", 16, 6, ImColor(255, 255, 255), ImColor(255, 255, 255, 0), 6 * velocity);
 
       ImGui::SameLine();
@@ -1201,7 +1269,7 @@ namespace ImSpinner
 
       ImGui::SameLine();
       nextdot2 -= 0.2f * velocity;
-      ImSpinner::SpinnerDots("SpinnerDots", nextdot2, 16, 4, ImColor(255, 255, 255), 0.3f, 12, 6, 0.f);
+      ImSpinner::SpinnerDots("SpinnerDots", &nextdot2, 16, 4, ImColor(255, 255, 255), 0.3f, 12, 6, 0.f);
 
       ImGui::SameLine();
       ImSpinner::SpinnerIncScaleDots("SpinnerIncScaleDots", 16, 4, ImColor(255, 255, 255), 6.6f, 6);
