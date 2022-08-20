@@ -968,6 +968,59 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerFilledArcFade(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius) / 2;
+      float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 4.f);
+
+      float arc_angle = 2.f * IM_PI / (float)arcs;
+      const float angle_offset = arc_angle / num_segments;
+      for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+      {
+        const float b = arc_angle * arc_num - IM_PI / 2.f - IM_PI / 4.f;
+        const float e = arc_angle * arc_num + arc_angle - IM_PI / 2.f - IM_PI / 4.f;
+        const float a = arc_angle * arc_num;
+        ImColor c = color;
+        if (start < IM_PI * 2.f) {
+          c.Value.w = 0.f;
+          if (start > a && start < (a + arc_angle))
+          {
+            c.Value.w = 1.f - (start - a) / (float)arc_angle;
+          }
+          else if (start < a)
+          {
+            c.Value.w = 1.f;
+          }
+          c.Value.w = ImMax(0.f, 1.f - c.Value.w);
+        }
+        else
+        {
+          const float startk = start - IM_PI * 2.f;
+          c.Value.w = 0.f;
+          if (startk > a && startk < (a + arc_angle))
+          {
+            c.Value.w = 1.f - (startk - a) / (float)arc_angle;
+          }
+          else if (startk < a)
+          {
+            c.Value.w = 1.f;
+          }
+        }
+
+        window->DrawList->PathClear();
+        window->DrawList->PathLineTo(centre);
+        for (size_t i = 0; i <= num_segments + 1; i++)
+        {
+          const float a = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f - IM_PI / 4.f;
+          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+        }
+        window->DrawList->PathFillConvex(c);
+      }
+    }
+
     void SpinnerTwinBall(const char *label, float radius1, float radius2, float thickness, float b_thickness, const ImColor &ball = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t balls = 2)
     {
       float radius = ImMax(radius1, radius2);
@@ -1401,6 +1454,15 @@ namespace ImSpinner
 
       ImGui::SameLine(); 
       ImSpinner::SpinnerDoubleFadePulsar("SpinnerDoubleFadePulsar", 16, 2, ImColor(255, 255, 255), 2 * velocity);
+
+      ImGui::SameLine(); 
+      ImSpinner::SpinnerFilledArcFade("SpinnerFilledArcFade", 16, ImColor(255, 255, 255), 4 * velocity, 4);
+
+      ImGui::SameLine(); 
+      ImSpinner::SpinnerFilledArcFade("SpinnerFilledArcFade6", 16, ImColor(255, 255, 255), 6 * velocity, 6);
+
+      ImGui::SameLine(); 
+      ImSpinner::SpinnerFilledArcFade("SpinnerFilledArcFade6", 16, ImColor(255, 255, 255), 8 * velocity, 12);
     }
 #endif // IMSPINNER_DEMO
 }
