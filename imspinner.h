@@ -1021,6 +1021,48 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerFilledArcColor(const char *label, float radius, const ImColor &color = 0xffff0000, const ImColor &bg = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius) / 2;
+      float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 2.f);
+
+      float arc_angle = 2.f * IM_PI / (float)arcs;
+      const float angle_offset = arc_angle / num_segments;
+
+      window->DrawList->AddCircleFilled(centre, radius, bg, num_segments * 2);
+
+      for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+      {
+        const float b = arc_angle * arc_num - IM_PI / 2.f;
+        const float e = arc_angle * arc_num + arc_angle - IM_PI / 2.f;
+        const float a = arc_angle * arc_num;
+
+        ImColor c = color;
+        c.Value.w = 0.f;
+        if (start > a && start < (a + arc_angle))
+        {
+          c.Value.w = 1.f - (start - a) / (float)arc_angle;
+        }
+        else if (start < a)
+        {
+          c.Value.w = 1.f;
+        }
+        c.Value.w = ImMax(0.f, 1.f - c.Value.w);
+        
+        window->DrawList->PathClear();
+        window->DrawList->PathLineTo(centre);
+        for (size_t i = 0; i < num_segments + 1; i++)
+        {
+          const float a = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f;
+          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+        }
+        window->DrawList->PathFillConvex(c);
+      }
+    }
+
     void SpinnerTwinBall(const char *label, float radius1, float radius2, float thickness, float b_thickness, const ImColor &ball = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t balls = 2)
     {
       float radius = ImMax(radius1, radius2);
@@ -1463,6 +1505,9 @@ namespace ImSpinner
 
       ImGui::SameLine(); 
       ImSpinner::SpinnerFilledArcFade("SpinnerFilledArcFade6", 16, ImColor(255, 255, 255), 8 * velocity, 12);
+
+      ImGui::SameLine(); 
+      ImSpinner::SpinnerFilledArcColor("SpinnerFilledArcColor", 16, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f, 4);
     }
 #endif // IMSPINNER_DEMO
 }
