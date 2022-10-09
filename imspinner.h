@@ -1319,6 +1319,42 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerCircleDrop(const char *label, float radius, float thickness, float thickness_drop, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI) 
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      window->DrawList->PathClear();
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+      float start = (float)ImGui::GetTime() * speed;
+      const float bg_angle_offset = IM_PI * 2.f / num_segments;
+
+      const float angle_offset = angle / num_segments;
+      const float th = thickness_drop / num_segments;
+      const float drop_radius_th = thickness_drop / num_segments;
+      for (size_t i = 0; i < num_segments; i++)
+      {
+        const float a = start + (i * angle_offset);
+        const float a1 = start + ((i + 1) * angle_offset);
+        const float s_drop_radius = radius - thickness / 2.f - (drop_radius_th * i);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * s_drop_radius, centre.y + ImSin(a) * s_drop_radius),
+                                  ImVec2(centre.x + ImCos(a1) * s_drop_radius, centre.y + ImSin(a1) * s_drop_radius),
+                                  color,
+                                  th * 2.f * i);
+      }
+      const float ai_end = start + (num_segments * angle_offset);
+      const float f_drop_radius = radius - thickness / 2.f - thickness_drop;
+      ImVec2 circle_i_center{centre.x + ImCos(ai_end) * f_drop_radius, centre.y + ImSin(ai_end) * f_drop_radius};
+      window->DrawList->AddCircleFilled(circle_i_center, thickness_drop, color, num_segments);
+
+      for (size_t i = 0; i <= num_segments; i++)
+      {
+        const float a = (i * bg_angle_offset);
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+      }
+      window->DrawList->PathStroke(bg, false, thickness);
+    }
+
     template<SpinnerTypeT Type, typename... Args>
     void Spinner(const char *label, const Args&... args)
     {
@@ -1514,6 +1550,9 @@ namespace ImSpinner
 
       ImGui::SameLine(); 
       ImSpinner::SpinnerFilledArcColor("SpinnerFilledArcColor", 16, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f, 4);
+
+      // Next line
+      ImSpinner::SpinnerCircleDrop("SpinnerCircleDrop", 16, 1.5f, 4.f, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f, IM_PI);
     }
 #endif // IMSPINNER_DEMO
 }
