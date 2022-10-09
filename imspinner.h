@@ -225,7 +225,7 @@ namespace ImSpinner
       window->DrawList->PathStroke(bg, false, thickness);
     }
 
-    void SpinnerDoubleFadePulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f)
+    void SpinnerDoubleFadePulsar(const char *label, float radius, float /*thickness*/, const ImColor &bg = 0xffffff80, float speed = 2.8f)
     {
       SPINNER_HEADER(pos, size, centre);
 
@@ -1014,8 +1014,8 @@ namespace ImSpinner
         window->DrawList->PathLineTo(centre);
         for (size_t i = 0; i <= num_segments + 1; i++)
         {
-          const float a = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f - IM_PI / 4.f;
-          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+          const float ar = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f - IM_PI / 4.f;
+          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
         }
         window->DrawList->PathFillConvex(c);
       }
@@ -1056,8 +1056,8 @@ namespace ImSpinner
         window->DrawList->PathLineTo(centre);
         for (size_t i = 0; i < num_segments + 1; i++)
         {
-          const float a = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f;
-          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+          const float ar = arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f;
+          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
         }
         window->DrawList->PathFillConvex(c);
       }
@@ -1209,6 +1209,9 @@ namespace ImSpinner
                                   colorI,
                                   th * i);
       }
+      const float ai_end = startI + (num_segments * angle_offset);
+      ImVec2 circle_i_center{centre.x + ImCos(ai_end) * radius, centre.y + ImSin(ai_end) * radius};
+      window->DrawList->AddCircleFilled(circle_i_center, thickness / 2.f, colorI, num_segments);
 
       const float rv = reverse ? -1.f : 1.f;
       const float yang_radius = (radius - yang_detlta_r);
@@ -1221,6 +1224,9 @@ namespace ImSpinner
                                   colorY,
                                   th * i);
       }
+      const float ay_end = startY + IM_PI + (num_segments * angle_offset);
+      ImVec2 circle_y_center{centre.x + ImCos(ay_end * rv) * yang_radius, centre.y + ImSin(ay_end * rv) * yang_radius};
+      window->DrawList->AddCircleFilled(circle_y_center, thickness / 2.f, colorY, num_segments);
     }
 
 
