@@ -1355,6 +1355,35 @@ namespace ImSpinner
       window->DrawList->PathStroke(bg, false, thickness);
     }
 
+    void SpinnerSurroundedIndicator(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f) 
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      window->DrawList->PathClear();
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+
+      ImColor c = color;
+      float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
+      c.Value.w = ImMax(0.1f, ImMin(lerp_koeff, 1.f));
+      window->DrawList->AddCircleFilled(centre, thickness, bg, num_segments);
+      window->DrawList->AddCircleFilled(centre, thickness, c, num_segments);
+
+      auto PathArc = [&] {
+        const float bg_angle_offset = IM_PI * 2.f / num_segments;
+        for (size_t i = 0; i <= num_segments; i++) {
+          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(i * bg_angle_offset) * radius, centre.y + ImSin(i * bg_angle_offset) * radius));
+        }
+      };
+      PathArc();
+      window->DrawList->PathStroke(bg, false, thickness);
+
+      PathArc();
+      lerp_koeff = (ImSin((float)ImGui::GetTime() * speed * 1.6f) + 1.f) * 0.5f;
+      c.Value.w = 1.f - ImMax(0.1f, ImMin(lerp_koeff, 1.f));;
+      window->DrawList->PathStroke(c, false, thickness);
+    }
+
     template<SpinnerTypeT Type, typename... Args>
     void Spinner(const char *label, const Args&... args)
     {
@@ -1527,32 +1556,35 @@ namespace ImSpinner
       ImGui::SameLine();
       ImSpinner::SpinnerTopup("SpinnerTopup", 16, 12, ImColor(255, 0, 0), ImColor(80, 80, 80), ImColor(255, 255, 255), 1 * velocity);
 
-      ImGui::SameLine(); 
+      ImGui::SameLine();
       ImSpinner::SpinnerFadePulsar("SpinnerFadePulsar", 16, ImColor(255, 255, 255), 1.5f * velocity, 1);
 
-      ImGui::SameLine(); 
+      ImGui::SameLine();
       ImSpinner::SpinnerFadePulsar("SpinnerFadePulsar2", 16, ImColor(255, 255, 255), 0.9f * velocity, 2);
 
-      ImGui::SameLine(); 
+      ImGui::SameLine();
       ImSpinner::SpinnerPulsar("SpinnerPulsar", 16, 2, ImColor(255, 255, 255), 1 * velocity, false);
 
-      ImGui::SameLine(); 
+      ImGui::SameLine();
       ImSpinner::SpinnerDoubleFadePulsar("SpinnerDoubleFadePulsar", 16, 2, ImColor(255, 255, 255), 2 * velocity);
 
-      ImGui::SameLine(); 
+      ImGui::SameLine();
       ImSpinner::SpinnerFilledArcFade("SpinnerFilledArcFade", 16, ImColor(255, 255, 255), 4 * velocity, 4);
 
-      ImGui::SameLine(); 
+      ImGui::SameLine();
       ImSpinner::SpinnerFilledArcFade("SpinnerFilledArcFade6", 16, ImColor(255, 255, 255), 6 * velocity, 6);
 
-      ImGui::SameLine(); 
+      ImGui::SameLine();
       ImSpinner::SpinnerFilledArcFade("SpinnerFilledArcFade6", 16, ImColor(255, 255, 255), 8 * velocity, 12);
 
-      ImGui::SameLine(); 
-      ImSpinner::SpinnerFilledArcColor("SpinnerFilledArcColor", 16, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f, 4);
+      ImGui::SameLine();
+      ImSpinner::SpinnerFilledArcColor("SpinnerFilledArcColor", 16, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f * velocity, 4);
 
       // Next line
-      ImSpinner::SpinnerCircleDrop("SpinnerCircleDrop", 16, 1.5f, 4.f, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f, IM_PI);
+      ImSpinner::SpinnerCircleDrop("SpinnerCircleDrop", 16, 1.5f, 4.f, ImColor(255, 0, 0), ImColor(255, 255, 255), 2.8f * velocity, IM_PI);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerSurroundedIndicator("SpinnerSurroundedIndicator", 16, 5, ImColor(0, 0, 0), ImColor(255, 255, 255), 7.8f * velocity);
     }
 #endif // IMSPINNER_DEMO
 }
