@@ -27,6 +27,7 @@
  */
 
 #include <functional>
+#include <array>
 
 namespace ImSpinner
 {
@@ -764,11 +765,11 @@ namespace ImSpinner
       SPINNER_HEADER(pos, size, centre);
 
       // Render
+      dots = ImMin<size_t>(dots, 32);
       float start = (float)ImGui::GetTime() * speed;
       float astart = ImFmod(start, IM_PI / dots);
       start -= astart;
       const float bg_angle_offset = IM_PI / dots;
-      dots = ImMin<size_t>(dots, 32);
 
       for (size_t i = 0; i < dots * 2; i++)
       {
@@ -1384,6 +1385,61 @@ namespace ImSpinner
       window->DrawList->PathStroke(c, false, thickness);
     }
 
+    void SpinnerTrianglesSeletor(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t bars = 8) 
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      window->DrawList->PathClear();
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+
+      ImColor c = color;
+      float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
+      c.Value.w = ImMax(0.1f, ImMin(lerp_koeff, 1.f));
+      float dr = radius - thickness - 3;
+      window->DrawList->AddCircleFilled(centre, dr, bg, num_segments);
+      window->DrawList->AddCircleFilled(centre, dr, c, num_segments);
+
+      // Render
+      float start = (float)ImGui::GetTime() * speed;
+      float astart = ImFmod(start, IM_PI * 2 / bars);
+      start -= astart;
+      const float angle_offset = IM_PI * 2 / bars;
+      const float angle_offset_t = angle_offset * 0.3f;
+      bars = ImMin<size_t>(bars, 32);
+
+      const float rmin = radius - thickness;
+      auto get_points = [&] (auto left, auto right) -> std::array<ImVec2, 4> {
+        return {
+          ImVec2(centre.x + ImCos(left) * rmin, centre.y + ImSin(left) * rmin),
+          ImVec2(centre.x + ImCos(left) * radius, centre.y + ImSin(left) * radius),
+          ImVec2(centre.x + ImCos(right) * radius, centre.y + ImSin(right) * radius),
+          ImVec2(centre.x + ImCos(right) * rmin, centre.y + ImSin(right) * rmin)
+        };
+      };
+
+      for (size_t i = 0; i <= bars; i++)
+      {
+        float left = (i * angle_offset) - angle_offset_t;
+        float right = (i * angle_offset) + angle_offset_t;
+        ImColor rc = bg;
+        rc.Value.w = 0.1f;
+        auto points = get_points(left, right);
+        window->DrawList->AddConvexPolyFilled(points.data(), 4, rc);
+      }
+
+
+      for (size_t i = 0; i < bars; i++)
+      {
+        float left = start + (i * angle_offset) - angle_offset_t;
+        float right = start + (i * angle_offset) + angle_offset_t;
+        ImColor rc = bg;
+        rc.Value.w = (i / (float)bars) - 0.5f;
+        auto points = get_points(left, right);
+        window->DrawList->AddConvexPolyFilled(points.data(), 4, rc);
+      }
+    }
+
     template<SpinnerTypeT Type, typename... Args>
     void Spinner(const char *label, const Args&... args)
     {
@@ -1585,6 +1641,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerSurroundedIndicator("SpinnerSurroundedIndicator", 16, 5, ImColor(0, 0, 0), ImColor(255, 255, 255), 7.8f * velocity);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerTrianglesSeletor("SpinnerTrianglesSeletor", 16, 8, ImColor(0, 0, 0), ImColor(255, 255, 255), 4.8f * velocity, 8);
     }
 #endif // IMSPINNER_DEMO
 }
