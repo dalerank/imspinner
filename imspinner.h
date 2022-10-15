@@ -1437,6 +1437,44 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerFlowingGradient(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+      float start = (float)ImGui::GetTime()* speed;
+
+      const float angle_offset = (angle * 0.5f) / num_segments;
+      const float bg_angle_offset = (IM_PI * 2.f) / num_segments;
+      const float th = thickness / num_segments;
+
+      for (size_t i = 0; i <= num_segments; i++)
+      {
+        const float a = (i * bg_angle_offset);
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+      }
+      window->DrawList->PathStroke(bg, false, thickness);
+
+      auto draw_gradient = [&] (auto b, auto e, auto c) {
+        for (size_t i = 0; i < num_segments; i++)
+        {
+          window->DrawList->AddLine(ImVec2(centre.x + ImCos(start + b(i)) * radius, centre.y + ImSin(start + b(i)) * radius),
+                                    ImVec2(centre.x + ImCos(start + e(i)) * radius, centre.y + ImSin(start + e(i)) * radius),
+                                    c(i),
+                                    thickness);
+        }
+      };
+
+      draw_gradient([&] (auto i) { return (i) * angle_offset; },
+                    [&] (auto i) { return (i + 1) * angle_offset; },
+                    [&] (auto i) { ImColor rc = color; rc.Value.w = (i / (float)num_segments); return rc; });
+
+      draw_gradient([&] (auto i) { return (num_segments + i) * angle_offset; },
+                    [&] (auto i) { return (num_segments + i + 1) * angle_offset; },
+                    [&] (auto i) { ImColor rc = color; rc.Value.w = 1.f - (i / (float)num_segments); return rc; });
+    }
+
 #ifdef IMSPINNER_DEMO
     void demoSpinners() {
 
@@ -1622,6 +1660,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerTrianglesSeletor("SpinnerTrianglesSeletor", 16, 8, ImColor(0, 0, 0), ImColor(255, 255, 255), 4.8f * velocity, 8);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerFlowingGradient("SpinnerFlowingFradient", 16, 6, ImColor(200, 80, 0), ImColor(80, 80, 80), 5 * velocity, IM_PI * 2.f);
     }
 #endif // IMSPINNER_DEMO
 }
