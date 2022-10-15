@@ -1278,46 +1278,33 @@ namespace ImSpinner
 
       window->DrawList->AddCircleFilled(centre, radius, bg, num_segments);
 
-      for (size_t i = 0; i < num_segments; i++)
-      {
-        const float a = start + ((num_segments + i) * angle_offset);
-        const float a1 = start + ((num_segments + i + 1) * angle_offset);
-        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
-                                  ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
-                                  color,
-                                  thickness - th * i);
-      }
+      auto draw_gradient = [&] (auto b, auto e, auto th) {
+        for (size_t i = 0; i < num_segments; i++)
+        {
+          window->DrawList->AddLine(ImVec2(centre.x + ImCos(start + b(i)) * radius, centre.y + ImSin(start + b(i)) * radius),
+                                    ImVec2(centre.x + ImCos(start + e(i)) * radius, centre.y + ImSin(start + e(i)) * radius),
+                                    color,
+                                    th(i));
+        }
 
-      for (size_t i = 0; i < num_segments; i++)
-      {
-        const float a = start + (i * angle_offset);
-        const float a1 = start + ((i+1) * angle_offset);
-        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
-                                  ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
-                                  color,
-                                  th * i);
-      }
+      };
 
-      for (size_t i = 0; i < num_segments; i++)
-      {
-        const float a = start + ((num_segments + i) * angle_offset);
-        const float a1 = start + ((num_segments + i + 1) * angle_offset);
-        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
-                                  ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
-                                  color,
-                                  thickness - th * i);
-      }
+      draw_gradient([&] (auto i) { return (num_segments + i) * angle_offset; },
+                    [&] (auto i) { return (num_segments + i + 1) * angle_offset; },
+                    [&] (auto i) { return thickness - th * i; });
 
-      const float b_angle_offset = (2.f * IM_PI - angle) / num_segments;
-      for (size_t i = 0; i < num_segments; i++)
-      {
-        const float a = start + num_segments * angle_offset * 2.f + (i * b_angle_offset);
-        const float a1 = start + num_segments * angle_offset * 2.f + ((i + 1) * b_angle_offset);
-        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
-                                  ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
-                                  color,
-                                  1.f);
-      }
+      draw_gradient([&] (auto i) { return (i) * angle_offset; },
+                    [&] (auto i) { return (i + 1) * angle_offset; },
+                    [&] (auto i) { return th * i; });
+
+      draw_gradient([&] (auto i) { return (num_segments + i) * angle_offset; },
+                    [&] (auto i) { return (num_segments + i + 1) * angle_offset; },
+                    [&] (auto i) { return thickness - th * i; });
+
+      const float b_angle_offset = (2.f * IM_PI - angle) / num_segments; 
+      draw_gradient([&] (auto i) { return num_segments * angle_offset * 2.f + (i * b_angle_offset); },
+                    [&] (auto i) { return num_segments * angle_offset * 2.f + ((i + 1) * b_angle_offset); },
+                    [] (auto) { return 1.f; });
     }
 
     void SpinnerCircleDrop(const char *label, float radius, float thickness, float thickness_drop, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI) 
@@ -1427,7 +1414,7 @@ namespace ImSpinner
         }
       };
 
-      draw_sectors(0, [&] (auto i) { ImColor rc = bg; rc.Value.w = 0.1f; return rc; });
+      draw_sectors(0, [&] (auto) { ImColor rc = bg; rc.Value.w = 0.1f; return rc; });
       draw_sectors(start, [&] (auto i) { ImColor rc = bg; rc.Value.w = (i / (float)bars) - 0.5f; return rc; });
     }
 
