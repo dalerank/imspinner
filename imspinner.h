@@ -1418,26 +1418,17 @@ namespace ImSpinner
         };
       };
 
-      for (size_t i = 0; i <= bars; i++)
-      {
-        float left = (i * angle_offset) - angle_offset_t;
-        float right = (i * angle_offset) + angle_offset_t;
-        ImColor rc = bg;
-        rc.Value.w = 0.1f;
-        auto points = get_points(left, right);
-        window->DrawList->AddConvexPolyFilled(points.data(), 4, rc);
-      }
+      auto draw_sectors = [&] (auto s, auto color_func) {
+        for (size_t i = 0; i <= bars; i++) {
+          float left = s + (i * angle_offset) - angle_offset_t;
+          float right = s + (i * angle_offset) + angle_offset_t;
+          auto points = get_points(left, right);
+          window->DrawList->AddConvexPolyFilled(points.data(), 4, color_func(i));
+        }
+      };
 
-
-      for (size_t i = 0; i < bars; i++)
-      {
-        float left = start + (i * angle_offset) - angle_offset_t;
-        float right = start + (i * angle_offset) + angle_offset_t;
-        ImColor rc = bg;
-        rc.Value.w = (i / (float)bars) - 0.5f;
-        auto points = get_points(left, right);
-        window->DrawList->AddConvexPolyFilled(points.data(), 4, rc);
-      }
+      draw_sectors(0, [&] (auto i) { ImColor rc = bg; rc.Value.w = 0.1f; return rc; });
+      draw_sectors(start, [&] (auto i) { ImColor rc = bg; rc.Value.w = (i / (float)bars) - 0.5f; return rc; });
     }
 
     template<SpinnerTypeT Type, typename... Args>
