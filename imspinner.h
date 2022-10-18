@@ -1475,6 +1475,28 @@ namespace ImSpinner
                     [&] (auto i) { ImColor rc = color; rc.Value.w = 1.f - (i / (float)num_segments); return rc; });
     }
 
+    void SpinnerRotateSegments(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius) / 2;
+      float start = (float)ImGui::GetTime()* speed;
+
+      float arc_angle = 2.f * IM_PI / (float)arcs;
+      const float angle_offset = arc_angle / num_segments;
+      for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+      {
+        window->DrawList->PathClear();
+        for (size_t i = 2; i <= num_segments - 2; i++)
+        {
+          const float a = start + arc_angle * arc_num + (i * angle_offset);
+          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+        }
+        window->DrawList->PathStroke(color, false, thickness);
+      }
+    }
+
 #ifdef IMSPINNER_DEMO
     void demoSpinners() {
 
@@ -1663,6 +1685,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerFlowingGradient("SpinnerFlowingFradient", 16, 6, ImColor(200, 80, 0), ImColor(80, 80, 80), 5 * velocity, IM_PI * 2.f);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerRotateSegments("SpinnerRotateSegments", 16, 4, ImColor(255, 255, 255), 3 * velocity, 4);
     }
 #endif // IMSPINNER_DEMO
 }
