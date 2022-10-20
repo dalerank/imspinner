@@ -1505,6 +1505,38 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerLemniscate(const char* label, float radius, float thickness, const ImColor& color = 0xffffffff, float speed = 2.8f, float angle = IM_PI / 2.0f)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+      const float start = (float)ImGui::GetTime() * speed;
+      const float a = radius;
+      const float t = start;
+      const float step = angle / num_segments;
+      const float th = thickness / num_segments;
+
+      /*
+          x = a cos(t) / 1 + sin²(t)
+          y = a sin(t) . cos(t) / 1 + sin²(t)
+      */
+      const auto get_coord = [&](float const& a, float const& t) -> auto {
+          return std::make_pair((a * std::cosf(t)) / (1 + (std::powf(std::sinf(t), 2.0f))), (a * std::sinf(t) * std::cosf(t)) / (1 + (std::powf(std::sinf(t), 2.0f))));
+      };
+
+      for (size_t i = 0; i < num_segments; i++)
+      {
+          const auto [x0, y0] = get_coord(a, start + (i * step));
+          const auto [x1, y1] = get_coord(a, start + ((i + 1) * step));
+      
+          window->DrawList->AddLine(ImVec2(centre.x + x0, centre.y + y0),
+              ImVec2(centre.x + x1, centre.y + y1),
+              color,
+              th * i);
+      }
+    }
+
 #ifdef IMSPINNER_DEMO
     void demoSpinners() {
 
@@ -1702,6 +1734,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerRotateSegments("SpinnerRotateSegments3", 16, 2, ImColor(255, 255, 255), 2.1 * velocity, 4, 3);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerLemniscate("SpinnerLemniscate", 20, 3, ImColor(255, 255, 255), 2.1 * velocity, 3);
     }
 #endif // IMSPINNER_DEMO
 }
