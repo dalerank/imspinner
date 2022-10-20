@@ -1537,6 +1537,33 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerRotateGear(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int pins = 12)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      // Render
+      window->DrawList->PathClear();
+      const size_t num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
+      float start = (float)ImGui::GetTime()* speed;
+      const float bg_angle_offset = IM_PI * 2.f / num_segments;
+      const float bg_radius = radius - thickness;
+      for (size_t i = 0; i <= num_segments; i++)
+      {
+        const float a = (i * bg_angle_offset);
+        window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * bg_radius, centre.y + ImSin(a) * bg_radius));
+      }
+      window->DrawList->PathStroke(color, false, bg_radius / 2);
+
+      const float rmin = bg_radius;
+      const float rmax = radius;
+      const float pin_angle_offset = IM_PI * 2.f / pins;
+      for (size_t i = 0; i <= pins; i++)
+      {
+        float a = start + (i * pin_angle_offset);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin), ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax), color, thickness);
+      }
+    }
+
 #ifdef IMSPINNER_DEMO
     void demoSpinners() {
 
@@ -1737,6 +1764,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerLemniscate("SpinnerLemniscate", 20, 3, ImColor(255, 255, 255), 2.1f * velocity, 3);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerRotateGear("SpinnerRotateGear", 16, 6, ImColor(255, 255, 255), 2.1f * velocity, 8);
     }
 #endif // IMSPINNER_DEMO
 }
