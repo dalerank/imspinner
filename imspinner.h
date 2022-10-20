@@ -1494,7 +1494,7 @@ namespace ImSpinner
           window->DrawList->PathClear();
           for (size_t i = 2; i <= num_segments - 2; i++)
           {
-            const float a = start * (1 + 0.1 * layer) + arc_angle * arc_num + (i * angle_offset);
+            const float a = start * (1 + 0.1f * layer) + arc_angle * arc_num + (i * angle_offset);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a * reverse) * r, centre.y + ImSin(a * reverse) * r));
           }
           window->DrawList->PathStroke(color, false, thickness);
@@ -1522,16 +1522,16 @@ namespace ImSpinner
           y = a sin(t) . cos(t) / 1 + sin²(t)
       */
       const auto get_coord = [&](float const& a, float const& t) -> auto {
-          return std::make_pair((a * std::cosf(t)) / (1 + (std::powf(std::sinf(t), 2.0f))), (a * std::sinf(t) * std::cosf(t)) / (1 + (std::powf(std::sinf(t), 2.0f))));
+          return std::make_pair((a * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))), (a * ImSin(t) * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))));
       };
 
       for (size_t i = 0; i < num_segments; i++)
       {
-          const auto [x0, y0] = get_coord(a, start + (i * step));
-          const auto [x1, y1] = get_coord(a, start + ((i + 1) * step));
+          const auto xy0 = get_coord(a, start + (i * step));
+          const auto xy1 = get_coord(a, start + ((i + 1) * step));
       
-          window->DrawList->AddLine(ImVec2(centre.x + x0, centre.y + y0),
-              ImVec2(centre.x + x1, centre.y + y1),
+          window->DrawList->AddLine(ImVec2(centre.x + xy0.first, centre.y + xy0.second),
+              ImVec2(centre.x + xy1.first, centre.y + xy1.second),
               color,
               th * i);
       }
@@ -1730,13 +1730,13 @@ namespace ImSpinner
       ImSpinner::SpinnerRotateSegments("SpinnerRotateSegments", 16, 4, ImColor(255, 255, 255), 3 * velocity, 4);
 
       ImGui::SameLine();
-      ImSpinner::SpinnerRotateSegments("SpinnerRotateSegments2", 16, 3, ImColor(255, 255, 255), 2.4 * velocity, 4, 2);
+      ImSpinner::SpinnerRotateSegments("SpinnerRotateSegments2", 16, 3, ImColor(255, 255, 255), 2.4f * velocity, 4, 2);
 
       ImGui::SameLine();
-      ImSpinner::SpinnerRotateSegments("SpinnerRotateSegments3", 16, 2, ImColor(255, 255, 255), 2.1 * velocity, 4, 3);
+      ImSpinner::SpinnerRotateSegments("SpinnerRotateSegments3", 16, 2, ImColor(255, 255, 255), 2.1f * velocity, 4, 3);
 
       ImGui::SameLine();
-      ImSpinner::SpinnerLemniscate("SpinnerLemniscate", 20, 3, ImColor(255, 255, 255), 2.1 * velocity, 3);
+      ImSpinner::SpinnerLemniscate("SpinnerLemniscate", 20, 3, ImColor(255, 255, 255), 2.1f * velocity, 3);
     }
 #endif // IMSPINNER_DEMO
 }
