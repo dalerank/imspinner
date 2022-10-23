@@ -1537,7 +1537,7 @@ namespace ImSpinner
       }
     }
 
-    void SpinnerRotateGear(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int pins = 12)
+    void SpinnerRotateGear(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t pins = 12)
     {
       SPINNER_HEADER(pos, size, centre);
 
@@ -1561,6 +1561,38 @@ namespace ImSpinner
       {
         float a = start + (i * pin_angle_offset);
         window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin), ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax), color, thickness);
+      }
+    }
+
+    void SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      const size_t num_segments = ImMin(36, window->DrawList->_CalcCircleAutoSegmentCount(radius));
+      float start = (float)ImGui::GetTime()* speed;
+
+      auto draw_rotated_ellipse = [&] (float alpha) {
+        std::array<ImVec2, 36> pts;
+
+        alpha = ImFmod(alpha, IM_PI);
+        float a = radius;
+        float b = radius / 2.f; 
+
+        const float bg_angle_offset = IM_PI * 2.f / num_segments;
+        for (size_t i = 0; i < num_segments; ++i) {
+          float anga = (i * bg_angle_offset);
+
+          pts[i].x = a * cos(anga) * cos(alpha) + b * sin(anga) * sin(alpha) + centre.x;
+          pts[i].y = b * sin(anga) * cos(alpha) - a * cos(anga) * sin(alpha) + centre.y;
+        }
+        for (size_t i = 1; i < num_segments; ++i) {
+          window->DrawList->AddLine(pts[i-1], pts[i], color, thickness);
+        }
+        window->DrawList->AddLine(pts[num_segments-1], pts[0], color, thickness);
+      };
+
+      for (int i = 0; i < elipses; ++i) {
+        draw_rotated_ellipse(start + (IM_PI * (float)i/ elipses));
       }
     }
 
@@ -1767,6 +1799,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerRotateGear("SpinnerRotateGear", 16, 6, ImColor(255, 255, 255), 2.1f * velocity, 8);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerRotatedAtom("SpinnerRotatedAtom", 16, 2, ImColor(255, 255, 255), 2.1f * velocity, 3);
     }
 #endif // IMSPINNER_DEMO
 }
