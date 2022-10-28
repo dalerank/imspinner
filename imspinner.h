@@ -1564,6 +1564,50 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerAtom(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      const size_t num_segments = ImMin(36, window->DrawList->_CalcCircleAutoSegmentCount(radius));
+      float start = (float)ImGui::GetTime()* speed;
+      elipses = std::min<int>(elipses, 3);
+
+      auto draw_rotated_ellipse = [&] (float alpha, float start) {
+        std::array<ImVec2, 36> pts;
+
+        alpha = ImFmod(alpha, IM_PI);
+        float a = radius;
+        float b = radius / 2.f; 
+
+        const float bg_angle_offset = IM_PI * 2.f / num_segments;
+        for (size_t i = 0; i < num_segments; ++i) {
+          float anga = (i * bg_angle_offset);
+
+          pts[i].x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+          pts[i].y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
+        }
+        for (size_t i = 1; i < num_segments; ++i) {
+          window->DrawList->AddLine(pts[i-1], pts[i], color, thickness);
+        }
+        window->DrawList->AddLine(pts[num_segments-1], pts[0], color, thickness);
+
+        float anga = ImFmod(start, IM_PI * 2);
+        float x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+        float y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
+        return ImVec2{x, y};
+      };
+
+      ImVec2 ppos[3];
+      for (int i = 0; i < elipses; ++i) {
+        ppos[i % 3] = draw_rotated_ellipse((IM_PI * (float)i/ elipses), start * (1 + 0.1 * i));
+      }
+
+      ImColor pcolors[3] = {ImColor(255, 0, 0), ImColor(0, 255, 0), ImColor(0, 0, 255)};
+      for (int i = 0; i < elipses; ++i) {
+        window->DrawList->AddCircleFilled(ppos[i], thickness * 2, pcolors[i], num_segments / 3);
+      }
+    }
+
     void SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
     {
       SPINNER_HEADER(pos, size, centre);
@@ -1582,8 +1626,8 @@ namespace ImSpinner
         for (size_t i = 0; i < num_segments; ++i) {
           float anga = (i * bg_angle_offset);
 
-          pts[i].x = a * cos(anga) * cos(alpha) + b * sin(anga) * sin(alpha) + centre.x;
-          pts[i].y = b * sin(anga) * cos(alpha) - a * cos(anga) * sin(alpha) + centre.y;
+          pts[i].x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+          pts[i].y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
         }
         for (size_t i = 1; i < num_segments; ++i) {
           window->DrawList->AddLine(pts[i-1], pts[i], color, thickness);
@@ -1802,6 +1846,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerRotatedAtom("SpinnerRotatedAtom", 16, 2, ImColor(255, 255, 255), 2.1f * velocity, 3);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerAtom("SpinnerAtom", 16, 2, ImColor(255, 255, 255), 4.1f * velocity, 3);
     }
 #endif // IMSPINNER_DEMO
 }
