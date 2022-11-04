@@ -1662,7 +1662,7 @@ namespace ImSpinner
       }
     }
 
-    void SpinnerBarChartSine(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5)
+    void SpinnerBarChartSine(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre);
 
@@ -1681,9 +1681,37 @@ namespace ImSpinner
         float a = start + (IM_PI - i * offset);
         ImColor c = color;
         c.Value.w = ImMax(0.1f, ImSin(a * heightSpeed));
-        float h = (0.6f + 0.4f * c.Value.w) * size.y;
-        window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) - thickness / 2, centre.y + size.y / 2.f),
-                                        ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + size.y / 2.f - h * yOffsetKoeftt), c);
+        float h = mode ? ImSin(a) * size.y / 2.f
+                       : (0.6f + 0.4f * c.Value.w) * size.y;
+        float halfs = mode ? 0 : size.y / 2.f;
+        window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) - thickness / 2, centre.y + halfs),
+                                        ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + halfs - h * yOffsetKoeftt), c);
+      }
+    }
+
+    void SpinnerBarChartRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre);
+
+      ImGuiContext &g = *GImGui;
+      const ImGuiStyle &style = g.Style;
+      const float nextItemKoeff = 1.5f;
+      const float yOffsetKoeftt = 0.8f;
+      const float heightSpeed = 0.8f;
+
+      // Render
+      float start = (float)ImGui::GetTime() * speed;
+
+      const float offset = IM_PI / bars;
+      for (int i = 0; i < bars; i++)
+      {
+        float a = start + (IM_PI - i * offset);
+        ImColor c = color;
+        c.Value.w = ImMax(0.1f, ImSin(a * heightSpeed));
+        float h = mode ? ImSin(a) * size.y / 2.f : (0.6f + 0.4f * c.Value.w) * size.y;
+        float halfs = mode ? 0 : size.y / 2.f ;
+        window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) - thickness / 2, centre.y + halfs),
+                                        ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + halfs - h * yOffsetKoeftt), c);
       }
     }
 
@@ -1720,7 +1748,7 @@ namespace ImSpinner
       ImSpinner::SpinnerIngYang("SpinnerIngYang", 16, 5, false, 0, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
 
       ImGui::SameLine();
-      ImSpinner::SpinnerBarChartSine("SpinnerBarChartSine", 16, 4, ImColor(255, 255, 255), 6.8f * velocity, 4);
+      ImSpinner::SpinnerBarChartSine("SpinnerBarChartSine", 16, 4, ImColor(255, 255, 255), 6.8f * velocity, 4, 0);
 
       // Next Line
       ImSpinner::SpinnerBounceDots("SpinnerBounceDots", 6, ImColor(255, 255, 255), 6 * velocity, 3);
@@ -1745,6 +1773,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerIngYang("SpinnerIngYangR", 16, 5, true, 0.1f, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerBarChartSine("SpinnerBarChartSine2", 16, 4, ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 4.8f * velocity, 4, 1);
 
       // next line
       ImSpinner::SpinnerTwinAng180("SpinnerTwinAng", 16, 12, 4, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity);
