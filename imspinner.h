@@ -1689,7 +1689,7 @@ namespace ImSpinner
       }
     }
 
-    void SpinnerBarChartRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5, int mode = 0)
+    void SpinnerBarChartRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5)
     {
       SPINNER_HEADER(pos, size, centre);
 
@@ -1702,16 +1702,16 @@ namespace ImSpinner
       // Render
       float start = (float)ImGui::GetTime() * speed;
 
-      const float offset = IM_PI / bars;
+      const float hspeed = 0.1f + ImSin((float)ImGui::GetTime() * 0.1f) * 0.05f;
+      constexpr float rkoeff[6] = {4.f, 13.f, 3.4f, 8.7f, 25.f, 11.f};
+      float out_h, out_s, out_v;
+      ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
       for (int i = 0; i < bars; i++)
       {
-        float a = start + (IM_PI - i * offset);
-        ImColor c = color;
-        c.Value.w = ImMax(0.1f, ImSin(a * heightSpeed));
-        float h = mode ? ImSin(a) * size.y / 2.f : (0.6f + 0.4f * c.Value.w) * size.y;
-        float halfs = mode ? 0 : size.y / 2.f ;
-        window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) - thickness / 2, centre.y + halfs),
-                                        ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + halfs - h * yOffsetKoeftt), c);
+        ImColor c = ImColor::HSV(out_h + i * 0.1, out_s, out_v);
+        float h = (0.6f + 0.4f * ImSin(start + (1.f + rkoeff[i % 6] * i * hspeed)) ) * size.y;
+        window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) - thickness / 2, centre.y + size.y / 2.f),
+                                        ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + size.y / 2.f - h * yOffsetKoeftt), c);
       }
     }
 
@@ -1807,6 +1807,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerIngYang("SpinnerIngYangR2", 16, 5, true, 3.f, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerBarChartRainbow("SpinnerBarChartRainbow", 16, 4, ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), 6.8f * velocity, 4);
 
       // Next line
       ImSpinner::SpinnerBarsRotateFade("SpinnerBarsRotateFade", 8, 18, 4, ImColor(255, 255, 255), 7.6f, 6);
