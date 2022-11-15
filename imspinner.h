@@ -38,6 +38,7 @@ namespace ImSpinner
       e_st_dots,
       e_st_ang,
       e_st_vdots,
+      e_st_bounce_ball,
 
       e_st_count
     };
@@ -1439,7 +1440,8 @@ namespace ImSpinner
         { e_st_angle,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
         { e_st_dots,    [] (const char *label, const detail::SpinnerConfig &c) { SpinnerDots(label, c.m_FloatPtr, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_Dots, c.m_MiddleDots, c.m_MinThickness); } },
         { e_st_ang,     [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
-        { e_st_vdots,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerVDots(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Dots); } }
+        { e_st_vdots,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerVDots(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Dots); } },
+        { e_st_bounce_ball, [](const char *label,const detail::SpinnerConfig &c) { SpinnerBounceBall(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } }
       };
 
       detail::SpinnerConfig config(SpinnerType{Type}, args...);
@@ -1747,6 +1749,34 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerFluid(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 3)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      ImGuiContext &g = *GImGui;
+      const ImGuiStyle &style = g.Style;
+      const float nextItemKoeff = 1.5f;
+      const float heightSpeed = 0.8f;
+
+      // Render
+      const float hspeed = 0.1f + ImSin((float)ImGui::GetTime() * 0.1f) * 0.05f;
+      constexpr float rkoeff[6][3] = {{0.15f, 0.1f, 0.1f}, {0.033f, 0.15f, 0.8f}, {0.017f, 0.25f, 0.6f}, {0.037f, 0.1f, 0.4f}, {0.25f, 0.1f, 0.3f}, {0.11f, 0.1f, 0.2f}};
+      const float i_k = radius / bars;
+      const float j_k = radius * 2.f / num_segments;
+      float out_h, out_s, out_v;
+      ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+      for (int i = 0; i < bars; i++)
+      {
+        ImColor c = ImColor::HSV(out_h - i * 0.1f, out_s, out_v);
+        c.Value.w = rkoeff[i % 6][1];
+        for (int j = 0; j < num_segments; ++j) {
+          float h = (0.6f + 0.3f * ImSin(ImGui::GetTime() * (speed * rkoeff[i % 6][2] * 2.f) + (2 * rkoeff[i % 6][0] * j * j_k))) * (radius * 2.f * rkoeff[i][2]);
+          window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + j * j_k, centre.y + size.y / 2.f),
+                                          ImVec2(pos.x + style.FramePadding.x + (j + 1) * (j_k), centre.y + size.y / 2.f - h), c);
+        }
+      }
+    }
+
 #ifdef IMSPINNER_DEMO
     void demoSpinners() {
 
@@ -1763,14 +1793,12 @@ namespace ImSpinner
       ImSpinner::Spinner<e_st_dots>   ("SpinnerDots",       Radius{16},   Thickness{4},   Color{ImColor(255, 255, 255)}, FloatPtr{&nextdot}, Speed{1 * velocity}, Dots{12}, MiddleDots{6}, MinThickness{-1.f}); ImGui::SameLine();
       ImSpinner::Spinner<e_st_ang>    ("SpinnerAngNoBg",    Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 0)}, Speed{6 * velocity}, Angle{IM_PI}); ImGui::SameLine();
       ImSpinner::Spinner<e_st_ang>    ("SpinnerAng270",     Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 128)}, Speed{6 * velocity}, Angle{270.f / 360.f * 2 * IM_PI}); ImGui::SameLine();
-      ImSpinner::Spinner<e_st_ang>    ("SpinnerAng270NoBg", Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 0)}, Speed{6 * velocity}, Angle{270.f / 360.f * 2 * IM_PI}); ImGui::SameLine();      
-      ImSpinner::Spinner<e_st_vdots>  ("SpinnerVDots",      Radius{16.f}, Thickness{4.f}, Color{ImColor::HSV(hue * 0.001f, 0.8f, 0.8f)}, BgColor{ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f)}, Speed{2.7f * velocity}, Dots{12}, MiddleDots{6});
-
-      ImGui::SameLine(); ImGui::Dummy({10, 0}); ImGui::SameLine();
-      ImSpinner::SpinnerBounceBall("SpinnerBounceBall", 16, 6, ImColor(255, 255, 255), 4 * velocity);
+      ImSpinner::Spinner<e_st_ang>    ("SpinnerAng270NoBg", Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 0)}, Speed{6 * velocity}, Angle{270.f / 360.f * 2 * IM_PI}); ImGui::SameLine();
+      ImSpinner::Spinner<e_st_vdots>  ("SpinnerVDots",      Radius{16.f}, Thickness{4.f}, Color{ImColor::HSV(hue * 0.001f, 0.8f, 0.8f)}, BgColor{ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f)}, Speed{2.7f * velocity}, Dots{12}, MiddleDots{6}); ImGui::SameLine();
+      ImSpinner::Spinner<e_st_bounce_ball>("SpinnerBounceBall", Radius{16.f}, Thickness{6.f}, Color{ImColor(255, 255, 255)}, Speed{4 * velocity});
 
       ImGui::SameLine();
-      ImSpinner::SpinnerAngEclipse("SpinnerAng", 16, 5, ImColor(255, 255, 255), 6 * velocity);
+      ImSpinner::SpinnerAngEclipse("SpinnerAngEclipse", 16, 5, ImColor(255, 255, 255), 6 * velocity);
 
       ImGui::SameLine();
       ImSpinner::SpinnerIngYang("SpinnerIngYang", 16, 5, false, 0, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
@@ -1898,6 +1926,9 @@ namespace ImSpinner
 
       ImGui::SameLine();
       ImSpinner::SpinnerArcRotation("SpinnerArcRotation", 13, 5, ImColor(255, 255, 255), 3 * velocity, 4);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerFluid("SpinnerFluid", 16, 4, ImColor(0, 0, 255), 3.8f * velocity, 4);
 
       // Next line
       ImSpinner::SpinnerArcFade("SpinnerArcFade", 13, 5, ImColor(255, 255, 255), 3 * velocity, 4);
