@@ -118,13 +118,11 @@ namespace ImSpinner
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
-        // Render
-        window->DrawList->PathClear();
-        float start = ImAbs(ImSin((float)ImGui::GetTime() * 1.8f) * (num_segments - 5));
-
+        const float start = ImAbs(ImSin((float)ImGui::GetTime() * 1.8f) * (num_segments - 5));
         const float a_min = IM_PI * 2.0f * ((float)start) / (float)num_segments;
         const float a_max = IM_PI * 2.0f * ((float)num_segments - 3) / (float)num_segments;
 
+        window->DrawList->PathClear();
         for (size_t i = 0; i < num_segments; i++)
         {
             const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
@@ -138,10 +136,10 @@ namespace ImSpinner
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
-        // Render
-        window->DrawList->PathClear();
-        float start = (float)ImGui::GetTime()* speed;
+        const float start = (float)ImGui::GetTime()* speed;
         const float bg_angle_offset = IM_PI * 2.f / num_segments;
+
+        window->DrawList->PathClear();
         for (size_t i = 0; i <= num_segments; i++)
         {
             const float a = start + (i * bg_angle_offset);
@@ -158,20 +156,15 @@ namespace ImSpinner
         }
         window->DrawList->PathStroke(color, false, thickness);
     }
-    /*auto is_between = [] (float start, float end, float mid){
-    end = (end - start) < 0.0f ? (end - start + IM_PI) : end - start;
-    mid = (mid - start) < 0.0f ? (mid - start + IM_PI) : mid - start;
-    return (mid < end);
-    };*/
 
     void SpinnerClock(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      window->DrawList->PathClear();
-      float start = (float)ImGui::GetTime()* speed;
+      const float start = (float)ImGui::GetTime()* speed;
       const float bg_angle_offset = IM_PI * 2.f / num_segments;
+      
+      window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments; i++)
       {
         const float a = start + (i * bg_angle_offset);
@@ -191,14 +184,14 @@ namespace ImSpinner
       const ImGuiID radiusbId = window->GetID("##radiusb");
       float radius_b = storage->GetFloat(radiusbId, 0.8f);
 
-      // Render
-      window->DrawList->PathClear();
-      float start = (float)ImGui::GetTime() * speed;
+      const float start = (float)ImGui::GetTime() * speed;
       const float bg_angle_offset = IM_PI * 2.f / num_segments;
 
       float start_r = ImFmod(start, IM_PI / 2.f);
       float radius_k = ImSin(start_r);
       float radius1 = radius_k * radius;
+
+      window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments; i++)
       {
         const float a = start + (i * bg_angle_offset);
@@ -218,6 +211,7 @@ namespace ImSpinner
       storage->SetFloat(radiusbId, radius_b);
       
       float radius_tb = sequence ? ImMax(radius_k, radius_b) * radius : (radius_b * radius);
+      
       window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments; i++)
       {
@@ -235,8 +229,7 @@ namespace ImSpinner
       const ImGuiID radiusbId = window->GetID("##radiusb");
       float radius_b = storage->GetFloat(radiusbId, 0.8f);
 
-      // Render
-      float start = (float)ImGui::GetTime() * speed;
+      const float start = (float)ImGui::GetTime() * speed;
       const float bg_angle_offset = IM_PI * 2.f / num_segments;
 
       float start_r = ImFmod(start, IM_PI / 2.f);
@@ -312,8 +305,7 @@ namespace ImSpinner
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
-        // Render
-        float start = (float)ImGui::GetTime() * speed;
+        const float start = (float)ImGui::GetTime() * speed;
         const float bg_angle_offset = IM_PI * 2.f / dots;
         dots = ImMin(dots, (size_t)32);
 
@@ -349,8 +341,7 @@ namespace ImSpinner
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
-        // Render
-        float start = (float)ImGui::GetTime() * speed;
+        const float start = (float)ImGui::GetTime() * speed;
         const float bg_angle_offset = IM_PI * 2.f / dots;
         dots = ImMin(dots, (size_t)32);
 
@@ -378,8 +369,7 @@ namespace ImSpinner
       if (window->SkipItems)
         return;
 
-      ImGuiContext &g = *GImGui;
-      const ImGuiStyle &style = g.Style;
+      const ImGuiStyle &style = GImGui->Style;
       const ImGuiID id = window->GetID(label);
 
       const float nextItemKoeff = 2.5f;
@@ -416,8 +406,7 @@ namespace ImSpinner
       if (window->SkipItems)
         return;
 
-      ImGuiContext &g = *GImGui;
-      const ImGuiStyle &style = g.Style;
+      const ImGuiStyle &style = GImGui->Style;
       const ImGuiID id = window->GetID(label);
 
       const float nextItemKoeff = 2.5f;
@@ -452,8 +441,7 @@ namespace ImSpinner
       if (window->SkipItems)
         return;
 
-      ImGuiContext &g = *GImGui;
-      const ImGuiStyle &style = g.Style;
+      const ImGuiStyle &style = GImGui->Style;
       const ImGuiID id = window->GetID(label);
 
       const float nextItemKoeff = 2.5f;
@@ -468,8 +456,6 @@ namespace ImSpinner
         return;
 
       const ImVec2 centre = bb.GetCenter();
-
-      // Render
       float start = (float)ImGui::GetTime() * speed;
 
       const float offset = IM_PI / dots;
@@ -506,9 +492,7 @@ namespace ImSpinner
         return;
 
       const ImVec2 centre = bb.GetCenter();
-
-      // Render
-      float start = ImFmod((float)ImGui::GetTime() * speed, size.x);
+      const float start = ImFmod((float)ImGui::GetTime() * speed, size.x);
 
       float offset = 0;
       for (size_t i = 0; i < dots; i++)
@@ -531,7 +515,6 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       ImGuiStorage* storage = window->DC.StateStorage;
       const ImGuiID velocityId = window->GetID("##velocity");
       const ImGuiID vtimeId = window->GetID("##velocitytime");
@@ -570,13 +553,12 @@ namespace ImSpinner
       const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      window->DrawList->PathClear();
       const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2.f);
       const float aoffset = ImFmod((float)ImGui::GetTime(), 1.5f * IM_PI);
       const float bofsset = (aoffset > IM_PI) ? IM_PI : aoffset;
-
       const float angle_offset = IM_PI * 2.f / num_segments;
+
+      window->DrawList->PathClear();
       for (size_t i = 0; i <= 2 * num_segments; i++)
       {
         const float a = start + (i * angle_offset);
@@ -601,10 +583,10 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2.f);
-      window->DrawList->PathClear();
       const float angle_offset = IM_PI * 2.f / num_segments;
+
+      window->DrawList->PathClear();
       for (size_t i = 0; i <= 2 * num_segments; i++)
       {
         const float a = (i * angle_offset);
@@ -628,14 +610,14 @@ namespace ImSpinner
       const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
       window->DrawList->AddCircleFilled(centre, radius1, bg, num_segments);
 
-      window->DrawList->PathClear();
       const float abegin = (IM_PI * 0.5f) - start;
       const float aend = (IM_PI * 0.5f) + start;
       const float angle_offset = (aend - abegin) / num_segments;
+
+      window->DrawList->PathClear();
       window->DrawList->PathArcTo(centre, radius1, abegin, aend, num_segments * 2);
       window->DrawList->PathFillConvex(color);
 
@@ -647,18 +629,16 @@ namespace ImSpinner
       const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      window->DrawList->PathClear();
+      num_segments *= 8;
       const float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 2.f);
       const float aoffset = ImFmod((float)ImGui::GetTime(), 2.f * IM_PI);
       const float bofsset = (aoffset > IM_PI) ? IM_PI : aoffset;
-
       const float angle_offset = IM_PI * 2.f / num_segments;
-      window->DrawList->PathClear();
       float ared_min = 0, ared = 0;
       if (aoffset > IM_PI)
         ared_min = aoffset - IM_PI;
 
+      window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments / 2 + 1; i++)
       {
         ared = start + (i * angle_offset);
@@ -673,6 +653,7 @@ namespace ImSpinner
       }
       window->DrawList->PathStroke(color2, false, thickness);
 
+      window->DrawList->PathClear();
       for (size_t i = 0; i <= 2 * num_segments + 1; i++)
       {
         const float a = ared + ared_min + (i * angle_offset);
@@ -691,18 +672,17 @@ namespace ImSpinner
       const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
+      num_segments *= 4;
       const float start1 = ImFmod((float)ImGui::GetTime() * speed1, IM_PI * 2.f);
       const float start2 = ImFmod((float)ImGui::GetTime() * speed2, IM_PI * 2.f);
       const float aoffset = ImFmod((float)ImGui::GetTime(), 2.f * IM_PI);
       const float bofsset = (aoffset > IM_PI) ? IM_PI : aoffset;
-
       const float angle_offset = IM_PI * 2.f / num_segments;
-      window->DrawList->PathClear();
       float ared_min = 0, ared = 0;
       if (aoffset > IM_PI)
         ared_min = aoffset - IM_PI;
 
+      window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments + 1; i++)
       {
         ared = start1 + (i * angle_offset);
@@ -737,7 +717,6 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       float start = (float)ImGui::GetTime() * speed;
       float astart = ImFmod(start, IM_PI / dots);
       start -= astart;
@@ -757,7 +736,6 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       dots = ImMin<size_t>(dots, 32);
       float start = (float)ImGui::GetTime() * speed;
       float astart = ImFmod(start, IM_PI / dots);
@@ -791,9 +769,7 @@ namespace ImSpinner
       const float nextItemKoeff = 1.5f;
       const float yOffsetKoeftt = 0.8f;
       const float heightSpeed = 0.8f;
-
-      // Render
-      float start = (float)ImGui::GetTime() * speed;
+      const float start = (float)ImGui::GetTime() * speed;
 
       const float offset = IM_PI / bars;
       for (size_t i = 0; i < bars; i++)
@@ -812,7 +788,6 @@ namespace ImSpinner
       float radius = rmax;
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       float start = (float)ImGui::GetTime() * speed;
       float astart = ImFmod(start, IM_PI / bars);
       start -= astart;
@@ -838,11 +813,9 @@ namespace ImSpinner
       const float nextItemKoeff = 1.5f;
       const float yOffsetKoeftt = 0.8f;
       const float heightSpeed = 0.8f;
-
-      // Render
       float start = (float)ImGui::GetTime() * speed;
-
       const float offset = IM_PI / bars;
+
       for (size_t i = 0; i < bars; i++)
       {
         float a = start + (IM_PI - i * offset);
@@ -862,11 +835,10 @@ namespace ImSpinner
       float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      window->DrawList->PathClear();
-      float start = (float)ImGui::GetTime()* speed;
+      const float start = (float)ImGui::GetTime()* speed;
       const float bg_angle_offset = IM_PI * 2.f / num_segments;
 
+      window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments; i++)
       {
         const float a = start + (i * bg_angle_offset);
@@ -892,11 +864,10 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      float start = (float)ImGui::GetTime()* speed;
-
-      float arc_angle = 2.f * IM_PI / (float)arcs;
+      const float start = (float)ImGui::GetTime()* speed;
+      const float arc_angle = 2.f * IM_PI / (float)arcs;
       const float angle_offset = arc_angle / num_segments;
+      
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
       {
         window->DrawList->PathClear();
@@ -915,11 +886,10 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 4.f);
-
-      float arc_angle = 2.f * IM_PI / (float)arcs;
+      const float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 4.f);
+      const float arc_angle = 2.f * IM_PI / (float)arcs;
       const float angle_offset = arc_angle / num_segments;
+      
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
       {
         window->DrawList->PathClear();
@@ -963,10 +933,8 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 4.f);
-
-      float arc_angle = 2.f * IM_PI / (float)arcs;
+      const float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 4.f);
+      const float arc_angle = 2.f * IM_PI / (float)arcs;
       const float angle_offset = arc_angle / num_segments;
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
       {
@@ -1015,14 +983,11 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 2.f);
-
-      float arc_angle = 2.f * IM_PI / (float)arcs;
+      const float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 2.f);
+      const float arc_angle = 2.f * IM_PI / (float)arcs;
       const float angle_offset = arc_angle / num_segments;
 
       window->DrawList->AddCircleFilled(centre, radius, bg, num_segments * 2);
-
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
       {
         const float b = arc_angle * arc_num - IM_PI / 2.f;
@@ -1057,11 +1022,10 @@ namespace ImSpinner
       float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      window->DrawList->PathClear();
-      float start = (float)ImGui::GetTime()* speed;
+      const float start = (float)ImGui::GetTime()* speed;
       const float bg_angle_offset = IM_PI * 2.f / num_segments;
 
+      window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments; i++)
       {
         const float a = start + (i * bg_angle_offset);
@@ -1081,7 +1045,6 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       ImGuiStorage* storage = window->DC.StateStorage;
       const ImGuiID vtimeId = window->GetID("##vtime");
       const ImGuiID hmaxId = window->GetID("##hmax");
@@ -1105,7 +1068,6 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       float start = (float)ImGui::GetTime() * speed;
       float astart = ImFmod(start, IM_PI / dots);
       start -= astart;
@@ -1125,9 +1087,9 @@ namespace ImSpinner
       float radius = ImMax(ImMax(radius1, radius2), radius3);
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      float start1 = (float)ImGui::GetTime() * speed;
+      const float start1 = (float)ImGui::GetTime() * speed;
       const float angle_offset = angle / num_segments;
+
       window->DrawList->PathClear();
       for (size_t i = 0; i < num_segments; i++)
       {
@@ -1159,11 +1121,10 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      float start = (float)ImGui::GetTime()* speed;
-
+      const float start = (float)ImGui::GetTime()* speed;
       const float angle_offset = angle / num_segments;
       const float th = thickness / num_segments;
+
       for (size_t i = 0; i < num_segments; i++)
       {
         const float a = start + (i * angle_offset);
@@ -1179,12 +1140,11 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      float startI = (float)ImGui::GetTime() * speed;
-      float startY = (float)ImGui::GetTime() * (speed + (yang_detlta_r > 0.f ? ImClamp(yang_detlta_r * 0.5f, 0.5f, 2.f) : 0.f));
-
+      const float startI = (float)ImGui::GetTime() * speed;
+      const float startY = (float)ImGui::GetTime() * (speed + (yang_detlta_r > 0.f ? ImClamp(yang_detlta_r * 0.5f, 0.5f, 2.f) : 0.f));
       const float angle_offset = angle / num_segments;
       const float th = thickness / num_segments;
+
       for (int i = 0; i < num_segments; i++)
       {
         const float a = startI + (i * angle_offset);
@@ -1219,9 +1179,7 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
-
       const float radius1 = (0.3f + 0.3f * ImSin(start)) * radius;
       const float radius2 = radius - radius1;
 
@@ -1233,10 +1191,8 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       const float start = ImFmod((float)ImGui::GetTime(), IM_PI);
       const float rstart = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2);
-
       const float radius1 = (0.2f + 0.3f * ImSin(start)) * radius;
       const float angle_offset = IM_PI * 2.f / balls;
 
@@ -1251,9 +1207,7 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      float start = (float)ImGui::GetTime()* speed;
-
+      const float start = (float)ImGui::GetTime()* speed;
       const float angle_offset = (angle * 0.5f) / num_segments;
       const float th = thickness / num_segments;
 
@@ -1292,14 +1246,12 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      window->DrawList->PathClear();
-      float start = (float)ImGui::GetTime() * speed;
+      const float start = (float)ImGui::GetTime() * speed;
       const float bg_angle_offset = IM_PI * 2.f / num_segments;
-
       const float angle_offset = angle / num_segments;
       const float th = thickness_drop / num_segments;
       const float drop_radius_th = thickness_drop / num_segments;
+
       for (int i = 0; i < num_segments; i++)
       {
         const float a = start + (i * angle_offset);
@@ -1315,6 +1267,7 @@ namespace ImSpinner
       ImVec2 circle_i_center{centre.x + ImCos(ai_end) * f_drop_radius, centre.y + ImSin(ai_end) * f_drop_radius};
       window->DrawList->AddCircleFilled(circle_i_center, thickness_drop, color, num_segments);
 
+      window->DrawList->PathClear();
       for (int i = 0; i <= num_segments; i++)
       {
         const float a = (i * bg_angle_offset);
@@ -1327,8 +1280,6 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      window->DrawList->PathClear();
 
       ImColor c = color;
       float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
@@ -1342,6 +1293,7 @@ namespace ImSpinner
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(i * bg_angle_offset) * radius, centre.y + ImSin(i * bg_angle_offset) * radius));
         }
       };
+      window->DrawList->PathClear();
       PathArc();
       window->DrawList->PathStroke(bg, false, thickness);
 
@@ -1354,9 +1306,6 @@ namespace ImSpinner
     void SpinnerTrianglesSeletor(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t bars = 8) 
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
-
-      // Render
-      window->DrawList->PathClear();
 
       ImColor c = color;
       float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
@@ -1401,11 +1350,7 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      window->DrawList->PathClear();
-
-      // Render
-      float start = (float)ImGui::GetTime() * speed;
+      const float start = (float)ImGui::GetTime() * speed;
       const float angle_offset = IM_PI * 2 / bars;
       const float angle_offset_t = angle_offset * 0.3f;
       bars = ImMin<size_t>(bars, 32);
@@ -1431,35 +1376,11 @@ namespace ImSpinner
       draw_sectors(start, leaf_color);
     }
 
-    template<SpinnerTypeT Type, typename... Args>
-    void Spinner(const char *label, const Args&... args)
-    {
-      struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); }
-
-      spinner_draw_funcs[e_st_count] = {
-        { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
-        { e_st_angle,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
-        { e_st_dots,    [] (const char *label, const detail::SpinnerConfig &c) { SpinnerDots(label, c.m_FloatPtr, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_Dots, c.m_MiddleDots, c.m_MinThickness); } },
-        { e_st_ang,     [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
-        { e_st_vdots,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerVDots(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Dots); } },
-        { e_st_bounce_ball, [](const char *label,const detail::SpinnerConfig &c) { SpinnerBounceBall(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
-        { e_st_eclipse, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAngEclipse(label , c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } }
-      };
-
-      detail::SpinnerConfig config(SpinnerType{Type}, args...);
-      if (config.m_SpinnerType < sizeof(spinner_draw_funcs))
-      {
-        spinner_draw_funcs[config.m_SpinnerType].func(label, config);
-      }
-    }
-
     void SpinnerFlowingGradient(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      float start = (float)ImGui::GetTime()* speed;
-
+      const float start = (float)ImGui::GetTime()* speed;
       const float angle_offset = (angle * 0.5f) / num_segments;
       const float bg_angle_offset = (IM_PI * 2.f) / num_segments;
       const float th = thickness / num_segments;
@@ -1494,10 +1415,8 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      float start = (float)ImGui::GetTime()* speed;
-
-      float arc_angle = 2.f * IM_PI / (float)arcs;
+      const float start = (float)ImGui::GetTime()* speed;
+      const float arc_angle = 2.f * IM_PI / (float)arcs;
       const float angle_offset = arc_angle / num_segments;
       float r = radius;
       float reverse = 1.f;
@@ -1523,18 +1442,13 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       const float start = (float)ImGui::GetTime() * speed;
       const float a = radius;
       const float t = start;
       const float step = angle / num_segments;
       const float th = thickness / num_segments;
 
-      /*
-          x = a cos(t) / 1 + sin²(t)
-          y = a sin(t) . cos(t) / 1 + sin²(t)
-      */
-      const auto get_coord = [&](float const& a, float const& t) -> auto {
+      auto get_coord = [&](float const& a, float const& t) -> auto {
           return std::make_pair((a * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))), (a * ImSin(t) * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))));
       };
 
@@ -1554,11 +1468,11 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
-      window->DrawList->PathClear();
-      float start = (float)ImGui::GetTime()* speed;
+      const float start = (float)ImGui::GetTime()* speed;
       const float bg_angle_offset = IM_PI * 2.f / num_segments;
       const float bg_radius = radius - thickness;
+
+      window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments; i++)
       {
         const float a = (i * bg_angle_offset);
@@ -1580,7 +1494,7 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      float start = (float)ImGui::GetTime()* speed;
+      const float start = (float)ImGui::GetTime()* speed;
       elipses = std::min<int>(elipses, 3);
 
       auto draw_rotated_ellipse = [&] (float alpha, float start) {
@@ -1623,8 +1537,7 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      float start = (float)ImGui::GetTime()* speed;
-
+      const float start = (float)ImGui::GetTime()* speed;
       auto draw_rotated_ellipse = [&] (float alpha) {
         std::array<ImVec2, 36> pts;
 
@@ -1657,10 +1570,8 @@ namespace ImSpinner
       // Render
       const float start = ImFmod((float)ImGui::GetTime() * speed * 3.f, IM_PI);
       const float rstart = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2);
-
       const float radius1 = (0.8f + 0.2f * ImSin(start)) * radius;
       const float angle_offset = IM_PI * 2.f / balls;
-
       const bool rainbow = ((ImU32)color) == 0;
 
       for (int i = 0; i <= balls; i++)
@@ -1675,15 +1586,12 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      ImGuiContext &g = *GImGui;
-      const ImGuiStyle &style = g.Style;
+      const ImGuiStyle &style = GImGui->Style;
       const float nextItemKoeff = 1.5f;
       const float yOffsetKoeftt = 0.8f;
       const float heightSpeed = 0.8f;
 
-      // Render
-      float start = (float)ImGui::GetTime() * speed;
-
+      const float start = (float)ImGui::GetTime() * speed;
       const float offset = IM_PI / bars;
       for (int i = 0; i < bars; i++)
       {
@@ -1702,15 +1610,11 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      ImGuiContext &g = *GImGui;
-      const ImGuiStyle &style = g.Style;
+      const ImGuiStyle &style = GImGui->Style;
       const float nextItemKoeff = 1.5f;
       const float yOffsetKoeftt = 0.8f;
-      const float heightSpeed = 0.8f;
 
-      // Render
-      float start = (float)ImGui::GetTime() * speed;
-
+      const float start = (float)ImGui::GetTime() * speed;
       const float hspeed = 0.1f + ImSin((float)ImGui::GetTime() * 0.1f) * 0.05f;
       constexpr float rkoeff[6] = {4.f, 13.f, 3.4f, 8.7f, 25.f, 11.f};
       float out_h, out_s, out_v;
@@ -1728,12 +1632,6 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      const float nextItemKoeff = 1.5f;
-      const float yOffsetKoeftt = 0.8f;
-      const float heightSpeed = 0.8f;
-
-      // Render
-      //float start = (float)ImGui::GetTime() * speed;
       ImVec2 lt{centre.x - radius, centre.y - radius};
       const float offset_block = radius * 2.f / 3.f;
 
@@ -1755,12 +1653,7 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      ImGuiContext &g = *GImGui;
-      const ImGuiStyle &style = g.Style;
-      const float nextItemKoeff = 1.5f;
-      const float heightSpeed = 0.8f;
-
-      // Render
+      const ImGuiStyle &style = GImGui->Style;
       const float hspeed = 0.1f + ImSin((float)ImGui::GetTime() * 0.1f) * 0.05f;
       constexpr float rkoeff[6][3] = {{0.15f, 0.1f, 0.1f}, {0.033f, 0.15f, 0.8f}, {0.017f, 0.25f, 0.6f}, {0.037f, 0.1f, 0.4f}, {0.25f, 0.1f, 0.3f}, {0.11f, 0.1f, 0.2f}};
       const float i_k = radius / bars;
@@ -1783,7 +1676,6 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       float arc_angle = 2.f * IM_PI / (float)arcs;
       const float angle_offset = arc_angle / num_segments;
       constexpr float rkoeff[6][3] = {{0.15f, 0.1f, 0.1f}, {0.033f, 0.15f, 0.8f}, {0.017f, 0.25f, 0.6f}, {0.037f, 0.1f, 0.4f}, {0.25f, 0.1f, 0.3f}, {0.11f, 0.1f, 0.2f}};
@@ -1811,7 +1703,6 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       float arc_angle = 2.f * IM_PI / (float)arcs;
       const float angle_offset = arc_angle / num_segments;
       constexpr float rkoeff[6][3] = {{0.15f, 0.1f, 0.41f}, {0.033f, 0.15f, 0.8f}, {0.017f, 0.25f, 0.6f}, {0.037f, 0.1f, 0.4f}, {0.25f, 0.1f, 0.3f}, {0.11f, 0.1f, 0.2f}};
@@ -1833,6 +1724,28 @@ namespace ImSpinner
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * (radius * r), centre.y + ImSin(ar) * (radius * r)));
         }
         window->DrawList->PathFillConvex(c);
+      }
+    }
+
+    template<SpinnerTypeT Type, typename... Args>
+    void Spinner(const char *label, const Args&... args)
+    {
+      struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); }
+
+      spinner_draw_funcs[e_st_count] = {
+        { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
+        { e_st_angle,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
+        { e_st_dots,    [] (const char *label, const detail::SpinnerConfig &c) { SpinnerDots(label, c.m_FloatPtr, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_Dots, c.m_MiddleDots, c.m_MinThickness); } },
+        { e_st_ang,     [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
+        { e_st_vdots,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerVDots(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Dots); } },
+        { e_st_bounce_ball, [](const char *label,const detail::SpinnerConfig &c) { SpinnerBounceBall(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
+        { e_st_eclipse, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAngEclipse(label , c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } }
+      };
+
+      detail::SpinnerConfig config(SpinnerType{Type}, args...);
+      if (config.m_SpinnerType < sizeof(spinner_draw_funcs))
+      {
+        spinner_draw_funcs[config.m_SpinnerType].func(label, config);
       }
     }
 
