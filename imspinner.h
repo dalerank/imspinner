@@ -1567,17 +1567,19 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      // Render
       const float start = ImFmod((float)ImGui::GetTime() * speed * 3.f, IM_PI);
+      const float colorback = 0.3f + 0.2f * ImSin((float)ImGui::GetTime() * speed);
       const float rstart = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2);
       const float radius1 = (0.8f + 0.2f * ImSin(start)) * radius;
       const float angle_offset = IM_PI * 2.f / balls;
-      const bool rainbow = ((ImU32)color) == 0;
+      const bool rainbow = ((ImU32)color.Value.w) == 0;
 
+      float out_h, out_s, out_v;
+      ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
       for (int i = 0; i <= balls; i++)
       {
         const float a = rstart + (i * angle_offset);
-        ImColor c = rainbow ? ImColor::HSV(ImSin((float)ImGui::GetTime() * 0.1f + (i * 1.f / balls)), 0.8f, 0.8f) : color;
+        ImColor c = rainbow ? ImColor::HSV(out_h + i * (1.f / balls) + colorback, out_s, out_v) : color;
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, c, num_segments);
       }
     }
@@ -1725,6 +1727,42 @@ namespace ImSpinner
         }
         window->DrawList->PathFillConvex(c);
       }
+    }
+
+    void SpinnerCaleidoscope(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 6)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      float start = (float)ImGui::GetTime() * speed;
+      float astart = ImFmod(start, IM_PI * 2 / arcs);
+      start -= astart;
+      const float angle_offset = IM_PI * 2 / arcs;
+      const float angle_offset_t = angle_offset * 0.3f;
+      arcs = ImMin<size_t>(arcs, 32);
+
+      auto get_points = [&] (auto left, auto right, auto r) -> std::array<ImVec2, 4> {
+        const float rmin = r - thickness;
+        return {
+          ImVec2(centre.x + ImCos(left) * rmin, centre.y + ImSin(left) * rmin),
+          ImVec2(centre.x + ImCos(left) * r, centre.y + ImSin(left) * r),
+          ImVec2(centre.x + ImCos(right) * r, centre.y + ImSin(right) * r),
+          ImVec2(centre.x + ImCos(right) * rmin, centre.y + ImSin(right) * rmin)
+        };
+      };
+
+      auto draw_sectors = [&] (auto s, auto color_func, auto r) {
+        for (size_t i = 0; i <= arcs; i++) {
+          float left = s + (i * angle_offset) - angle_offset_t;
+          float right = s + (i * angle_offset) + angle_offset_t;
+          auto points = get_points(left, right, r);
+          window->DrawList->AddConvexPolyFilled(points.data(), 4, color_func(i));
+        }
+      };
+
+      float out_h, out_s, out_v;
+      ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+      draw_sectors(start * ImCos(start), [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius);
+      draw_sectors(start * ImSin(start), [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius - thickness - 2 );
     }
 
     template<SpinnerTypeT Type, typename... Args>
@@ -1967,7 +2005,7 @@ namespace ImSpinner
       ImSpinner::SpinnerAtom("SpinnerAtom", 16, 2, ImColor(255, 255, 255), 4.1f * velocity, 3);
 
       // next line
-      ImSpinner::SpinnerRainbowBalls("SpinnerRainbowBalls", 16, 4, ImColor(0, 0, 0, 0), 1.5f * velocity, 5);
+      ImSpinner::SpinnerRainbowBalls("SpinnerRainbowBalls", 16, 4, ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), 1.5f * velocity, 5);
 
       ImGui::SameLine();
       ImSpinner::SpinnerCamera("SpinnerCamera", 16, 8, [] (int i) { return ImColor::HSV(i * 0.25f, 0.8f, 0.8f); }, 4.8f * velocity, 8);
@@ -1976,7 +2014,10 @@ namespace ImSpinner
       ImSpinner::SpinnerArcPolarFade("SpinnerArcPolarFade", 16, ImColor(255, 255, 255), 6 * velocity, 6);
 
       ImGui::SameLine();
-      ImSpinner::SpinnerArcPolarRadius("SpinnerArcPolarRadius", 16, ImColor::HSV(0.25f, 0.8f, 0.8f), 6 * velocity, 6);
+      ImSpinner::SpinnerArcPolarRadius("SpinnerArcPolarRadius", 16, ImColor::HSV(0.25f, 0.8f, 0.8f), 6.f * velocity, 6);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerCaleidoscope("SpinnerArcPolarPies", 16, 4, ImColor::HSV(0.25f, 0.8f, 0.8f), 2.6f * velocity, 10);
     }
 #endif // IMSPINNER_DEMO
 }
