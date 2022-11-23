@@ -40,6 +40,7 @@ namespace ImSpinner
       e_st_vdots,
       e_st_bounce_ball,
       e_st_eclipse,
+      e_st_ingyang,
 
       e_st_count
     };
@@ -52,11 +53,14 @@ namespace ImSpinner
     DECLPROP (Thickness, float, 1.f)
     DECLPROP (Color, ImColor, 0xffffffff)
     DECLPROP (BgColor, ImColor, 0xffffffff)
+    DECLPROP (AltColor, ImColor, 0xffffffff)
     DECLPROP (Angle, float, IM_PI)
     DECLPROP (FloatPtr, float_ptr, nullptr)
     DECLPROP (Dots, int, 0)
     DECLPROP (MiddleDots, int, 0)
     DECLPROP (MinThickness, float, 0.f)
+    DECLPROP (Reverse, bool, false)
+    DECLPROP (Delta, float, 0.f)
 #undef DECLPROP
 
     namespace detail {
@@ -103,11 +107,14 @@ namespace ImSpinner
         IMPLRPOP(float, Thickness)
         IMPLRPOP(ImColor, Color)
         IMPLRPOP(ImColor, BgColor)
+        IMPLRPOP(ImColor, AltColor)
         IMPLRPOP(float, Angle)
         IMPLRPOP(float_ptr, FloatPtr)
         IMPLRPOP(int, Dots)
         IMPLRPOP(int, MiddleDots)
         IMPLRPOP(float, MinThickness)
+        IMPLRPOP(bool, Reverse)
+        IMPLRPOP(float, Delta)
       };
 #undef IMPLRPOP
     }
@@ -1729,7 +1736,7 @@ namespace ImSpinner
       }
     }
 
-    void SpinnerCaleidoscope(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 6)
+    void SpinnerCaleidoscope(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 6, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1761,8 +1768,19 @@ namespace ImSpinner
 
       float out_h, out_s, out_v;
       ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
-      draw_sectors(start * ImCos(start), [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius);
-      draw_sectors(start * ImSin(start), [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius - thickness - 2 );
+      draw_sectors(start, [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius);
+      switch (mode) {
+      case 0: draw_sectors(-start * 0.78f, [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius - thickness - 2); break;
+      case 1:
+        {
+          ImColor c = color;
+          float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
+          c.Value.w = ImMax(0.1f, ImMin(lerp_koeff, 1.f));
+          float dr = radius - thickness - 3;
+          window->DrawList->AddCircleFilled(centre, dr, c, num_segments);
+        } 
+        break;
+      }
     }
 
     template<SpinnerTypeT Type, typename... Args>
@@ -1777,7 +1795,8 @@ namespace ImSpinner
         { e_st_ang,     [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
         { e_st_vdots,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerVDots(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Dots); } },
         { e_st_bounce_ball, [](const char *label,const detail::SpinnerConfig &c) { SpinnerBounceBall(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
-        { e_st_eclipse, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAngEclipse(label , c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } }
+        { e_st_eclipse, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAngEclipse(label , c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
+        { e_st_ingyang, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerIngYang(label, c.m_Radius, c.m_Thickness, c.m_Reverse, c.m_Delta, c.m_AltColor, c.m_Color, c.m_Speed, c.m_Angle); } }
       };
 
       detail::SpinnerConfig config(SpinnerType{Type}, args...);
@@ -1806,10 +1825,8 @@ namespace ImSpinner
       ImSpinner::Spinner<e_st_ang>    ("SpinnerAng270NoBg", Radius{16.f}, Thickness{2.f}, Color{ImColor(255, 255, 255)}, BgColor{ImColor(255, 255, 255, 0)}, Speed{6 * velocity}, Angle{270.f / 360.f * 2 * IM_PI}); ImGui::SameLine();
       ImSpinner::Spinner<e_st_vdots>  ("SpinnerVDots",      Radius{16.f}, Thickness{4.f}, Color{ImColor::HSV(hue * 0.001f, 0.8f, 0.8f)}, BgColor{ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f)}, Speed{2.7f * velocity}, Dots{12}, MiddleDots{6}); ImGui::SameLine();
       ImSpinner::Spinner<e_st_bounce_ball>("SpinnerBounceBall", Radius{16.f}, Thickness{6.f}, Color{ImColor(255, 255, 255)}, Speed{4 * velocity}); ImGui::SameLine();
-      ImSpinner::Spinner<e_st_eclipse>("SpinnerAngEclipse", Radius{16.f}, Thickness{5.f}, Color{ImColor(255, 255, 255)}, Speed{6 * velocity});
-
-      ImGui::SameLine();
-      ImSpinner::SpinnerIngYang("SpinnerIngYang", 16, 5, false, 0, ImColor(255, 255, 255), ImColor(255, 0, 0), 4 * velocity, IM_PI * 0.8f);
+      ImSpinner::Spinner<e_st_eclipse>("SpinnerAngEclipse", Radius{16.f}, Thickness{5.f}, Color{ImColor(255, 255, 255)}, Speed{6 * velocity}); ImGui::SameLine();
+      ImSpinner::Spinner<e_st_ingyang>("SpinnerIngYang", Radius{16.f}, Thickness{5.f}, Reverse{false}, Delta{0.f}, Color{ImColor(255, 255, 255)}, AltColor{ImColor(255, 0, 0)}, Speed{4 * velocity}, Angle{IM_PI * 0.8f});
 
       ImGui::SameLine();
       ImSpinner::SpinnerBarChartSine("SpinnerBarChartSine", 16, 4, ImColor(255, 255, 255), 6.8f * velocity, 4, 0);
@@ -2017,7 +2034,10 @@ namespace ImSpinner
       ImSpinner::SpinnerArcPolarRadius("SpinnerArcPolarRadius", 16, ImColor::HSV(0.25f, 0.8f, 0.8f), 6.f * velocity, 6);
 
       ImGui::SameLine();
-      ImSpinner::SpinnerCaleidoscope("SpinnerArcPolarPies", 16, 4, ImColor::HSV(0.25f, 0.8f, 0.8f), 2.6f * velocity, 10);
+      ImSpinner::SpinnerCaleidoscope("SpinnerArcPolarPies", 16, 4, ImColor::HSV(0.25f, 0.8f, 0.8f), 2.6f * velocity, 10, 0);
+
+      ImGui::SameLine();
+      ImSpinner::SpinnerCaleidoscope("SpinnerArcPolarPies2", 16, 4, ImColor::HSV(0.35f, 0.8f, 0.8f), 3.2f * velocity, 10, 1);
     }
 #endif // IMSPINNER_DEMO
 }
