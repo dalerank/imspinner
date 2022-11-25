@@ -1658,6 +1658,29 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerScaleBlocks(const char *label, float radius, float thickness, const ImColor &bg, const ImColor &color, float speed)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      ImVec2 lt{centre.x - radius, centre.y - radius};
+      const float offset_block = radius * 2.f / 3.f;
+
+      int start = (int)ImFmod((float)ImGui::GetTime() * speed, 9.f);
+
+      const ImVec2ih poses[] = {{0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2}};
+      constexpr float rkoeff[9] = {0.1f, 0.15f, 0.17f, 0.25f, 0.6f, 0.15f, 0.1f, 0.12f, 0.22f};
+
+      int ti = 0;
+      for (const auto &rpos: poses)
+      {
+        const ImColor &c = (ti == start) ? color : bg;
+        float h = (0.8f + 0.4f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[ti % 9])));
+        window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
+                                        ImVec2(lt.x + rpos.x * (offset_block) + h * thickness, lt.y + rpos.y * offset_block + h * thickness), color);
+        ti++;
+      }
+    }
+
     void SpinnerFluid(const char *label, float radius, const ImColor &color, float speed, int bars = 3)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -1821,8 +1844,9 @@ namespace ImSpinner
       static float widget_size = 50.f;
 
       static ImVec2 selected{0, 0};
-      constexpr int num_spinners = 80;
-      int sidex = int(500 / widget_size), sidey = int(80 / sidex);
+      constexpr int num_spinners = 90;
+      int sidex = int(500 / widget_size);
+      int sidey = int(num_spinners / sidex);
 
       static int cci = 0, last_cci = 0;
       static std::map<int, float> __rr; auto R = [] (float v) { if (!__rr.count(cci)) { __rr[cci] = v; }; return __rr[cci]; };
@@ -2013,6 +2037,8 @@ namespace ImSpinner
                                                           R(16), 4, C(ImColor::HSV(0.25f, 0.8f, 0.8f)), S(2.6f) * velocity, 10, 0); break;
           case $(79) ImSpinner::SpinnerCaleidoscope     ("SpinnerArcPolarPies2",
                                                           R(16), 4, C(ImColor::HSV(0.35f, 0.8f, 0.8f)), S(3.2f) * velocity, 10, 1); break;
+          case $(80) ImSpinner::SpinnerScaleBlocks      ("SpinnerScaleBlocks",
+                                                          R(16), 8, C(ImColor(255, 255, 255, 30)), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(5) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
