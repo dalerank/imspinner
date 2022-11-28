@@ -1713,8 +1713,6 @@ namespace ImSpinner
       ImVec2 lt{centre.x - radius, centre.y - radius};
       const float offset_block = radius * 2.f / 3.f;
 
-      int start = (int)ImFmod((float)ImGui::GetTime() * speed, 9.f);
-
       const ImVec2ih poses[] = {{0, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}, {2, 1}, {0, 2}, {1, 2}, {2, 2}};
       constexpr float rkoeff[9] = {0.1f, 0.15f, 0.17f, 0.25f, 0.6f, 0.15f, 0.1f, 0.12f, 0.22f};
 
@@ -1727,6 +1725,31 @@ namespace ImSpinner
                                         ImVec2(lt.x + rpos.x * (offset_block) + h * thickness, lt.y + rpos.y * offset_block + h * thickness), color);
         ti++;
       }
+    }
+
+    void SpinnerScaleSquares(const char *label, float radius, float offset, const ImColor &bg, const ImColor &color, float speed)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        ImVec2 lt{centre.x - radius, centre.y - radius};
+        const float offset_block = radius * 2.f / 3.f;
+        const float hside = offset_block / 2.f;
+
+        const ImVec2ih poses[] = {{0, 0}, {1, 0}, {0, 1}, {2, 0}, {1, 1}, {0, 2}, {2, 1}, {1, 2}, {2, 2}};
+        const float offsets[] =  {0.f,    0.8f,   0.8f,   1.6f,   1.6f,   1.6f,   2.4f,   2.4f,   3.2f};
+
+        int ti = 0;
+        float out_h, out_s, out_v;
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+        for (const auto &rpos: poses)
+        {
+            const ImColor c = ImColor::HSV(out_h + offsets[ti], out_s, out_v);
+            const float strict = (0.5f + 0.5f * ImSin((float)-ImGui::GetTime() * speed + offsets[ti % 9]));
+            const float side = ImClamp<float>(strict + 0.1f, 0.1f, 1.f) * hside;
+            window->DrawList->AddRectFilled(ImVec2(lt.x + hside + (rpos.x * offset_block) - side, lt.y + hside + (rpos.y * offset_block) - side),
+                                            ImVec2(lt.x + hside + (rpos.x * offset_block) + side, lt.y + hside + (rpos.y * offset_block) + side), c);
+            ti++;
+        }
     }
 
     void SpinnerFluid(const char *label, float radius, const ImColor &color, float speed, int bars = 3)
@@ -2088,10 +2111,12 @@ namespace ImSpinner
                                                           R(16), T(4), C(ImColor::HSV(0.35f, 0.8f, 0.8f)), S(3.2f) * velocity, 10, 1); break;
           case $(80) ImSpinner::SpinnerScaleBlocks      ("SpinnerScaleBlocks",
                                                           R(16), T(8), C(ImColor(255, 255, 255, 30)), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(5) * velocity); break;
-          case $(81) ImSpinner::SpinnerRotateTriangles ("SpinnerRotateTriangles",
+          case $(81) ImSpinner::SpinnerRotateTriangles  ("SpinnerRotateTriangles",
                                                           R(16), T(5), C(ImColor(255, 255, 255)), S(6.f) * velocity, 3); break;
           case $(82) ImSpinner::SpinnerArcWedges        ("SpinnerArcWedges",
                                                               R(16), C(ImColor::HSV(0.3f, 0.8f, 0.8f)), S(2.8f) * velocity, 4); break;
+          case $(83) ImSpinner::SpinnerScaleSquares     ("SpinnerScaleSquares",
+                                                             R(16), T(8), C(ImColor(255, 255, 255, 30)), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(5) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
