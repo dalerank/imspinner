@@ -1024,6 +1024,34 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerArcWedges(const char *label, float radius, const ImColor &color = 0xffff0000, float speed = 2.8f, size_t arcs = 4)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = (float)ImGui::GetTime() * speed;
+        const float arc_angle = 2.f * IM_PI / (float)arcs;
+        const float angle_offset = arc_angle / num_segments;
+        float out_h, out_s, out_v;
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+
+        for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+        {
+            const float b = arc_angle * arc_num - IM_PI / 2.f;
+            const float e = arc_angle * arc_num + arc_angle - IM_PI / 2.f;
+            const float a = arc_angle * arc_num;
+
+            window->DrawList->PathClear();
+            window->DrawList->PathLineTo(centre);
+            for (size_t i = 0; i < num_segments + 1; i++)
+            {
+                const float start_a = ImFmod(start * (1.05f * (arc_num + 1)), IM_PI * 2.f);
+                const float ar = start_a + arc_angle * arc_num + (i * angle_offset) - IM_PI / 2.f;
+                window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
+            }
+            window->DrawList->PathFillConvex(ImColor::HSV(out_h + (1.f / arcs) * arc_num, out_s, out_v, 0.7f));
+        }
+    }
+
     void SpinnerTwinBall(const char *label, float radius1, float radius2, float thickness, float b_thickness, const ImColor &ball = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t balls = 2)
     {
       float radius = ImMax(radius1, radius2);
@@ -2062,6 +2090,8 @@ namespace ImSpinner
                                                           R(16), T(8), C(ImColor(255, 255, 255, 30)), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(5) * velocity); break;
           case $(81) ImSpinner::SpinnerRotateTriangles ("SpinnerRotateTriangles",
                                                           R(16), T(5), C(ImColor(255, 255, 255)), S(6.f) * velocity, 3); break;
+          case $(82) ImSpinner::SpinnerArcWedges        ("SpinnerArcWedges",
+                                                              R(16), C(ImColor::HSV(0.3f, 0.8f, 0.8f)), S(2.8f) * velocity, 4); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
