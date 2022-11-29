@@ -1877,6 +1877,25 @@ namespace ImSpinner
       }
     }
 
+    // spinner idea by nitz 'Chris Dailey'
+    void SpinnerHboDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 1.1f, size_t dots = 6)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const ImGuiStyle &style = GImGui->Style;
+        const float start = (float)ImGui::GetTime() * speed;
+        const float ang_offset = (IM_PI * 2.f) / dots;
+
+        float offset = 0;
+        for (size_t i = 0; i < dots; i++)
+        {
+            const float astart = start + ang_offset * i;
+            ImColor c = color;
+            c.Value.w = ImSin(astart * 1.0f + IM_PI * 0.5f);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(astart) * radius, centre.y + 0.f * ImCos(astart) * radius), thickness, c, 8);
+        }
+    }
+
     namespace detail {
       struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); } spinner_draw_funcs[e_st_count] = {
         { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
@@ -2117,6 +2136,8 @@ namespace ImSpinner
                                                               R(16), C(ImColor::HSV(0.3f, 0.8f, 0.8f)), S(2.8f) * velocity, 4); break;
           case $(83) ImSpinner::SpinnerScaleSquares     ("SpinnerScaleSquares",
                                                              R(16), T(8), C(ImColor(255, 255, 255, 30)), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(5) * velocity); break;
+          case $(84) ImSpinner::SpinnerHboDots          ("SpinnerMovingDots", R(16),
+                                                             T(4), C(ImColor(255, 255, 255)), S(1.1f) * velocity, 6); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
