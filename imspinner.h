@@ -56,6 +56,8 @@ namespace ImSpinner
     DECLPROP (BgColor, ImColor, 0xffffffff)
     DECLPROP (AltColor, ImColor, 0xffffffff)
     DECLPROP (Angle, float, IM_PI)
+    DECLPROP (AngleMin, float, IM_PI)
+    DECLPROP (AngleMax, float, IM_PI)
     DECLPROP (FloatPtr, float_ptr, nullptr)
     DECLPROP (Dots, int, 0)
     DECLPROP (MiddleDots, int, 0)
@@ -109,6 +111,8 @@ namespace ImSpinner
         IMPLRPOP(ImColor, BgColor)
         IMPLRPOP(ImColor, AltColor)
         IMPLRPOP(float, Angle)
+        IMPLRPOP(float, AngleMin)
+        IMPLRPOP(float, AngleMax)
         IMPLRPOP(float_ptr, FloatPtr)
         IMPLRPOP(int, Dots)
         IMPLRPOP(int, MiddleDots)
@@ -121,13 +125,13 @@ namespace ImSpinner
 
 #define SPINNER_HEADER(pos, size, centre, num_segments) ImVec2 pos, size, centre; int num_segments; if (!detail::SpinnerBegin(label, radius, pos, size, centre, num_segments)) { return; }; ImGuiWindow *window = ImGui::GetCurrentWindow();
 
-    void SpinnerRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed)
+    void SpinnerRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, float ang_min = 0.f, float ang_max = IM_PI * 2.f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
         const float start = ImAbs(ImSin((float)ImGui::GetTime() * 1.8f) * (num_segments - 5));
-        const float a_min = IM_PI * 2.0f * ((float)start) / (float)num_segments;
-        const float a_max = IM_PI * 2.0f * ((float)num_segments - 3) / (float)num_segments;
+        const float a_min = ImMax(ang_min, IM_PI * 2.0f * ((float)start) / (float)num_segments);
+        const float a_max = ImMin(ang_max, IM_PI * 2.0f * ((float)num_segments - 3) / (float)num_segments);
 
         window->DrawList->PathClear();
         for (size_t i = 0; i < num_segments; i++)
@@ -1898,7 +1902,7 @@ namespace ImSpinner
 
     namespace detail {
       struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); } spinner_draw_funcs[e_st_count] = {
-        { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
+        { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_AngleMin, c.m_AngleMax); } },
         { e_st_angle,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
         { e_st_dots,    [] (const char *label, const detail::SpinnerConfig &c) { SpinnerDots(label, c.m_FloatPtr, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_Dots, c.m_MiddleDots, c.m_MinThickness); } },
         { e_st_ang,     [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
@@ -1945,6 +1949,8 @@ namespace ImSpinner
       static std::map<int, bool> __hc; auto HC = [] (bool v) { if (!__hc.count(cci)) { __hc[cci] = v; }; return __hc[cci];  };
       static std::map<int, float> __ss; auto S = [] (float v) { if (!__ss.count(cci)) { __ss[cci] = v; }; return __ss[cci];  };
       static std::map<int, float> __aa; auto A = [] (float v) { if (!__aa.count(cci)) { __aa[cci] = v; }; return __aa[cci];  };
+      static std::map<int, float> __amn; auto AMN = [] (float v) { if (!__amn.count(cci)) { __amn[cci] = v; }; return __amn[cci];  };
+      static std::map<int, float> __amx; auto AMX = [] (float v) { if (!__amx.count(cci)) { __amx[cci] = v; }; return __amx[cci];  };
 
       ImGuiStyle &style = GImGui->Style;
       ImVec2 lastSpacing = style.ItemSpacing, lastPadding = style.WindowPadding;
@@ -1968,7 +1974,7 @@ namespace ImSpinner
 #define $(i) i: cci = i;
           switch (current_spi) {
           case $( 0) ImSpinner::Spinner<e_st_rainbow>   ("Spinner",
-                                                          Radius{R(16)}, Thickness{T(2)}, Color{ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f)}, Speed{S(8) * velocity}); break;
+                                                          Radius{R(16)}, Thickness{T(2)}, Color{ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f)}, Speed{S(8) * velocity}, AngleMin{AMN(0.f)}, AngleMax{AMX(IM_PI * 2.f)}); break;
           case $( 1) ImSpinner::Spinner<e_st_angle>     ("SpinnerAng",
                                                           Radius{R(16)}, Thickness{T(2)}, Color{C(ImColor(255, 255, 255))}, BgColor{ImColor(255, 255, 255, 128)}, Speed{S(8) * velocity}, Angle{A(IM_PI)}); break;
           case $( 2) ImSpinner::Spinner<e_st_dots>      ("SpinnerDots",
@@ -2167,6 +2173,8 @@ namespace ImSpinner
       }
       if (__ss.count(last_cci)) ImGui::SliderFloat("Speed", &__ss[last_cci], 0.0f, 100.0f, "speed = %.2f");
       if (__aa.count(last_cci)) ImGui::SliderFloat("Angle", &__aa[last_cci], 0.0f, 2 * IM_PI, "angle = %.2f");
+      if (__amn.count(last_cci)) ImGui::SliderFloat("Angle Min", &__amn[last_cci], 0.0f, 2 * IM_PI, "angle min = %.2f");
+      if (__amx.count(last_cci)) ImGui::SliderFloat("Angle Max", &__amx[last_cci], 0.0f, 2 * IM_PI, "angle max = %.2f");
 
       ImGui::EndChild();
     }
