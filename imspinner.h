@@ -1075,7 +1075,7 @@ namespace ImSpinner
       }
     }
 
-    void SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    void SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int dots = 1)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1088,14 +1088,19 @@ namespace ImSpinner
 
       vtime += 0.05f;
       hmax += 0.01f;
-      float maxht = ImMax(ImSin(ImFmod((float)hmax, IM_PI)), 0.7f) * radius;
-
-      float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
 
       storage->SetFloat(vtimeId, vtime);
       storage->SetFloat(hmaxId, hmax);
 
-      window->DrawList->AddCircleFilled(ImVec2(centre.x, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, color, 8);
+      constexpr float rkoeff[9] = {0.1f, 0.15f, 0.17f, 0.25f, 0.31f, 0.19f, 0.08f, 0.24f, 0.9f};
+
+      for (int i = 0; i < dots; i++) {
+          float start = ImFmod((float)ImGui::GetTime() * speed * (1 + rkoeff[i % 9]), IM_PI);
+          float sign = ((i % 2 == 0) ? 1 : -1);
+          float offset = (i == 0) ? 0.f : (floor((i+1) / 2.f + 0.1f) * sign * 2.f * thickness);
+          float maxht = ImMax(ImSin(ImFmod(hmax, IM_PI)), (0.7f + rkoeff[i % 9])) * radius;
+          window->DrawList->AddCircleFilled(ImVec2(centre.x + offset, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, color, 8);
+      }
     }
 
     void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6)
@@ -1900,7 +1905,7 @@ namespace ImSpinner
         { e_st_dots,    [] (const char *label, const detail::SpinnerConfig &c) { SpinnerDots(label, c.m_FloatPtr, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_Dots, c.m_MinThickness); } },
         { e_st_ang,     [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
         { e_st_vdots,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerVDots(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Dots); } },
-        { e_st_bounce_ball, [] (const char *label,const detail::SpinnerConfig &c) { SpinnerBounceBall(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
+        { e_st_bounce_ball, [] (const char *label,const detail::SpinnerConfig &c) { SpinnerBounceBall(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_Dots); } },
         { e_st_eclipse, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAngEclipse(label , c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
         { e_st_ingyang, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerIngYang(label, c.m_Radius, c.m_Thickness, c.m_Reverse, c.m_Delta, c.m_AltColor, c.m_Color, c.m_Speed, c.m_Angle); } }
       };
@@ -1985,7 +1990,7 @@ namespace ImSpinner
           case $( 6) ImSpinner::Spinner<e_st_vdots>     ("SpinnerVDots",
                                                           Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.7f) * velocity}, Dots{DT(12)}, MiddleDots{6}); break;
           case $( 7) ImSpinner::Spinner<e_st_bounce_ball>("SpinnerBounceBall",
-                                                          Radius{R(16)}, Thickness{T(6)}, Color{C(ImColor(255, 255, 255))}, Speed{S(4) * velocity}); break;
+                                                          Radius{R(16)}, Thickness{T(6)}, Color{C(ImColor(255, 255, 255))}, Speed{S(4) * velocity}, Dots{DT(1)}); break;
           case $( 8) ImSpinner::Spinner<e_st_eclipse>   ("SpinnerAngEclipse",
                                                           Radius{R(16)}, Thickness{T(5)}, Color{C(ImColor(255, 255, 255))}, Speed{S(6) * velocity}); break;
           case $( 9) ImSpinner::Spinner<e_st_ingyang>   ("SpinnerIngYang",
