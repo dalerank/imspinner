@@ -1075,7 +1075,7 @@ namespace ImSpinner
       }
     }
 
-    void SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int dots = 1)
+    void SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int dots = 1, bool shadow = false)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1093,13 +1093,17 @@ namespace ImSpinner
       storage->SetFloat(hmaxId, hmax);
 
       constexpr float rkoeff[9] = {0.1f, 0.15f, 0.17f, 0.25f, 0.31f, 0.19f, 0.08f, 0.24f, 0.9f};
-
-      for (int i = 0; i < dots; i++) {
-          float start = ImFmod((float)ImGui::GetTime() * speed * (1 + rkoeff[i % 9]), IM_PI);
-          float sign = ((i % 2 == 0) ? 1 : -1);
-          float offset = (i == 0) ? 0.f : (floor((i+1) / 2.f + 0.1f) * sign * 2.f * thickness);
-          float maxht = ImMax(ImSin(ImFmod(hmax, IM_PI)), (0.7f + rkoeff[i % 9])) * radius;
-          window->DrawList->AddCircleFilled(ImVec2(centre.x + offset, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, color, 8);
+      const int iterations = shadow ? 4 : 1;
+      for (int j = 0; j < iterations; j++) {
+          ImColor c = color;
+          c.Value.w -= 0.15f * j;
+          for (int i = 0; i < dots; i++) {
+              float start = ImFmod((float)ImGui::GetTime() * speed * (1 + rkoeff[i % 9]) - (IM_PI / 12.f) * j, IM_PI);
+              float sign = ((i % 2 == 0) ? 1 : -1);
+              float offset = (i == 0) ? 0.f : (floor((i+1) / 2.f + 0.1f) * sign * 2.f * thickness);
+              float maxht = ImMax(ImSin(ImFmod(hmax, IM_PI)), (0.7f + rkoeff[i % 9])) * radius;
+              window->DrawList->AddCircleFilled(ImVec2(centre.x + offset, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, c, 8);
+          }
       }
     }
 
@@ -2141,13 +2145,19 @@ namespace ImSpinner
           case $(81) ImSpinner::SpinnerRotateTriangles  ("SpinnerRotateTriangles",
                                                           R(16), T(5), C(ImColor(255, 255, 255)), S(6.f) * velocity, 3); break;
           case $(82) ImSpinner::SpinnerArcWedges        ("SpinnerArcWedges",
-                                                              R(16), C(ImColor::HSV(0.3f, 0.8f, 0.8f)), S(2.8f) * velocity, 4); break;
+                                                          R(16), C(ImColor::HSV(0.3f, 0.8f, 0.8f)), S(2.8f) * velocity, 4); break;
           case $(83) ImSpinner::SpinnerScaleSquares     ("SpinnerScaleSquares",
-                                                             R(16), T(8), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(5) * velocity); break;
+                                                          R(16), T(8), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(5) * velocity); break;
           case $(84) ImSpinner::SpinnerHboDots          ("SpinnerMovingDots", R(16),
-                                                             T(4), C(ImColor(255, 255, 255)), 0.f, 0.f, S(1.1f) * velocity, 6); break;
+                                                          T(4), C(ImColor(255, 255, 255)), 0.f, 0.f, S(1.1f) * velocity, 6); break;
           case $(85) ImSpinner::SpinnerHboDots          ("SpinnerMovingDots", R(16),
-                                                             T(4), C(ImColor(255, 255, 255)), 0.1f, 0.5f, S(1.1f) * velocity, 6); break;
+                                                          T(4), C(ImColor(255, 255, 255)), 0.1f, 0.5f, S(1.1f) * velocity, 6); break;
+          case $(86) ImSpinner::Spinner<e_st_bounce_ball>("SpinnerBounceBall3",
+                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, Speed{S(3.2f) * velocity}, Dots{DT(5)}); break;
+          case $(87) ImSpinner::SpinnerBounceBall       ("SpinnerBounceBallShadow",
+                                                          R(16), T(4), C(ImColor(255, 255, 255)), S(2.2f) * velocity, DT(1), true); break;
+          case $(88) ImSpinner::SpinnerBounceBall       ("SpinnerBounceBall5Shadow",
+                                                          R(16), T(4), C(ImColor(255, 255, 255)), S(3.6f) * velocity, DT(5), true); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
