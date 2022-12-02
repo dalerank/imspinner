@@ -935,6 +935,47 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerSquareStrokeFade(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 4.f);
+        const float arc_angle = 2.f * IM_PI / 4.f;
+        const float angle_offset = arc_angle / num_segments;
+        const float ht = thickness / 2.f;
+
+        for (size_t arc_num = 0; arc_num < 4; ++arc_num)
+        {
+            float a = arc_angle * arc_num;
+            ImColor c = color;
+            if (start < IM_PI * 2.f) {
+                c.Value.w = (start > a && start < (a + arc_angle))
+                                ? 1.f - (start - a) / (float)arc_angle
+                                : (start < a ? 1.f : 0.f);
+                c.Value.w = ImMax(0.05f, 1.f - c.Value.w);
+            } else {
+                const float startk = start - IM_PI * 2.f;
+                c.Value.w = (startk > a && startk < (a + arc_angle))
+                                ? 1.f - (startk - a) / (float)arc_angle
+                                : (startk < a ? 1.f : 0.f);
+                c.Value.w = ImMax(0.05f, c.Value.w);
+            }
+            a -= IM_PI / 4.f;
+            const float r = radius * 1.4f;
+            const bool right = ImSin(a) > 0;
+            const bool top = ImCos(a) < 0;
+            ImVec2 p1(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r);
+            ImVec2 p2(centre.x + ImCos(a - IM_PI / 2.f) * r, centre.y + ImSin(a - IM_PI / 2.f) * r);
+            switch (arc_num) {
+            case 0: p1.x -= ht; p2.x -= ht; break;
+            case 1: p1.y -= ht; p2.y -= ht; break;
+            case 2: p1.x += ht; p2.x += ht; break;
+            case 3: p1.y += ht; p2.y += ht; break;
+            }
+            window->DrawList->AddLine(p1, p2, c, thickness);
+        }
+    }
+
     void SpinnerFilledArcFade(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -2158,6 +2199,8 @@ namespace ImSpinner
                                                           R(16), T(4), C(ImColor(255, 255, 255)), S(2.2f) * velocity, DT(1), true); break;
           case $(88) ImSpinner::SpinnerBounceBall       ("SpinnerBounceBall5Shadow",
                                                           R(16), T(4), C(ImColor(255, 255, 255)), S(3.6f) * velocity, DT(5), true); break;
+          case $(89) ImSpinner::SpinnerSquareStrokeFade ("SpinnerSquareStrokeFade",
+                                                          R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
