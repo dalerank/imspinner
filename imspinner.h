@@ -406,6 +406,27 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerWaveDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float nextItemKoeff = 2.f;
+        const float dots = (size.x / (thickness * nextItemKoeff));
+        float start = (float)ImGui::GetTime() * speed;
+
+        const float offset = IM_PI / dots;
+
+        float out_h, out_s, out_v;
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+        for (size_t i = 0; i < dots; i++)
+        {
+            float a = start + (IM_PI - i * offset);
+            float y = centre.y + ImSin(a) * size.y / 2.f;
+            ImColor c = ImColor::HSV(out_h + i * (1.f / dots * 2.f), out_s, out_v);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff, y), thickness, c, 8);
+        }
+    }
+
     void SpinnerFadeDots(const char *label, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3)
     {
       ImGuiWindow *window = ImGui::GetCurrentWindow();
@@ -2298,6 +2319,8 @@ namespace ImSpinner
                                                            R(16), T(6), C(ImColor(255, 0, 0)), S(4.1f) * velocity); break;
           case $(92) ImSpinner::SpinnerRotateWheel      ("SpinnerRotateWheel",
                                                            R(16), T(10), C(ImColor(255, 255, 0)), CB(ImColor(255, 255, 255)), S(2.1f) * velocity, 8); break;
+          case $(93) ImSpinner::SpinnerWaveDots         ("SpinnerWaveDots", R(16),
+                                                             T(3), C(ImColor(255, 255, 255)), S(6) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
