@@ -28,6 +28,7 @@
 
 #include <functional>
 #include <array>
+#include <vector>
 #include <map>
 
 namespace ImSpinner
@@ -1354,8 +1355,31 @@ namespace ImSpinner
         ImVec2 p1(tri_centre.x + ImCos(-a) * radius1, tri_centre.y + ImSin(-a) * radius1);
         ImVec2 p2(tri_centre.x + ImCos(-a + 2.f * IM_PI / 3.f) * radius1, tri_centre.y + ImSin(-a + 2.f * IM_PI / 3.f) * radius1);
         ImVec2 p3(tri_centre.x + ImCos(-a - 2.f * IM_PI / 3.f) * radius1, tri_centre.y + ImSin(-a - 2.f * IM_PI / 3.f) * radius1);
-        window->DrawList->AddTriangleFilled(p1, p2, p3, color);
+        ImVec2 points[] = {p1, p2, p3};
+        window->DrawList->AddConvexPolyFilled(points, 3, color);
       }
+    }
+
+    void SpinnerRotateShapes(const char *label, float radius, float thickness, const ImColor &color, float speed, int shapes, int pnt)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime(), IM_PI);
+        const float rstart = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2);
+        const float radius1 = radius / 2.5f + thickness;
+        const float angle_offset = IM_PI * 2.f / shapes;
+
+        std::vector<ImVec2> points(pnt);
+        const float begin_a = -IM_PI / ((pnt % 2 == 0) ? pnt : (pnt - 1));
+        for (int i = 0; i <= shapes; i++)
+        {
+            const float a = rstart + (i * angle_offset);
+            ImVec2 tri_centre(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1);
+            for (int pi = 0; pi < pnt; ++pi) {
+                points[pi] = {tri_centre.x + ImCos(begin_a+ pi * 2.f * IM_PI / pnt) * radius1, tri_centre.y + ImSin(begin_a + pi * 2.f * IM_PI / pnt) * radius1};
+            }
+            window->DrawList->AddConvexPolyFilled(points.data(), pnt, color);
+        }
     }
 
     void SpinnerMoonLine(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI)
@@ -2321,6 +2345,8 @@ namespace ImSpinner
                                                            R(16), T(10), C(ImColor(255, 255, 0)), CB(ImColor(255, 255, 255)), S(2.1f) * velocity, 8); break;
           case $(93) ImSpinner::SpinnerWaveDots         ("SpinnerWaveDots", R(16),
                                                              T(3), C(ImColor(255, 255, 255)), S(6) * velocity); break;
+          case $(94) ImSpinner::SpinnerRotateShapes     ("SpinnerRotateShapes",
+                                                             R(16), T(2), C(ImColor(255, 255, 255)), S(6.f) * velocity, DT(4), MDT(3)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
