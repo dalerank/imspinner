@@ -1,4 +1,4 @@
 # imspinner
 Set of nice spinners for imgui
 
-![Preview](https://user-images.githubusercontent.com/918081/204662488-9d9cb9a4-4e8a-4ff1-907f-5da2cef249de.gif)
+![Preview](https://user-images.githubusercontent.com/918081/205407551-41883ed9-09aa-4de0-821f-d564bd58c06c.gif)
