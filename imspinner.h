@@ -1973,6 +1973,35 @@ namespace ImSpinner
         }
     }
 
+    void SpinnerSwingDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = (float)ImGui::GetTime() * speed;
+        constexpr int elipses = 2;
+
+        auto get_rotated_ellipse_pos = [&] (float alpha, float start) {
+            std::array<ImVec2, 36> pts;
+
+            alpha = ImFmod(alpha, IM_PI);
+            float a = radius;
+            float b = radius / 10.f; 
+
+            float anga = ImFmod(start, IM_PI * 2);
+            float x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+            float y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
+            return ImVec2{x, y};
+        };
+
+        ImColor pcolors[3] = {ImColor(255, 0, 0), ImColor(0, 255, 0), ImColor(0, 0, 255)};
+        for (int i = 0; i < elipses; ++i) {
+            ImVec2 ppos = get_rotated_ellipse_pos((IM_PI * (float)i/ elipses) + IM_PI / 4.f, start + (IM_PI * 0.5f) * i);
+            const float y_delta = ImAbs(centre.y - ppos.y);
+            float th_koeff = ImMax((y_delta / size.y) * 4.f, 0.5f);
+            window->DrawList->AddCircleFilled(ppos, th_koeff * thickness, pcolors[i], num_segments);
+        }
+    }
+
     namespace detail {
       struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); } spinner_draw_funcs[e_st_count] = {
         { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_AngleMin, c.m_AngleMax); } },
@@ -2233,6 +2262,8 @@ namespace ImSpinner
                                                           R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
           case $(90) ImSpinner::SpinnerSquareStrokeFill ("SpinnerSquareStrokeFill",
                                                            R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
+          case $(91) ImSpinner::SpinnerSwingDots        ("SpinnerSwingDots",
+                                                             R(16), T(6), C(ImColor(255, 255, 255)), S(4.1f) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
