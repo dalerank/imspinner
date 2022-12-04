@@ -1001,28 +1001,84 @@ namespace ImSpinner
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
-        const float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 2.f);
+        const float overt = 3.f;
+        const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2.f + overt);
         const float arc_angle = 2.f * IM_PI / 4.f;
         const float ht = thickness / 2.f;
 
-        for (size_t arc_num = 0; arc_num < 4; ++arc_num)
-        {
+        const float r = radius * 1.4f;
+        ImVec2 pp(centre.x + ImCos(-IM_PI * 0.75f) * r, centre.y + ImSin(-IM_PI * 0.75f) * r);
+        if (start > IM_PI * 2.f) {
+            ImColor c = color;
+            const float delta = (start - IM_PI * 2.f) / overt;
+            if (delta < 0.5f) {
+                c.Value.w = 1.f - delta * 2.f;
+                window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), c, thickness);
+            } else {
+                c.Value.w = (delta - 0.5f) * 2.f;
+                window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), color, thickness);
+            }
+        } else {
+            window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), color, thickness);
+        }
+
+        if (start < IM_PI * 2.f) {
+            for (size_t arc_num = 0; arc_num < 4; ++arc_num) {
+                float a = arc_angle * arc_num;
+                float segment_progress = (start > a && start < (a + arc_angle))
+                    ? 1.f - (start - a) / (float)arc_angle
+                    : (start < a ? 1.f : 0.f);
+                a -= IM_PI / 4.f;
+                segment_progress = 1.f - segment_progress;
+                ImVec2 p1(centre.x + ImCos(a - IM_PI / 2.f) * r, centre.y + ImSin(a - IM_PI / 2.f) * r);
+                ImVec2 p2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r);
+                switch (arc_num) {
+                case 0: p1.x += ht; p2.x -= ht; p2.x = p1.x + (p2.x - p1.x) * segment_progress; break;
+                case 1: p1.y -= ht; p2.y -= ht; p2.y = p1.y + (p2.y - p1.y) * segment_progress; break;
+                case 2: p1.x += ht; p2.x += ht; p2.x = p1.x + (p2.x - p1.x) * segment_progress; break;
+                case 3: p1.y += ht; p2.y -= ht; p2.y = p1.y + (p2.y - p1.y) * segment_progress; break;
+                }
+                window->DrawList->AddLine(p1, p2, color, thickness);
+            }
+        }
+    }
+
+    void SpinnerSquareStrokeLoading(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2.f );
+        const float arc_angle = 2.f * IM_PI / 4.f;
+        const float ht = thickness / 2.f;
+
+        const float r = radius * 1.4f;
+        const float delta = (start - IM_PI * 2.f) / 2.f;
+        for (size_t arc_num = 0; arc_num < 4; ++arc_num) {
             float a = arc_angle * arc_num;
-            float segment_progress = (start > a && start < (a + arc_angle))
-                                        ? 1.f - (start - a) / (float)arc_angle
-                                        : (start < a ? 1.f : 0.f);
             a -= IM_PI / 4.f;
-            segment_progress = 1.f - segment_progress;
+            ImVec2 pp(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r);
+            window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), color, thickness);
+        }
+
+        const bool grow = start < IM_PI;
+        const float segment_progress = grow ? (start / IM_PI) : (1.f - (start - IM_PI) / IM_PI);
+        for (size_t arc_num = 0; arc_num < 4; ++arc_num)             {
+            float a = arc_angle * arc_num;
+            a -= IM_PI / 4.f;
             const float r = radius * 1.4f;
             const bool right = ImSin(a) > 0;
             const bool top = ImCos(a) < 0;
             ImVec2 p1(centre.x + ImCos(a - IM_PI / 2.f) * r, centre.y + ImSin(a - IM_PI / 2.f) * r);
             ImVec2 p2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r);
             switch (arc_num) {
-            case 0: p1.x -= ht; p2.x -= ht; p2.x = p1.x + (p2.x - p1.x) * segment_progress; break;
-            case 1: p1.y -= ht; p2.y -= ht; p2.y = p1.y + (p2.y - p1.y) * segment_progress; break;
-            case 2: p1.x += ht; p2.x += ht; p2.x = p1.x + (p2.x - p1.x) * segment_progress; break;
-            case 3: p1.y += ht; p2.y += ht; p2.y = p1.y + (p2.y - p1.y) * segment_progress; break;
+            case 0: p1.x -= ht; p2.x += ht;
+                p1.x = grow ? p1.x : p1.x + (p2.x - p1.x) * (1.f - segment_progress); p2.x = grow ? p1.x + (p2.x - p1.x) * segment_progress : p2.x; break;
+            case 1: p1.y -= ht; p2.y += ht;
+                p1.y = grow ? p1.y : p1.y + (p2.y - p1.y) * (1.f - segment_progress); p2.y = grow ? p1.y + (p2.y - p1.y) * segment_progress : p2.y; break;
+            case 2: p1.x += ht; p2.x -= ht;
+                p1.x = grow ? p1.x : grow ? p1.x : p1.x + (p2.x - p1.x) * (1.f - segment_progress); p2.x = grow ? p1.x + (p2.x - p1.x) * segment_progress : p2.x; break;
+            case 3: p1.y += ht; p2.y -= ht;
+                p1.y = grow ? p1.y : p1.y + (p2.y - p1.y) * (1.f - segment_progress); p2.y = grow ? p1.y + (p2.y - p1.y) * segment_progress : p2.y; break;
             }
             window->DrawList->AddLine(p1, p2, color, thickness);
         }
@@ -2346,7 +2402,9 @@ namespace ImSpinner
           case $(93) ImSpinner::SpinnerWaveDots         ("SpinnerWaveDots", R(16),
                                                              T(3), C(ImColor(255, 255, 255)), S(6) * velocity); break;
           case $(94) ImSpinner::SpinnerRotateShapes     ("SpinnerRotateShapes",
-                                                             R(16), T(2), C(ImColor(255, 255, 255)), S(6.f) * velocity, DT(4), MDT(3)); break;
+                                                             R(16), T(2), C(ImColor(255, 255, 255)), S(6.f) * velocity, DT(4), MDT(4)); break;
+          case $(95) ImSpinner::SpinnerSquareStrokeLoading("SpinnerSquareStrokeLoanding",
+                                                             R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
