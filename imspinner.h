@@ -1438,6 +1438,30 @@ namespace ImSpinner
         }
     }
 
+    void SpinnerSinSquares(const char *label, float radius, float thickness, const ImColor &color, float speed)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime(), IM_PI);
+        const float rstart = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2);
+        const float radius1 = radius / 2.5f + thickness;
+        const float angle_offset = IM_PI * 2.f / 4;
+        const float pi_div_2 = IM_PI / 2;
+
+        std::vector<ImVec2> points(4);
+        for (int i = 0; i <= 4; i++)
+        {
+            const float a = rstart + (i * angle_offset);
+            const float begin_a = a - pi_div_2;
+            const float roff = ImMax(ImSin(start) - 0.5f, 0.f) * (radius * 0.4f);
+            ImVec2 tri_centre(centre.x + ImCos(a) * (radius1 + roff), centre.y + ImSin(a) * (radius1 + roff));
+            for (int pi = 0; pi < 4; ++pi) {
+                points[pi] = {tri_centre.x + ImCos(begin_a+ pi * pi_div_2) * radius1, tri_centre.y + ImSin(begin_a + pi * pi_div_2) * radius1};
+            }
+            window->DrawList->AddConvexPolyFilled(points.data(), 4, color);
+        }
+    }
+
     void SpinnerMoonLine(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -2405,6 +2429,8 @@ namespace ImSpinner
                                                              R(16), T(2), C(ImColor(255, 255, 255)), S(6.f) * velocity, DT(4), MDT(4)); break;
           case $(95) ImSpinner::SpinnerSquareStrokeLoading("SpinnerSquareStrokeLoanding",
                                                              R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
+          case $(96) ImSpinner::SpinnerSinSquares       ("SpinnerSinSquares",
+                                                             R(16), T(2), C(ImColor(255, 255, 255)), S(1.f) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
