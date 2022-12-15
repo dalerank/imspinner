@@ -313,6 +313,29 @@ namespace ImSpinner
       }
     }
 
+    void SpinnerCircularLines(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 1.8f, int lines = 8)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        auto ghalf_pi = [] (auto f) -> float { return ImMin(f, IM_PI / 2.f); };
+        const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
+        const float bg_angle_offset = (IM_PI * 2.f) / lines;
+        for (size_t j = 0; j < 3; ++j)
+        {
+            const float start_offset = j * IM_PI / 7.f;
+            const float rmax = ImMax(ImSin(ghalf_pi(start - start_offset)), 0.3f) * radius;
+            const float rmin = ImMax(ImSin(ghalf_pi(start - IM_PI / 4.f - start_offset)), 0.3f) * radius;
+
+            ImColor c = color;
+            c.Value.w = 1.f - j * 0.3f;
+            for (size_t i = 0; i <= lines; i++)
+            {
+                float a = (i * bg_angle_offset);
+                window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin), ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax), c, 1.f);
+            }
+        }
+    }
+
     void SpinnerDots(const char *label, float *nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, float minth = -1.f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -2562,6 +2585,8 @@ namespace ImSpinner
                                                            T(1), C(ImColor(255, 255, 255)), S(3) * velocity);
           case $(100) ImSpinner::SpinnerTrianglesShift  ("SpinnerTrianglesShift",
                                                            R(16), T(8), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(1.8f) * velocity, 8); break;
+          case $(101) ImSpinner::SpinnerCircularLines   ("SpinnerCircularLines",
+                                                             R(16), C(ImColor(255, 255, 255)), S(1.5f) * velocity, 8);  break;
           }
           ImGui::PopID();
           ImGui::EndChild();
