@@ -169,6 +169,38 @@ namespace ImSpinner
         window->DrawList->PathStroke(color, false, thickness);
     }
 
+    void SpinnerLoadingRing(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, int segments = 5)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
+        const float bg_angle_offset = IM_PI * 2.f / num_segments;
+
+        window->DrawList->PathClear();
+        for (size_t i = 0; i <= num_segments; i++)
+        {
+            const float a = (i * bg_angle_offset);
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+        }
+        window->DrawList->PathStroke(bg, false, thickness);
+
+        float out_h, out_s, out_v;
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+    
+        const float half_pi = IM_PI / 2.f;
+        const float start_ang = (start < half_pi) ? 0.f : (start - half_pi) * 4.f;
+        const float angle_offset = ((start < half_pi) ? IM_PI * 2.f : (IM_PI * 2.f - start_ang)) / segments;
+        const float delta_angle = (start < half_pi) ? ImSin(start) * angle_offset : angle_offset;
+        for (int i = 0; i < segments; ++i)
+        {
+            window->DrawList->PathClear();
+            const float begin_ang = start_ang - half_pi + delta_angle * i;
+            ImColor c = ImColor::HSV(out_h + i * (1.f / segments * 2.f), out_s, out_v);
+            window->DrawList->PathArcTo(centre, radius, begin_ang, begin_ang + delta_angle, num_segments);
+            window->DrawList->PathStroke(c, false, thickness);
+        }
+    }
+
     void SpinnerClock(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -2587,6 +2619,8 @@ namespace ImSpinner
                                                            R(16), T(8), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(1.8f) * velocity, 8); break;
           case $(101) ImSpinner::SpinnerCircularLines   ("SpinnerCircularLines",
                                                              R(16), C(ImColor(255, 255, 255)), S(1.5f) * velocity, 8);  break;
+          case $(102) ImSpinner::SpinnerLoadingRing     ("SpinnerLoadingRing",
+                                                            R(16), T(6), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255, 128)), S(1.f) * velocity, DT(5)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
