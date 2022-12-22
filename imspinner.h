@@ -632,9 +632,8 @@ namespace ImSpinner
       float offset = 0;
       for (size_t i = 0; i < dots; i++)
       {
-        const float a = start + (i * IM_PI / dots);
         float th = thickness;
-        offset =  ImFmod(start + i * (size.x / dots), size.x);
+        offset = ImFmod(start + i * (size.x / dots), size.x);
         if (offset < thickness)
         {
           th = offset;
@@ -1966,6 +1965,47 @@ namespace ImSpinner
         }
     }
 
+    void SpinnerPatternSphere(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed * 3.f, size.y);
+        elipses = std::max<int>(elipses, 1);
+
+        auto draw_rotated_ellipse = [&] (float alpha, float tr, float y, float r) {
+            std::array<ImVec2, 36> pts;
+
+            alpha = ImFmod(alpha, IM_PI);
+            float a = r;
+            float b = r / 4.f; 
+
+            const float bg_angle_offset = IM_PI * 2.f / num_segments;
+            for (int i = 0; i < num_segments; ++i) {
+                float anga = (i * bg_angle_offset);
+
+                pts[i].x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+                pts[i].y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + pos.y + y;
+            }
+            ImColor c = color;
+            c.Value.w = tr;
+            for (int i = 1; i < num_segments; ++i) {
+                window->DrawList->AddLine(pts[i-1], pts[i], c, thickness);
+            }
+            window->DrawList->AddLine(pts[num_segments-1], pts[0], c, thickness);
+        };
+
+        float offset = 0;
+        float half_size = size.y * 0.5f;
+        for (size_t i = 0; i < elipses; i++)
+        {
+            offset = ImFmod(start + i * (size.y / elipses), size.y);
+            const float th = (offset > half_size)
+                                ? 1.f - (offset - half_size) / half_size
+                                : offset / half_size;
+            draw_rotated_ellipse(0.f, th, offset, ImSin(offset / size.y * IM_PI) * radius);
+        }
+    }
+
     void SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -2659,6 +2699,8 @@ namespace ImSpinner
                                                             R(16), T(6), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255, 128)), S(1.f) * velocity, DT(5)); break;
           case $(103) ImSpinner::SpinnerPatternRings    ("SpinnerPatternRings",
                                                              R(16), T(2), C(ImColor(255, 255, 255)), S(4.1f) * velocity, DT(3)); break;
+          case $(104) ImSpinner::SpinnerPatternSphere    ("SpinnerPatternSphere",
+                                                             R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(6)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
