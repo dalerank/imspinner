@@ -2006,6 +2006,49 @@ namespace ImSpinner
         }
     }
 
+    void SpinnerRingSynchronous(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 2.f);
+       
+        num_segments *= 4;
+        const float aoffset = ImFmod((float)ImGui::GetTime(), 2.f * IM_PI);
+        const float bofsset = (aoffset > IM_PI) ? IM_PI : aoffset;
+        const float angle_offset = IM_PI * 2.f / num_segments;
+        float ared_min = 0, ared = 0;
+        if (aoffset > IM_PI)
+            ared_min = aoffset - IM_PI;
+
+        auto draw_ellipse = [&] (float alpha, float y, float r) {
+            window->DrawList->PathClear();
+            for (size_t i = 0; i <= num_segments + 1; i++)
+            {
+                ared = start + (i * angle_offset);
+
+                if (i * angle_offset < ared_min * 2)
+                    continue;
+
+                if (i * angle_offset > bofsset * 2.f)
+                    break;
+
+                float a = r;
+                float b = r * 0.25f;
+
+                const float xx = a * ImCos(ared) * ImCos(alpha) + b * ImSin(ared) * ImSin(alpha) + centre.x;
+                const float yy = b * ImSin(ared) * ImCos(alpha) - a * ImCos(ared) * ImSin(alpha) + pos.y + y;
+                window->DrawList->PathLineTo(ImVec2(xx, yy));
+            }
+            window->DrawList->PathStroke(color, false, thickness);
+        };
+
+        for (int i = 0; i < elipses; ++i)
+        {
+            float y = i * ((float)(size.y * 0.7f) / (float)elipses) + (size.y * 0.15f);
+            draw_ellipse(0, y, radius * ImSin((i + 1) * (IM_PI / (elipses + 1))));
+        }
+    }
+
     void SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -2694,13 +2737,15 @@ namespace ImSpinner
           case $(100) ImSpinner::SpinnerTrianglesShift  ("SpinnerTrianglesShift",
                                                            R(16), T(8), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(1.8f) * velocity, 8); break;
           case $(101) ImSpinner::SpinnerCircularLines   ("SpinnerCircularLines",
-                                                             R(16), C(ImColor(255, 255, 255)), S(1.5f) * velocity, 8);  break;
+                                                           R(16), C(ImColor(255, 255, 255)), S(1.5f) * velocity, 8);  break;
           case $(102) ImSpinner::SpinnerLoadingRing     ("SpinnerLoadingRing",
-                                                            R(16), T(6), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255, 128)), S(1.f) * velocity, DT(5)); break;
+                                                           R(16), T(6), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255, 128)), S(1.f) * velocity, DT(5)); break;
           case $(103) ImSpinner::SpinnerPatternRings    ("SpinnerPatternRings",
-                                                             R(16), T(2), C(ImColor(255, 255, 255)), S(4.1f) * velocity, DT(3)); break;
-          case $(104) ImSpinner::SpinnerPatternSphere    ("SpinnerPatternSphere",
-                                                             R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(6)); break;
+                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(4.1f) * velocity, DT(3)); break;
+          case $(104) ImSpinner::SpinnerPatternSphere   ("SpinnerPatternSphere",
+                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(6)); break;
+          case $(105) ImSpinner::SpinnerRingSynchronous ("SpinnerRingSnchronous",
+                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(3)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
