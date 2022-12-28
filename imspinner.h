@@ -1582,7 +1582,7 @@ namespace ImSpinner
             const float a = rstart + (i * angle_offset);
             ImVec2 tri_centre(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1);
             for (int pi = 0; pi < pnt; ++pi) {
-                points[pi] = {tri_centre.x + ImCos(begin_a+ pi * PI_2 / pnt) * radius1, tri_centre.y + ImSin(begin_a + pi * 2.f * PI_2 / pnt) * radius1};
+                points[pi] = {tri_centre.x + ImCos(begin_a+ pi * PI_2 / pnt) * radius1, tri_centre.y + ImSin(begin_a + pi * PI_2 / pnt) * radius1};
             }
             window->DrawList->AddConvexPolyFilled(points.data(), pnt, color);
         }
@@ -1595,18 +1595,17 @@ namespace ImSpinner
         const float start = ImFmod((float)ImGui::GetTime(), IM_PI);
         const float rstart = ImFmod((float)ImGui::GetTime() * speed, PI_2);
         const float radius1 = radius / 2.5f + thickness;
-        const float angle_offset = PI_2 / 4;
-        const float pi_div_2 = IM_PI / 2;
+        const float angle_offset = PI_DIV_2;
 
         std::vector<ImVec2> points(4);
         for (int i = 0; i <= 4; i++)
         {
             const float a = rstart + (i * angle_offset);
-            const float begin_a = a - pi_div_2;
+            const float begin_a = a - PI_DIV_2;
             const float roff = ImMax(ImSin(start) - 0.5f, 0.f) * (radius * 0.4f);
             ImVec2 tri_centre(centre.x + ImCos(a) * (radius1 + roff), centre.y + ImSin(a) * (radius1 + roff));
             for (int pi = 0; pi < 4; ++pi) {
-                points[pi] = {tri_centre.x + ImCos(begin_a+ pi * pi_div_2) * radius1, tri_centre.y + ImSin(begin_a + pi * pi_div_2) * radius1};
+                points[pi] = {tri_centre.x + ImCos(begin_a+ pi * PI_DIV_2) * radius1, tri_centre.y + ImSin(begin_a + pi * PI_DIV_2) * radius1};
             }
             window->DrawList->AddConvexPolyFilled(points.data(), 4, color);
         }
@@ -2534,7 +2533,6 @@ namespace ImSpinner
         ImColor rc = bg;
         for (size_t i = 0; i < bars; i++) {
             float left = start + (i * angle_offset) - angle_offset_t;
-            float right = start + (i * angle_offset) + angle_offset_t;
             float centera = start - PI_DIV_2 + (i * angle_offset);
             float rmul = 1.f - ImClamp(ImAbs(centera - save_start), 0.f, PI_DIV_2) / PI_DIV_2;
             rc.Value.w = ImMax(rmul, 0.1f);
