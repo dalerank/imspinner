@@ -190,14 +190,13 @@ namespace ImSpinner
         float out_h, out_s, out_v;
         ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
     
-        const float half_pi = PI_DIV_2;
-        const float start_ang = (start < half_pi) ? 0.f : (start - half_pi) * 4.f;
-        const float angle_offset = ((start < half_pi) ? PI_2 : (PI_2 - start_ang)) / segments;
-        const float delta_angle = (start < half_pi) ? ImSin(start) * angle_offset : angle_offset;
+        const float start_ang = (start < PI_DIV_2) ? 0.f : (start - PI_DIV_2) * 4.f;
+        const float angle_offset = ((start < PI_DIV_2) ? PI_2 : (PI_2 - start_ang)) / segments;
+        const float delta_angle = (start < PI_DIV_2) ? ImSin(start) * angle_offset : angle_offset;
         for (int i = 0; i < segments; ++i)
         {
             window->DrawList->PathClear();
-            const float begin_ang = start_ang - half_pi + delta_angle * i;
+            const float begin_ang = start_ang - PI_DIV_2 + delta_angle * i;
             ImColor c = ImColor::HSV(out_h + i * (1.f / segments * 2.f), out_s, out_v);
             window->DrawList->PathArcTo(centre, radius, begin_ang, begin_ang + delta_angle, num_segments);
             window->DrawList->PathStroke(c, false, thickness);
@@ -2483,7 +2482,6 @@ namespace ImSpinner
         const float angle_offset = PI_2 / bars;
         float start = (float)ImGui::GetTime() * speed;
         const float astart = ImFmod(start, angle_offset);
-        const float half_pi = PI_DIV_2;
         const float save_start = start;
         start -= astart;
         const float angle_offset_t = angle_offset * 0.3f;
@@ -2503,8 +2501,8 @@ namespace ImSpinner
         for (size_t i = 0; i < bars; i++) {
             float left = start + (i * angle_offset) - angle_offset_t;
             float right = start + (i * angle_offset) + angle_offset_t;
-            float centera = start - half_pi + (i * angle_offset);
-            float rmul = 1.f - ImClamp(ImAbs(centera - save_start), 0.f, half_pi) / half_pi;
+            float centera = start - PI_DIV_2 + (i * angle_offset);
+            float rmul = 1.f - ImClamp(ImAbs(centera - save_start), 0.f, PI_DIV_2) / PI_DIV_2;
             rc.Value.w = ImMax(rmul, 0.1f);
             rmul *= 1.5f;
             rmul = ImMax(0.5f, rmul);
@@ -2526,7 +2524,6 @@ namespace ImSpinner
         const float angle_offset = PI_2 / bars;
         float start = (float)ImGui::GetTime() * speed;
         const float astart = ImFmod(start, angle_offset);
-        const float half_pi = PI_DIV_2;
         const float save_start = start;
         start -= astart;
         const float angle_offset_t = angle_offset * 0.3f;
@@ -2538,8 +2535,8 @@ namespace ImSpinner
         for (size_t i = 0; i < bars; i++) {
             float left = start + (i * angle_offset) - angle_offset_t;
             float right = start + (i * angle_offset) + angle_offset_t;
-            float centera = start - half_pi + (i * angle_offset);
-            float rmul = 1.f - ImClamp(ImAbs(centera - save_start), 0.f, half_pi) / half_pi;
+            float centera = start - PI_DIV_2 + (i * angle_offset);
+            float rmul = 1.f - ImClamp(ImAbs(centera - save_start), 0.f, PI_DIV_2) / PI_DIV_2;
             rc.Value.w = ImMax(rmul, 0.1f);
             rmul *= 1.f + ImSin(rmul * IM_PI);
             const float r = ImMax(radius * rmul, radius);
