@@ -2593,6 +2593,30 @@ namespace ImSpinner
         }
     }
 
+    void SpinnerCurvedCircle(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t circles = 1) 
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+        const float bg_angle_offset = PI_2 / num_segments;
+
+        float out_h, out_s, out_v;
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+        for (int j = 0; j < circles; j++)
+        {
+            window->DrawList->PathClear();
+            const float rr = radius - ((radius * 0.5f) / circles) * j;
+            const float start_a = start * (1.1f * (j+1));
+            for (size_t i = 0; i <= num_segments; i++)
+            {
+                const float a = start_a + (i * bg_angle_offset);
+                const float r = rr - (0.2f * (i % 2)) * rr;
+                window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r));
+            }
+            window->DrawList->PathStroke(ImColor::HSV(out_h + (j * 1.f / circles), out_s, out_v), false, thickness);
+        }
+    }
+
     namespace detail {
       struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); } spinner_draw_funcs[e_st_count] = {
         { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_AngleMin, c.m_AngleMax); } },
@@ -2631,7 +2655,7 @@ namespace ImSpinner
       static float widget_size = 50.f;
 
       static ImVec2 selected{0, 0};
-      constexpr int num_spinners = 110;
+      constexpr int num_spinners = 120;
       int sidex = int(500 / widget_size);
       int sidey = int(num_spinners / sidex);
 
@@ -2890,8 +2914,10 @@ namespace ImSpinner
                                                           R(16), T(6), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(2.8f) * velocity, DT(8)); break;
           case $(108) ImSpinner::SpinnerPointsShift     ("SpinnerPointsShift",
                                                           R(16), T(3), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(1.8f) * velocity, DT(10)); break;
-          case $(109) ImSpinner::SpinnerCircularPoints   ("SpinnerCircularPoints",
-                                                          R(16), T(1.2), C(ImColor(255, 255, 255)), S(10.f) * velocity, DT(7));  break;
+          case $(109) ImSpinner::SpinnerCircularPoints  ("SpinnerCircularPoints",
+                                                          R(16), T(1.2f), C(ImColor(255, 255, 255)), S(10.f) * velocity, DT(7));  break;
+          case $(110) ImSpinner::SpinnerCurvedCircle    ("SpinnerCurvedCircle",
+                                                          R(16), T(1.2f), C(ImColor(255, 255, 255)), S(1.f) * velocity, DT(3));  break;
           }
           ImGui::PopID();
           ImGui::EndChild();
