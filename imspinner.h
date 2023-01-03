@@ -127,7 +127,8 @@ namespace ImSpinner
 #undef IMPLRPOP
     }
 
-#define SPINNER_HEADER(pos, size, centre, num_segments) ImVec2 pos, size, centre; int num_segments; if (!detail::SpinnerBegin(label, radius, pos, size, centre, num_segments)) { return; }; ImGuiWindow *window = ImGui::GetCurrentWindow();
+#define SPINNER_HEADER(pos, size, centre, num_segments) ImVec2 pos, size, centre; int num_segments; if (!detail::SpinnerBegin(label, radius, pos, size, centre, num_segments)) { return; }; ImGuiWindow *window = ImGui::GetCurrentWindow(); \
+    auto draw = [&] (auto point_func, auto dbc, auto dth) { window->DrawList->PathClear(); for (int i = 0; i < num_segments; i++) { ImVec2 p = point_func(i); window->DrawList->PathLineTo(ImVec2(centre.x + p.x, centre.y + p.y)); } window->DrawList->PathStroke(dbc, false, dth); }
 
     void SpinnerRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, float ang_min = 0.f, float ang_max = PI_2)
     {
@@ -137,39 +138,28 @@ namespace ImSpinner
         const float a_min = ImMax(ang_min, PI_2 * ((float)start) / (float)num_segments);
         const float a_max = ImMin(ang_max, PI_2 * ((float)num_segments - 3) / (float)num_segments);
 
-        window->DrawList->PathClear();
-        for (size_t i = 0; i < num_segments; i++)
-        {
+        draw([&] (int i) {
             const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
             const float rspeed = a + (float)ImGui::GetTime() * speed;
-            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(rspeed) * radius, centre.y + ImSin(rspeed) * radius));
-        }
-        window->DrawList->PathStroke(color, false, thickness);
+            return ImVec2(ImCos(rspeed) * radius, ImSin(rspeed) * radius);
+        }, color, thickness);
     }
 
     void SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
-        const float start = (float)ImGui::GetTime()* speed;
-        const float bg_angle_offset = PI_2 / num_segments;
+        const float start = (float)ImGui::GetTime() * speed;
 
-        window->DrawList->PathClear();
-        for (size_t i = 0; i <= num_segments; i++)
-        {
-            const float a = start + (i * bg_angle_offset);
-            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
-        }
-        window->DrawList->PathStroke(bg, false, thickness);
+        draw([&] (int i) {
+            const float a = start + (i * (PI_2 / (num_segments - 1)));
+            return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
+        }, bg, thickness);
 
-        window->DrawList->PathClear();
-        const float angle_offset = angle / num_segments;
-        for (size_t i = 0; i < num_segments; i++)
-        {
-            const float a = start + (i * angle_offset);
-            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
-        }
-        window->DrawList->PathStroke(color, false, thickness);
+        draw([&] (int i) {
+            const float a = start + (i * angle / num_segments);
+            return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
+        }, color, thickness);
     }
 
     void SpinnerLoadingRing(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, int segments = 5)
@@ -2939,6 +2929,8 @@ namespace ImSpinner
                                                           R(16), T(1.2f), C(ImColor(255, 255, 255)), S(1.f) * velocity, DT(3));  break;
           case $(111) ImSpinner::SpinnerModCircle       ("SpinnerModCirclre",
                                                           R(16), T(1.2f), C(ImColor(255, 255, 255)), AMN(1.f), AMX(2.f), S(3.f) * velocity);  break;
+          case $(112) ImSpinner::SpinnerModCircle       ("SpinnerModCirclre2",
+                                                             R(16), T(1.2f), C(ImColor(255, 255, 255)), AMN(1.11f), AMX(3.33f), S(3.f) * velocity);  break;
           }
           ImGui::PopID();
           ImGui::EndChild();
