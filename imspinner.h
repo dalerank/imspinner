@@ -2617,6 +2617,25 @@ namespace ImSpinner
         }
     }
 
+    void SpinnerModCircle(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float ang_min = 1.f, float ang_max = 1.f, float speed = 2.8f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+
+        window->DrawList->PathClear();
+        for (size_t i = 0; i <= 90; i++)
+        {
+            const float ax = ((i / 90.f) * PI_2 * ang_min);
+            const float ay = ((i / 90.f) * PI_2 * ang_max);
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ax) * radius, centre.y + ImSin(ay) * radius));
+        }
+        window->DrawList->PathStroke(color, false, thickness);
+
+        start = (start < IM_PI) ? (start * 2.f) : (PI_2 - start) * 2.f;
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(start * ang_min) * radius, centre.y + ImSin(start * ang_max) * radius), thickness * 4.f, color, num_segments);
+    }
+
     namespace detail {
       struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); } spinner_draw_funcs[e_st_count] = {
         { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_AngleMin, c.m_AngleMax); } },
@@ -2918,6 +2937,8 @@ namespace ImSpinner
                                                           R(16), T(1.2f), C(ImColor(255, 255, 255)), S(10.f) * velocity, DT(7));  break;
           case $(110) ImSpinner::SpinnerCurvedCircle    ("SpinnerCurvedCircle",
                                                           R(16), T(1.2f), C(ImColor(255, 255, 255)), S(1.f) * velocity, DT(3));  break;
+          case $(111) ImSpinner::SpinnerModCircle       ("SpinnerModCirclre",
+                                                          R(16), T(1.2f), C(ImColor(255, 255, 255)), AMN(1.f), AMX(2.f), S(3.f) * velocity);  break;
           }
           ImGui::PopID();
           ImGui::EndChild();
