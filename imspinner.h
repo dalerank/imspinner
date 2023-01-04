@@ -1928,23 +1928,19 @@ namespace ImSpinner
       elipses = std::min<int>(elipses, 3);
 
       auto draw_rotated_ellipse = [&] (float alpha, float start) {
-        std::array<ImVec2, 36> pts;
-
         alpha = ImFmod(alpha, IM_PI);
         float a = radius;
         float b = radius / 2.f; 
 
-        const float bg_angle_offset = PI_2 / num_segments;
+        window->DrawList->PathClear();
         for (int i = 0; i < num_segments; ++i) {
-          float anga = (i * bg_angle_offset);
+          float anga = (i * (PI_2 / (num_segments - 1)));
 
-          pts[i].x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
-          pts[i].y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
+          float xx = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+          float yy = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
+          window->DrawList->PathLineTo({xx, yy});
         }
-        for (int i = 1; i < num_segments; ++i) {
-          window->DrawList->AddLine(pts[i-1], pts[i], color, thickness);
-        }
-        window->DrawList->AddLine(pts[num_segments-1], pts[0], color, thickness);
+        window->DrawList->PathStroke(color, false, thickness);
 
         float anga = ImFmod(start, PI_2);
         float x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
@@ -1971,31 +1967,65 @@ namespace ImSpinner
         elipses = std::max<int>(elipses, 1);
 
         auto draw_rotated_ellipse = [&] (float alpha, float tr, float y) {
-            std::array<ImVec2, 36> pts;
-
             alpha = ImFmod(alpha, IM_PI);
             float a = radius;
             float b = radius / 2.f; 
 
-            const float bg_angle_offset = PI_2 / num_segments;
-            for (int i = 0; i < num_segments; ++i) {
-                float anga = (i * bg_angle_offset);
-
-                pts[i].x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
-                pts[i].y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y + y;
-            }
+            const float bg_angle_offset = PI_2 / (num_segments - 1);
             ImColor c = color;
             c.Value.w = tr;
-            for (int i = 1; i < num_segments; ++i) {
-                window->DrawList->AddLine(pts[i-1], pts[i], c, thickness);
+            window->DrawList->PathClear();
+            for (int i = 0; i < num_segments; ++i) {
+                float anga = (i * bg_angle_offset);
+                float xx = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+                float yy = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y + y;
+                window->DrawList->PathLineTo({xx, yy});
             }
-            window->DrawList->AddLine(pts[num_segments-1], pts[0], c, thickness);
+            window->DrawList->PathStroke(c, false, thickness);
         };
 
         for (int i = 0; i < elipses; ++i)
         {
             const float h = (0.5f * ImSin(start + (IM_PI / elipses) * i));
             draw_rotated_ellipse(0.f, 0.1f + (0.9f / elipses) * i, radius * h);
+        }
+    }
+
+    void SpinnerPatternEclipse(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3, float delta_a = 2.f, float delta_y = 0.f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = (float)ImGui::GetTime()* speed;
+        elipses = std::max<int>(elipses, 1);
+
+        auto draw_rotated_ellipse = [&] (const ImVec2 &pp, float alpha, float tr, float r, float x, float y) {
+            alpha = ImFmod(alpha, IM_PI);
+            float a = r;
+            float b = r / delta_a; 
+
+            ImColor c = color;
+            c.Value.w = tr;
+            window->DrawList->PathClear();
+            for (int i = 0; i < num_segments; ++i) {
+                float anga = (i *  PI_2 / (num_segments - 1));
+                float xx = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + pp.x + x;
+                float yy = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + pp.y + y;
+                window->DrawList->PathLineTo({xx, yy});
+            }
+            window->DrawList->PathStroke(c, false, thickness);
+        };
+
+        for (int i = 0; i < elipses; ++i)
+        {
+            const float rkoeff = (0.5f + 0.5f * ImSin(start + (IM_PI / elipses) * i));
+            const float h = ((1.f / elipses) * (i+1));
+            const float anga = start + (i *  PI_DIV_2 / elipses);
+            const float yoff = ((1.f / elipses) * i) * delta_y;
+            float a = (radius * (1.f - h));
+            float b = (radius * (1.f - h)) / delta_a; 
+            float xx = a * ImCos(anga) * ImCos(0) + b * ImSin(anga) * ImSin(0) + centre.x;
+            float yy = b * ImSin(anga) * ImCos(0) - a * ImCos(anga) * ImSin(0) + centre.y;
+            draw_rotated_ellipse(ImVec2(xx, yy), 0.f, 0.3f + (0.7f / elipses) * i, radius * h, 0.f, yoff * radius);
         }
     }
 
@@ -2007,25 +2037,20 @@ namespace ImSpinner
         elipses = std::max<int>(elipses, 1);
 
         auto draw_rotated_ellipse = [&] (float alpha, float tr, float y, float r) {
-            std::array<ImVec2, 36> pts;
-
             alpha = ImFmod(alpha, IM_PI);
             float a = r;
             float b = r / 4.f; 
 
-            const float bg_angle_offset = PI_2 / num_segments;
-            for (int i = 0; i < num_segments; ++i) {
-                float anga = (i * bg_angle_offset);
-
-                pts[i].x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
-                pts[i].y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + pos.y + y;
-            }
             ImColor c = color;
             c.Value.w = tr;
-            for (int i = 1; i < num_segments; ++i) {
-                window->DrawList->AddLine(pts[i-1], pts[i], c, thickness);
+            window->DrawList->PathClear();
+            for (int i = 0; i < num_segments; ++i) {
+                float anga = (i * PI_2 / (num_segments - 1));
+                float xx = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+                float yy = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + pos.y + y;
+                window->DrawList->PathLineTo({xx, yy});
             }
-            window->DrawList->AddLine(pts[num_segments-1], pts[0], c, thickness);
+            window->DrawList->PathStroke(c, false, thickness);
         };
 
         float offset = 0;
@@ -2886,37 +2911,37 @@ namespace ImSpinner
           case $(89) ImSpinner::SpinnerSquareStrokeFade ("SpinnerSquareStrokeFade",
                                                           R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
           case $(90) ImSpinner::SpinnerSquareStrokeFill ("SpinnerSquareStrokeFill",
-                                                           R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
+                                                          R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
           case $(91) ImSpinner::SpinnerSwingDots        ("SpinnerSwingDots",
-                                                           R(16), T(6), C(ImColor(255, 0, 0)), S(4.1f) * velocity); break;
+                                                          R(16), T(6), C(ImColor(255, 0, 0)), S(4.1f) * velocity); break;
           case $(92) ImSpinner::SpinnerRotateWheel      ("SpinnerRotateWheel",
-                                                           R(16), T(10), C(ImColor(255, 255, 0)), CB(ImColor(255, 255, 255)), S(2.1f) * velocity, 8); break;
+                                                          R(16), T(10), C(ImColor(255, 255, 0)), CB(ImColor(255, 255, 255)), S(2.1f) * velocity, 8); break;
           case $(93) ImSpinner::SpinnerWaveDots         ("SpinnerWaveDots", R(16),
-                                                           T(3), C(ImColor(255, 255, 255)), S(6) * velocity); break;
+                                                          T(3), C(ImColor(255, 255, 255)), S(6) * velocity); break;
           case $(94) ImSpinner::SpinnerRotateShapes     ("SpinnerRotateShapes",
-                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(6.f) * velocity, DT(4), MDT(4)); break;
+                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(6.f) * velocity, DT(4), MDT(4)); break;
           case $(95) ImSpinner::SpinnerSquareStrokeLoading("SpinnerSquareStrokeLoanding",
-                                                           R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
+                                                          R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
           case $(96) ImSpinner::SpinnerSinSquares       ("SpinnerSinSquares",
-                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(1.f) * velocity); break;
+                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(1.f) * velocity); break;
           case $(97) ImSpinner::SpinnerZipDots          ("SpinnerZipDots", R(16),
-                                                           T(3), C(ImColor(255, 255, 255)), S(6) * velocity, DT(5)); break;
+                                                          T(3), C(ImColor(255, 255, 255)), S(6) * velocity, DT(5)); break;
           case $(98) ImSpinner::SpinnerDotsToBar        ("SpinnerDotsToBar", R(16),
-                                                           T(3), D(0.5f), C(ImColor::HSV(0.31f, 0.8f, 0.8f)), S(5) * velocity, DT(5)); break;
+                                                          T(3), D(0.5f), C(ImColor::HSV(0.31f, 0.8f, 0.8f)), S(5) * velocity, DT(5)); break;
           case $(99) ImSpinner::SpinnerSineArcs         ("SpinnerSineArcs", R(16),
-                                                           T(1), C(ImColor(255, 255, 255)), S(3) * velocity);
+                                                          T(1), C(ImColor(255, 255, 255)), S(3) * velocity);
           case $(100) ImSpinner::SpinnerTrianglesShift  ("SpinnerTrianglesShift",
-                                                           R(16), T(8), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(1.8f) * velocity, DT(8)); break;
+                                                          R(16), T(8), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(1.8f) * velocity, DT(8)); break;
           case $(101) ImSpinner::SpinnerCircularLines   ("SpinnerCircularLines",
-                                                           R(16), C(ImColor(255, 255, 255)), S(1.5f) * velocity, DT(8));  break;
+                                                          R(16), C(ImColor(255, 255, 255)), S(1.5f) * velocity, DT(8));  break;
           case $(102) ImSpinner::SpinnerLoadingRing     ("SpinnerLoadingRing",
-                                                           R(16), T(6), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255, 128)), S(1.f) * velocity, DT(5)); break;
+                                                          R(16), T(6), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255, 128)), S(1.f) * velocity, DT(5)); break;
           case $(103) ImSpinner::SpinnerPatternRings    ("SpinnerPatternRings",
-                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(4.1f) * velocity, DT(3)); break;
+                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(4.1f) * velocity, DT(3)); break;
           case $(104) ImSpinner::SpinnerPatternSphere   ("SpinnerPatternSphere",
-                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(6)); break;
+                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(6)); break;
           case $(105) ImSpinner::SpinnerRingSynchronous ("SpinnerRingSnchronous",
-                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(3)); break;
+                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(3)); break;
           case $(106) ImSpinner::SpinnerRingWatermarks  ("SpinnerRingWatermarks",
                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(3)); break;
           case $(107) ImSpinner::SpinnerFilledArcRing   ("SpinnerFilledArcRing",
@@ -2930,7 +2955,11 @@ namespace ImSpinner
           case $(111) ImSpinner::SpinnerModCircle       ("SpinnerModCirclre",
                                                           R(16), T(1.2f), C(ImColor(255, 255, 255)), AMN(1.f), AMX(2.f), S(3.f) * velocity);  break;
           case $(112) ImSpinner::SpinnerModCircle       ("SpinnerModCirclre2",
-                                                             R(16), T(1.2f), C(ImColor(255, 255, 255)), AMN(1.11f), AMX(3.33f), S(3.f) * velocity);  break;
+                                                          R(16), T(1.2f), C(ImColor(255, 255, 255)), AMN(1.11f), AMX(3.33f), S(3.f) * velocity);  break;
+          case $(113) ImSpinner::SpinnerPatternEclipse  ("SpinnerPatternEclipse",
+                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(4.1f) * velocity, DT(5), AMN(2.f), AMX(0.f)); break;
+          case $(114) ImSpinner::SpinnerPatternEclipse  ("SpinnerPatternEclipse2",
+                                                             R(16), T(2), C(ImColor(255, 255, 255)), S(4.1f) * velocity, DT(9), AMN(4.f), AMX(1.f)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
