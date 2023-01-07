@@ -51,6 +51,7 @@ namespace ImSpinner
     constexpr float PI_DIV_4 = IM_PI / 4.f;
     constexpr float PI_DIV_2 = IM_PI / 2.f;
     constexpr float PI_2 = IM_PI * 2.f;
+    constexpr float PI_DIV(float d) { return IM_PI / d; }
 
     DECLPROP (SpinnerType, SpinnerTypeT, e_st_rainbow)
     DECLPROP (Radius, float, 16.f)
@@ -1627,27 +1628,48 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-
-      ImColor c = color;
       float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
-      c.Value.w = ImMax(0.1f, ImMin(lerp_koeff, 1.f));
       window->DrawList->AddCircleFilled(centre, thickness, bg, num_segments);
-      window->DrawList->AddCircleFilled(centre, thickness, c, num_segments);
+      window->DrawList->AddCircleFilled(centre, thickness, color_alpha(color, ImMax(0.1f, ImMin(lerp_koeff, 1.f))), num_segments);
 
-      auto PathArc = [&] {
+      auto PathArc = [&] (auto c, auto th) {
+        window->DrawList->PathClear();
         const float bg_angle_offset = PI_2 / num_segments;
-        for (int i = 0; i <= num_segments; i++) {
+        for (int i = 0; i <= num_segments; i++)
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(i * bg_angle_offset) * radius, centre.y + ImSin(i * bg_angle_offset) * radius));
-        }
+        window->DrawList->PathStroke(c, false, th);
       };
-      window->DrawList->PathClear();
-      PathArc();
-      window->DrawList->PathStroke(bg, false, thickness);
-
-      PathArc();
+      
       lerp_koeff = (ImSin((float)ImGui::GetTime() * speed * 1.6f) + 1.f) * 0.5f;
-      c.Value.w = 1.f - ImMax(0.1f, ImMin(lerp_koeff, 1.f));;
-      window->DrawList->PathStroke(c, false, thickness);
+      PathArc(bg, thickness);
+      PathArc(color_alpha(color, 1.f - ImMax(0.1f, ImMin(lerp_koeff, 1.f))), thickness);
+    }
+
+    void SpinnerWifiIndicator(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float cangle = 0.f, int dots = 3) 
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
+        float start_ang = -cangle - PI_DIV_4 - PI_DIV_2;
+        ImVec2 pc(centre.x + ImSin(cangle) * radius, centre.y + ImCos(cangle) * radius);
+        window->DrawList->AddCircleFilled(pc, thickness, bg, num_segments);
+        window->DrawList->AddCircleFilled(pc, thickness, color_alpha(color, ImMax(0.1f, ImMin(lerp_koeff, 1.f))), num_segments);
+
+        auto PathArc = [&] (auto as, auto c, auto th, auto r) {
+            window->DrawList->PathClear();
+            const float bg_angle_offset = PI_DIV(2) / num_segments;
+            for (int i = 0; i <= num_segments; i++)
+                window->DrawList->PathLineTo(ImVec2(pc.x + ImCos(as + i * bg_angle_offset) * r, pc.y + ImSin(as + i * bg_angle_offset) * r));
+            window->DrawList->PathStroke(c, false, th);
+        };
+
+        const float interval = (size.x * 0.7f) / dots;
+        for (int i = 0; i < dots; ++i) {
+            float r = 1.5f * (i + 1) * interval;
+            lerp_koeff = (ImSin((float)ImGui::GetTime() * speed - (i+1) * (IM_PI / dots)) + 1.f) * 0.5f;
+            PathArc(start_ang, bg, thickness, r);
+            PathArc(start_ang, color_alpha(color, ImMax(0.1f, ImMin(lerp_koeff, 1.f))), thickness, r);
+        }
     }
 
     void SpinnerTrianglesSelector(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t bars = 8) 
@@ -2198,6 +2220,29 @@ namespace ImSpinner
         }
     }
 
+    void SpinnerSpiralEye(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+        float a = (radius * 3.f) / num_segments;
+        float b = a;
+        num_segments *= 4;
+
+        auto half_eye = [&] (float side) {
+            for (size_t arc_num = 0; arc_num < num_segments; ++arc_num)         {
+                float angle = (PI_2 / num_segments) * arc_num;
+                float x = centre.x + (a + b * angle) * ImCos((start + angle) * side);
+                float y = centre.y + (a + b * angle) * ImSin((start + angle) * side);
+
+                window->DrawList->AddCircleFilled(ImVec2(x, y), thickness, color);
+            }
+        };
+
+        half_eye(1.f);
+        half_eye(-1.f);
+    }
+
     void SpinnerBarChartSine(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -2677,6 +2722,7 @@ namespace ImSpinner
 
       static int hue = 0;
       static float nextdot = 0, nextdot2;
+      static bool show_number = false;
       
       nextdot -= 0.07f;
 
@@ -2721,6 +2767,8 @@ namespace ImSpinner
           float sp_radius = __rr.count(current_spi) ? __rr[current_spi] : 16.f;
           float sp_offset = (widget_size - sp_radius * 2.f ) / 2.f;
           ImGui::SetCursorPos({curpos_begin.x + sp_offset, curpos_begin.y + sp_offset});
+          if (show_number)
+            ImGui::Text("%04u", current_spi);
 
 #define $(i) i: cci = i;
           switch (current_spi) {
@@ -2959,8 +3007,12 @@ namespace ImSpinner
                                                           T(2), C(ImColor(255, 255, 255)), S(8) * velocity, DT(8)); break;
           case $(116) ImSpinner::SpinnerRainbowShot     ("SpinnerRainbowShot",
                                                           R(16), T(4), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(5)); break;
-          case $(117) ImSpinner::SpinnerSpiral          ("SpinnerSpira",
+          case $(117) ImSpinner::SpinnerSpiral          ("SpinnerSpiral",
                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(6) * velocity, DT(5)); break;
+          case $(118) ImSpinner::SpinnerSpiralEye       ("SpinnerSpiralEye",
+                                                          R(16), T(1), C(ImColor(255, 255, 255)), S(3) * velocity); break;
+          case $(119) ImSpinner::SpinnerWifiIndicator   ("SpinnerWifiIndicator",
+                                                          R(16), T(1.5f), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(7.8f) * velocity, AMN(5.52f), DT(3)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
@@ -2975,6 +3027,7 @@ namespace ImSpinner
       ImGui::SetCursorPos({520, 20});
       ImGui::BeginChild("Options");
       ImGui::SliderFloat("Velocity", &velocity, 0.0f, 10.0f, "velocity = %.2f");
+      ImGui::Checkbox("Show Numbers", &show_number);
       ImGui::SliderFloat("Grid size", &widget_size, 0.0f, 100.0f, "size = %.2f");
       if (__rr.count(last_cci)) ImGui::SliderFloat("Radius", &__rr[last_cci], 0.0f, 100.0f, "radius = %.2f");
       if (__tt.count(last_cci)) ImGui::SliderFloat("Thickness", &__tt[last_cci], 0.0f, 100.0f, "thickness = %.2f");
