@@ -61,7 +61,8 @@ namespace ImSpinner
     constexpr float PI_DIV_4 = IM_PI / 4.f;
     constexpr float PI_DIV_2 = IM_PI / 2.f;
     constexpr float PI_2 = IM_PI * 2.f;
-    constexpr float PI_DIV(float d) { return IM_PI / d; }
+    template<class T> constexpr float PI_DIV(T d) { return IM_PI / (float)d; }
+    template<class T> constexpr float PI_2_DIV(T d) { return PI_2 / (float)d; }
 
     DECLPROP (SpinnerType, SpinnerTypeT, e_st_rainbow)
     DECLPROP (Radius, float, 16.f)
@@ -229,7 +230,6 @@ namespace ImSpinner
       float radius1 = radius_k * radius;
 
       circle([&] (int i) {
-          const float a = start + (i * bg_angle_offset);
           return ImVec2(ImCos(i * bg_angle_offset) * radius1, ImSin(i * bg_angle_offset) * radius1);
       }, bg, thickness);
 
@@ -240,13 +240,12 @@ namespace ImSpinner
       } 
       else 
       {
-        radius_b = (1 - radius_k);
+        radius_b = (1.f - radius_k);
       }
       storage->SetFloat(radiusbId, radius_b);
       
       float radius_tb = sequence ? ImMax(radius_k, radius_b) * radius : (radius_b * radius);
       circle([&] (int i) {
-          const float a = start + (i * bg_angle_offset);
           return ImVec2(ImCos(i * bg_angle_offset) * radius_tb, ImSin(i * bg_angle_offset) * radius_tb);
       }, bg, thickness);
     }
@@ -266,7 +265,7 @@ namespace ImSpinner
       float radius_k = ImSin(start_r);
       window->DrawList->AddCircleFilled(centre, radius_k * radius, color_alpha(bg, ImMin(0.1f, radius_k)), num_segments);
 
-      radius_b = (1 - radius_k);
+      radius_b = (1.f - radius_k);
       storage->SetFloat(radiusbId, radius_b);
 
       window->DrawList->AddCircleFilled(centre, radius_b * radius, color_alpha(bg, ImMin(0.3f, radius_b)), num_segments);
@@ -276,28 +275,19 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      const float bg_angle_offset = PI_2 / num_segments;
+      const float bg_angle_offset = PI_2 / (num_segments - 1);
       const float koeff = IM_PI / (2 * (float)rings);
       float start = (float)ImGui::GetTime() * speed;
 
       for (int num_ring = 0; num_ring < rings; ++num_ring)
       {
-        window->DrawList->PathClear();
-        float start_r = ImFmod(start + (num_ring * koeff), PI_DIV_2);
-        float radius_k = ImSin(start_r);
+        float radius_k = ImSin(ImFmod(start + (num_ring * koeff), PI_DIV_2));
         float radius1 = radius_k * radius;
-        ImColor c = color;
-        if (radius_k > 0.5f)
-        {
-          c.Value.w = 2.f - (radius_k * 2.f);
-        }
 
-        for (size_t i = 0; i <= num_segments; i++)
-        {
-          const float a = start + (i * bg_angle_offset);
-          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1));
-        }
-        window->DrawList->PathStroke(c, false, thickness);
+        circle([&] (int i) {
+            const float a = start + (i * bg_angle_offset);
+            return ImVec2(ImCos(a) * radius1, ImSin(a) * radius1);
+        }, color_alpha(color, radius_k > 0.5f ? 2.f - (radius_k * 2.f) : color.Value.w), thickness);
       }
     }
 
@@ -314,13 +304,7 @@ namespace ImSpinner
         float start_r = ImFmod(start + (num_ring * koeff), PI_DIV_2);
         float radius_k = ImSin(start_r);
         float radius1 = radius_k * radius;
-        ImColor c = color;
-        if (radius_k > 0.5f)
-        {
-          c.Value.w = 2.f - (radius_k * 2.f);
-        }
-
-        c.Value.w = (radius_k > 0.5f) ? (2.f - (radius_k * 2.f)) : c.Value.w;
+        ImColor c = color_alpha(color, (radius_k > 0.5f) ? (2.f - (radius_k * 2.f)) : color.Value.w);
         window->DrawList->AddCircleFilled(centre, radius1, c, num_segments);
       }
     }
@@ -2493,14 +2477,13 @@ namespace ImSpinner
         SPINNER_HEADER(pos, size, centre, num_segments);
 
         const float start = (float)ImGui::GetTime() * speed;
-        const float ang_offset = (PI_2) / dots;
 
         for (size_t i = 0; i < dots; i++)
         {
-            const float astart = start + ang_offset * i;
-            ImColor c = color;
-            c.Value.w = ImMax(minfade, ImSin(astart * 1.0f + PI_DIV_2));
-            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(astart) * radius, centre.y + ryk * ImCos(astart) * radius), thickness, c, 8);
+            const float astart = start + PI_2_DIV(dots) * i;
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(astart) * radius, centre.y + ryk * ImCos(astart) * radius), thickness,
+                                              color_alpha(color, ImMax(minfade, ImSin(astart + PI_DIV_2))),
+                                              8);
         }
     }
 
@@ -2698,6 +2681,37 @@ namespace ImSpinner
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(start * ang_min) * radius, centre.y + ImSin(start * ang_max) * radius), thickness * 4.f, color, num_segments);
     }
 
+    inline void SpinnerDnaDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8, float delta = 0.5f, bool mode = 0)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float nextItemKoeff = 2.5f;
+        const float dots = (size.x / (thickness * nextItemKoeff));
+        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+
+        float out_h, out_s, out_v;
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+        auto draw_point = [&] (float angle, int i) {
+            float a = angle + start + (IM_PI - i * PI_DIV(dots));
+            float th_koeff = 1.f + ImSin(a + PI_DIV_2) * 0.5f;
+
+            float pp = mode ? centre.x + ImSin(a) * size.x * delta
+                            : centre.y + ImSin(a) * size.y * delta;
+            ImColor c = ImColor::HSV(out_h + i * (1.f / dots * 2.f), out_s, out_v);
+            ImVec2 p = mode ? ImVec2(pp, centre.y - (size.y * 0.5f) + i * thickness * nextItemKoeff)
+                            : ImVec2(centre.x - (size.x * 0.5f) + i * thickness * nextItemKoeff, pp);
+            window->DrawList->AddCircleFilled(p, thickness * th_koeff, c, lt);
+            return p;
+        };
+
+
+        for (size_t i = 0; i < dots; i++) {
+            ImVec2 p1 = draw_point(0, i);
+            ImVec2 p2 = draw_point(IM_PI, i);
+            window->DrawList->AddLine(p1, p2, color, thickness * 0.5f);
+        }
+    }
+
     namespace detail {
       struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); } spinner_draw_funcs[e_st_count] = {
         { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_AngleMin, c.m_AngleMax); } },
@@ -2737,8 +2751,9 @@ namespace ImSpinner
       static float widget_size = 50.f;
 
       static ImVec2 selected{0, 0};
-      constexpr int num_spinners = 120;
-      int sidex = int(500 / widget_size);
+      constexpr int num_spinners = 140;
+      constexpr int table_width = 550;
+      int sidex = int(table_width / widget_size);
       int sidey = int(num_spinners / sidex);
 
       static int cci = 0, last_cci = 0;
@@ -2949,9 +2964,9 @@ namespace ImSpinner
           case $(83) ImSpinner::SpinnerScaleSquares     ("SpinnerScaleSquares",
                                                           R(16), T(8), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(5) * velocity); break;
           case $(84) ImSpinner::SpinnerHboDots          ("SpinnerMovingDots", R(16),
-                                                          T(4), C(ImColor(255, 255, 255)), 0.f, 0.f, S(1.1f) * velocity, 6); break;
-          case $(85) ImSpinner::SpinnerHboDots          ("SpinnerMovingDots", R(16),
-                                                          T(4), C(ImColor(255, 255, 255)), 0.1f, 0.5f, S(1.1f) * velocity, 6); break;
+                                                          T(4), C(ImColor(255, 255, 255)), 0.f, 0.f, S(1.1f) * velocity, DT(6)); break;
+          case $(85) ImSpinner::SpinnerHboDots          ("SpinnerMovingDots2", R(16),
+                                                          T(4), C(ImColor(255, 255, 255)), 0.1f, 0.5f, S(1.1f) * velocity, DT(6)); break;
           case $(86) ImSpinner::Spinner<e_st_bounce_ball>("SpinnerBounceBall3",
                                                           Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, Speed{S(3.2f) * velocity}, Dots{DT(5)}); break;
           case $(87) ImSpinner::SpinnerBounceBall       ("SpinnerBounceBallShadow",
@@ -3020,6 +3035,16 @@ namespace ImSpinner
                                                           R(16), T(1), C(ImColor(255, 255, 255)), S(3) * velocity); break;
           case $(119) ImSpinner::SpinnerWifiIndicator   ("SpinnerWifiIndicator",
                                                           R(16), T(1.5f), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(7.8f) * velocity, AMN(5.52f), DT(3)); break;
+          case $(120) ImSpinner::SpinnerHboDots         ("SpinnerMovingDots3", R(16),
+                                                          T(2), C(ImColor(255, 255, 255)), 0.f, 0.f, S(1.1f) * velocity, DT(10)); break;
+          case $(121) ImSpinner::SpinnerHboDots         ("SpinnerMovingDots4", R(16),
+                                                          T(4), C(ImColor(255, 255, 255)), 0.1f, 0.5f, S(1.1f) * velocity, DT(2)); break;
+          case $(122) ImSpinner::SpinnerHboDots         ("SpinnerMovingDots5", R(16),
+                                                          T(4), C(ImColor(255, 255, 255)), 0.1f, 0.5f, S(1.1f) * velocity, DT(3)); break;
+          case $(123) ImSpinner::SpinnerDnaDots         ("SpinnerDnaDotsH", R(16),
+                                                          T(3), C(ImColor(255, 255, 255)), S(2) * velocity, DT(8), D(0.25f)); break;
+          case $(124) ImSpinner::SpinnerDnaDots         ("SpinnerDnaDotsV", R(16),
+                                                            T(3), C(ImColor(255, 255, 255)), S(2) * velocity, DT(8), D(0.25f), true); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
@@ -3031,7 +3056,7 @@ namespace ImSpinner
       style.ItemSpacing = lastSpacing;
       style.WindowPadding = lastPadding;
     
-      ImGui::SetCursorPos({520, 20});
+      ImGui::SetCursorPos({table_width + 20, 20});
       ImGui::BeginChild("Options");
       ImGui::SliderFloat("Velocity", &velocity, 0.0f, 10.0f, "velocity = %.2f");
       ImGui::Checkbox("Show Numbers", &show_number);
