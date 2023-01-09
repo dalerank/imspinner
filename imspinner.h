@@ -83,7 +83,7 @@ namespace ImSpinner
 #undef DECLPROP
 
     namespace detail {
-      bool SpinnerBegin(const char *label, float radius, ImVec2 &pos, ImVec2 &size, ImVec2 &centre, int &num_segments) {
+      inline bool SpinnerBegin(const char *label, float radius, ImVec2 &pos, ImVec2 &size, ImVec2 &centre, int &num_segments) {
         ImGuiWindow *window = ImGui::GetCurrentWindow();
         if (window->SkipItems)
           return false;
@@ -2689,7 +2689,7 @@ namespace ImSpinner
     }
 
     namespace detail {
-      struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); } spinner_draw_funcs[e_st_count] = {
+      static struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); } spinner_draw_funcs[e_st_count] = {
         { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_AngleMin, c.m_AngleMax); } },
         { e_st_angle,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAng(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Angle); } },
         { e_st_dots,    [] (const char *label, const detail::SpinnerConfig &c) { SpinnerDots(label, c.m_FloatPtr, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_Dots, c.m_MinThickness); } },
@@ -2715,8 +2715,7 @@ namespace ImSpinner
     }
 
 #ifdef IMSPINNER_DEMO
-    void demoSpinners() {
-
+    inline void demoSpinners() {
       static int hue = 0;
       static float nextdot = 0, nextdot2;
       static bool show_number = false;
@@ -3022,7 +3021,7 @@ namespace ImSpinner
           case $(124) ImSpinner::SpinnerDnaDots         ("SpinnerDnaDotsV", R(16),
                                                           T(3), C(ImColor(255, 255, 255)), S(2) * velocity, DT(8), D(0.25f), true); break;
           case $(125) ImSpinner::SpinnerRotateDots      ("SpinnerRotateDots2",
-                                                          R(16), T(6), C(ImColor(255, 255, 255)), S(4) * velocity, ImMax(int(ImSin(ImGui::GetTime() * 0.5f) * 8), 3)); break;
+                                                          R(16), T(6), C(ImColor(255, 255, 255)), S(4) * velocity, ImMax<int>(int(ImSin((float)ImGui::GetTime() * 0.5f) * 8), 3)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
