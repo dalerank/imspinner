@@ -1015,6 +1015,88 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerSevenSegments(const char *label, const char* text, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        if (!text || !*text)
+            return;
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, strlen(text));
+        const float arc_angle = PI_DIV_2;
+
+        struct Segment { ImVec2 b, e; };
+        const float q = 1.f, hq = q * 0.5f, xq = thickness / radius;
+        const Segment segments[] = {{ ImVec2{-hq, 0.0f}, ImVec2{hq, 0.0f} }, /*central*/
+                                     { ImVec2{-hq - xq, 0.0f}, ImVec2{-hq - xq, -q} }, /*left up*/
+                                     { ImVec2{-hq - xq, q}, ImVec2{-hq - xq, xq} }, /*left down*/
+                                     { ImVec2{-hq, q}, ImVec2{hq, q} }, /*center up*/
+                                     { ImVec2{hq + xq, q}, ImVec2{hq + xq, xq} }, /*right down*/
+                                     { ImVec2{hq + xq, 0.0f}, ImVec2{hq + xq, -q} }, /*right up*/
+                                     { ImVec2{-hq, -q}, ImVec2{hq, -q} } /*center down*/};
+
+        const int symbols[][8]{
+            //segments
+            //g,f,e,d,c,b,a,sym
+            // NUMBERS
+            {0,1,1,1,1,1,1,0}, //ZERO
+            {0,0,0,0,1,1,0,1}, //ONE
+            {1,0,1,1,0,1,1,2}, //TWO
+            {1,0,0,1,1,1,1,3}, //THREE
+            {1,1,0,0,1,1,0,4}, //FOUR
+            {1,1,0,1,1,0,1,5}, //FIVE
+            {1,1,1,1,1,0,1,6}, //SIX
+            {0,0,0,0,1,1,1,7}, //SEVEN
+            {1,1,1,1,1,1,1,8}, //EIGHT
+            {1,1,0,1,1,1,1,9}, //NINE
+            // LETTERS
+            {1,1,1,0,1,1,1,'A'}, //LETTER A
+            {1,1,1,1,1,0,0,'B'}, //LETTER B
+            {0,1,1,1,0,0,1,'C'}, //LETTER C
+            {1,0,1,1,1,1,0,'D'}, //LETTER D
+            {1,1,1,1,0,0,1,'E'}, //LETTER E
+            {1,1,1,0,0,0,1,'F'}, //LETTER F
+            {0,1,1,1,1,0,1,'G'}, //LETTER G
+            {1,1,1,0,1,0,0,'H'}, //LETTER H
+            {0,1,1,0,0,0,0,'I'}, //LETTER I
+            {0,0,1,1,1,1,0,'J'}, //LETTER J
+            {1,1,1,0,1,0,1,'K'}, //LETTER K
+            {0,1,1,1,0,0,0,'L'}, //LETTER L
+            {0,0,1,0,1,0,1,'M'}, //LETTER M
+            {0,1,1,0,1,1,1,'N'}, //LETTER N
+            {0,1,1,1,1,1,1,'O'}, //LETTER O
+            {1,1,1,0,0,1,1,'P'}, //LETTER P
+            {1,1,0,0,1,1,1,'Q'}, //LETTER Q
+            {0,1,1,0,0,1,1,'R'}, //LETTER R
+            {1,1,0,1,1,0,1,'S'}, //LETTER S
+            {1,1,1,1,0,0,0,'T'}, //LETTER T
+            {0,1,1,1,1,1,0,'U'}, //LETTER U
+            {0,1,0,1,1,1,0,'V'}, //LETTER V
+            {0,1,0,1,0,1,0,'W'}, //LETTER W
+            {1,1,1,0,1,1,0,'X'}, //LETTER X
+            {1,1,0,1,1,1,0,'Y'}, //LETTER Y
+            {1,0,0,1,0,1,1,'Z'}, //LETTER Z
+        };
+
+        auto draw_segment = [&] (const Segment &s) {
+            ImVec2 p1(centre.x + radius * s.b.x, centre.y + radius * s.b.y);
+            ImVec2 p2(centre.x + radius * s.e.x, centre.y + radius * s.e.y);
+
+            window->DrawList->AddLine(p1, p2, color, thickness);
+        };
+
+        auto draw_symbol = [&] (const int* sq) {
+            for (int i = 0; i < 7; ++i)
+                sq[i] ? draw_segment(segments[i]) : void();
+        };
+        char current_char = text[(int)start];
+        if (isalpha(current_char)) {
+            draw_symbol(symbols[tolower(current_char) - 'a' + 10]);
+        } else if (isdigit(current_char)) {
+            draw_symbol(symbols[current_char - '0']);
+        }
+    }
+
     inline void SpinnerSquareStrokeFill(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3022,6 +3104,8 @@ namespace ImSpinner
                                                           T(3), C(ImColor(255, 255, 255)), S(2) * velocity, DT(8), D(0.25f), true); break;
           case $(125) ImSpinner::SpinnerRotateDots      ("SpinnerRotateDots2",
                                                           R(16), T(6), C(ImColor(255, 255, 255)), S(4) * velocity, ImMax<int>(int(ImSin((float)ImGui::GetTime() * 0.5f) * 8), 3)); break;
+          case $(126) ImSpinner::SpinnerSevenSegments   ("SpinnerSevenSegments", "012345679ABCDEF",
+                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(4) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
