@@ -143,7 +143,17 @@ namespace ImSpinner
     auto circle = [&] (auto point_func, auto dbc, auto dth) { window->DrawList->PathClear(); for (int i = 0; i < num_segments; i++) { ImVec2 p = point_func(i); window->DrawList->PathLineTo(ImVec2(centre.x + p.x, centre.y + p.y)); } window->DrawList->PathStroke(dbc, false, dth); }
     
     inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w = alpha; return c; }
-
+    
+    /*
+        const char *label: A string label for the spinner, used to identify it in ImGui.
+        float radius: The radius of the spinner.
+        float thickness: The thickness of the spinner's border.
+        const ImColor &color: The color of the spinner.
+        float speed: The speed of the spinning animation.
+        float ang_min: Minimum angle of spinning.
+        float ang_max: Maximum angle of spinning.
+        int arcs: Number of arcs of the spinner.
+    */
     inline void SpinnerRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, float ang_min = 0.f, float ang_max = PI_2, int arcs = 1)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -154,14 +164,40 @@ namespace ImSpinner
 
             const float start = ImAbs(ImSin((float)ImGui::GetTime()) * (num_segments - 5));
             const float a_min = ImMax(ang_min, PI_2 * ((float)start) / (float)num_segments + (IM_PI / arcs) * i);
-            const float a_max = ImMin(ang_max, PI_2 * ((float)num_segments - 3) / (float)num_segments);
+            const float a_max = ImMin(ang_max, PI_2 * ((float)num_segments + 3 * (i + 1)) / (float)num_segments);
 
             circle([&] (int i) {
-                const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
+                const float a =  a_min + ((float)i / (float)num_segments) * (a_max - a_min);
                 const float rspeed = a + (float)ImGui::GetTime() * speed;
                 return ImVec2(ImCos(rspeed) * rb, ImSin(rspeed) * rb);
             }, color, thickness);
         }
+    }
+
+    inline void SpinnerRotatingHeart(const char *label, float radius, float thickness, const ImColor &color, float speed, float ang_min = 0.f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+        const float start = (float)ImGui::GetTime() * speed;
+
+        num_segments *= 1.5f;
+        auto rotate = [] (const ImVec2 &point, float angle) {
+            const float s = ImSin(angle);
+            const float c = ImCos(angle);
+            float x = point.x * c - point.y * s;
+            float y = point.x * s + point.y * c;
+
+            return ImVec2(x, y);
+        };
+
+        const float rb = radius * ImMax(0.8f, ImSin(start * 2));
+        auto scale = [rb] (auto v) { return v / 16.f * rb; };
+
+        circle([&] (int i) {
+            const float a = PI_2 * i / num_segments;
+            const float x = (scale(16) * pow(sin(a), 3));
+            const float y = -1 * (scale(13) * cos(a) - scale(5) * cos(2 * a) - scale(2) * cos(3 * a) - cos(4 * a));
+            return rotate(ImVec2(x, y), ang_min);
+        }, color, thickness); 
     }
 
     inline void SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI)
@@ -2864,7 +2900,7 @@ namespace ImSpinner
       static float widget_size = 50.f;
 
       static ImVec2 selected{0, 0};
-      constexpr int num_spinners = 140;
+      constexpr int num_spinners = 150;
       constexpr int table_width = 550;
       int sidex = int(table_width / widget_size);
       int sidey = int(num_spinners / sidex);
@@ -3168,6 +3204,8 @@ namespace ImSpinner
                                                           R(16), T(4), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(5) * velocity, DT(4)); break;
           case $(129) ImSpinner::SpinnerRainbow         ("Spinner",
                                                           R(16), T(2), ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f), S(8) * velocity, AMN(0.f), AMX(PI_2), DT(3)); break;
+          case $(130) ImSpinner::SpinnerRotatingHeart    ("SpinnerRotatedHeart",
+                                                          R(16), T(2), C(ImColor(255, 0, 0)), S(8) * velocity, AMN(0.f)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
