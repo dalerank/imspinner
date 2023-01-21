@@ -274,15 +274,8 @@ namespace ImSpinner
           return ImVec2(ImCos(i * bg_angle_offset) * radius1, ImSin(i * bg_angle_offset) * radius1);
       }, bg, thickness);
 
-      if (sequence)
-      {
-        radius_b -= (0.005f * speed);
-        radius_b = ImMax(radius_k, ImMax(0.8f, radius_b));
-      } 
-      else 
-      {
-        radius_b = (1.f - radius_k);
-      }
+      if (sequence) { radius_b -= (0.005f * speed); radius_b = ImMax(radius_k, ImMax(0.8f, radius_b)); } 
+      else { radius_b = (1.f - radius_k); }
       storage->SetFloat(radiusbId, radius_b);
       
       float radius_tb = sequence ? ImMax(radius_k, radius_b) * radius : (radius_b * radius);
@@ -320,8 +313,7 @@ namespace ImSpinner
       const float koeff = PI_DIV(2 * rings);
       float start = (float)ImGui::GetTime() * speed;
 
-      for (int num_ring = 0; num_ring < rings; ++num_ring)
-      {
+      for (int num_ring = 0; num_ring < rings; ++num_ring) {
         float radius_k = ImSin(ImFmod(start + (num_ring * koeff), PI_DIV_2));
         float radius1 = radius_k * radius;
 
@@ -340,8 +332,7 @@ namespace ImSpinner
       const float koeff = PI_DIV(2 * rings);
       float start = (float)ImGui::GetTime() * speed;
 
-      for (int num_ring = 0; num_ring < rings; ++num_ring)
-      {
+      for (int num_ring = 0; num_ring < rings; ++num_ring) {
         float radius_k = ImSin(ImFmod(start + (num_ring * koeff), PI_DIV_2));
         ImColor c = color_alpha(color, (radius_k > 0.5f) ? (2.f - (radius_k * 2.f)) : color.Value.w);
         window->DrawList->AddCircleFilled(centre, radius_k * radius, c, num_segments);
@@ -592,12 +583,9 @@ namespace ImSpinner
         {
           float th = thickness;
           offset = ImFmod(start + i * (size.x / dots), size.x);
-          if (offset < thickness)
-          {
-            th = offset;
-          }
-          if (offset > size.x - thickness)
-            th = size.x - offset;
+
+          if (offset < thickness) { th = offset; }
+          if (offset > size.x - thickness) { th = size.x - offset; }
         
           window->DrawList->AddCircleFilled(ImVec2(pos.x + offset - thickness, centre.y), th, color, 8);
         }
@@ -616,14 +604,8 @@ namespace ImSpinner
      
       float dtime = ImFmod((float)vtime, IM_PI);
       float start = (vtime += velocity);
-      if (dtime > 0.f && dtime < PI_DIV_2)
-      {
-        velocity += 0.001f * speed;
-      }
-      else if (dtime > IM_PI * 0.9f && dtime < IM_PI)
-      {
-        velocity -= 0.01f * speed;
-      }
+      if (dtime > 0.f && dtime < PI_DIV_2) { velocity += 0.001f * speed; }
+      else if (dtime > IM_PI * 0.9f && dtime < IM_PI) { velocity -= 0.01f * speed; }
       if (velocity > 0.1f) velocity = 0.1f;
       if (velocity < 0.01f) velocity = 0.01f;
 
@@ -652,14 +634,9 @@ namespace ImSpinner
 
         float dtime = ImFmod((float)vtime, IM_PI);
         float start = (vtime += velocity);
-        if (dtime > 0.f && dtime < PI_DIV_2)
-        {
-            velocity += 0.001f * speed;
-        }
-        else if (dtime > IM_PI * 0.9f && dtime < IM_PI)
-        {
-            velocity -= 0.01f * speed;
-        }
+        if (dtime > 0.f && dtime < PI_DIV_2) { velocity += 0.001f * speed; }
+        else if (dtime > IM_PI * 0.9f && dtime < IM_PI) { velocity -= 0.01f * speed; }
+
         if (velocity > 0.1f) velocity = 0.1f;
         if (velocity < 0.01f) velocity = 0.01f;
 
@@ -691,14 +668,9 @@ namespace ImSpinner
 
         float dtime = ImFmod((float)vtime, IM_PI);
         float start = (vtime += (velocity * speed));
-        if (dtime > 0.f && dtime < PI_DIV_2)
-        {
-            velocity += 0.001f;
-        }
-        else if (dtime > IM_PI * 0.9f && dtime < IM_PI)
-        {
-            velocity -= 0.01f;
-        }
+        if (dtime > 0.f && dtime < PI_DIV_2) { velocity += 0.001f; }
+        else if (dtime > IM_PI * 0.9f && dtime < IM_PI) { velocity -= 0.01f; }
+
         if (velocity > 0.1f) velocity = 0.1f;
         if (velocity < 0.01f) velocity = 0.01f;
 
@@ -3303,7 +3275,7 @@ namespace ImSpinner
           case $(132) ImSpinner::SpinnerOrionDots       ("SpinnerOrionDots",
                                                           R(16), T(1.3), C(ImColor(255, 255, 255)), S(4) * velocity, DT(12)); break;
           case $(133) ImSpinner::SpinnerGalaxyDots      ("SpinnerGalaxyDots",
-                                                           R(16), T(1.3), C(ImColor(255, 255, 255)), S(0.2) * velocity, DT(6)); break;
+                                                          R(16), T(1.3), C(ImColor(255, 255, 255)), S(0.2) * velocity, DT(6)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
