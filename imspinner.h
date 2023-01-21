@@ -669,10 +669,49 @@ namespace ImSpinner
         window->DrawList->AddCircleFilled(centre, thickness, color, 8);
 
         for (int j = 1; j < arcs; ++j) {
-            const float r = (radius / arcs) * j;
+            const float r = (radius / (arcs + 1)) * j;
             for (int i = 0; i < j + 1; i++)
             {
                 const float a = start + (i * PI_2_DIV(j+1));
+                window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r), thickness, color, 8);
+            }
+        }
+    }
+
+    inline void SpinnerGalaxyDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int arcs = 4)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        ImGuiStorage* storage = window->DC.StateStorage;
+        const ImGuiID velocityId = window->GetID("##velocity");
+        const ImGuiID vtimeId = window->GetID("##velocitytime");
+
+        float velocity = storage->GetFloat(velocityId, 0.f);
+        float vtime = storage->GetFloat(vtimeId, 0.f);
+
+        float dtime = ImFmod((float)vtime, IM_PI);
+        float start = (vtime += (velocity * speed));
+        if (dtime > 0.f && dtime < PI_DIV_2)
+        {
+            velocity += 0.001f;
+        }
+        else if (dtime > IM_PI * 0.9f && dtime < IM_PI)
+        {
+            velocity -= 0.01f;
+        }
+        if (velocity > 0.1f) velocity = 0.1f;
+        if (velocity < 0.01f) velocity = 0.01f;
+
+        storage->SetFloat(velocityId, velocity);
+        storage->SetFloat(vtimeId, vtime);
+
+        window->DrawList->AddCircleFilled(centre, thickness, color, 8);
+
+        for (int j = 1; j < arcs; ++j) {
+            const float r = ((j / (float)arcs) * radius);
+            for (int i = 0; i < arcs; i++)
+            {
+                const float a = start * (1.f + j * 0.1f) + (i * PI_2_DIV(arcs));
                 window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r), thickness, color, 8);
             }
         }
@@ -3263,6 +3302,8 @@ namespace ImSpinner
                                                           R(16), T(1.3), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(1) * velocity, DT(36)); break;
           case $(132) ImSpinner::SpinnerOrionDots       ("SpinnerOrionDots",
                                                           R(16), T(1.3), C(ImColor(255, 255, 255)), S(4) * velocity, DT(12)); break;
+          case $(133) ImSpinner::SpinnerGalaxyDots      ("SpinnerGalaxyDots",
+                                                           R(16), T(1.3), C(ImColor(255, 255, 255)), S(0.2) * velocity, DT(6)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
