@@ -1106,6 +1106,39 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerAsciiSymbolPoints(const char *label, const char* text, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        if (!text || !*text)
+            return;
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, strlen(text));
+        const ImFontGlyph* glyph = ImGui::GetCurrentContext()->Font->FindGlyph(text[(int)start]);
+
+        ImVec2 pp(centre.x - radius, centre.y - radius);
+        ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+        unsigned char* bitmap;
+        int out_width, out_height;
+        atlas->GetTexDataAsAlpha8(&bitmap, &out_width, &out_height);
+
+        const int U1 = glyph->U1 * out_width;
+        const int U0 = glyph->U0 * out_width;
+        const int V1 = glyph->V1 * out_height;
+        const int V0 = glyph->V0 * out_height;
+        const float px = size.x / (U1 - U0);
+        const float py = size.y / (V1 - V0);
+        
+        for (int x = U0, ppx = 0; x < U1; x++, ppx++) {
+            for (int y = V0, ppy = 0; y < V1; y++, ppy++) {
+               ImVec2 point(pp.x + (ppx * px), pp.y + (ppy * py));
+               const unsigned char alpha = bitmap[out_width * y + x];
+               window->DrawList->AddCircleFilled(point, thickness * 1.5f, color_alpha(0x80808080, alpha / 255.f));
+               window->DrawList->AddCircleFilled(point, thickness, color_alpha(color, alpha / 255.f));
+            }
+        }
+    }
+
     inline void SpinnerSevenSegments(const char *label, const char* text, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -1114,7 +1147,6 @@ namespace ImSpinner
             return;
 
         const float start = ImFmod((float)ImGui::GetTime() * speed, strlen(text));
-        const float arc_angle = PI_DIV_2;
 
         struct Segment { ImVec2 b, e; };
         const float q = 1.f, hq = q * 0.5f, xq = thickness / radius;
@@ -3276,6 +3308,8 @@ namespace ImSpinner
                                                           R(16), T(1.3), C(ImColor(255, 255, 255)), S(4) * velocity, DT(12)); break;
           case $(133) ImSpinner::SpinnerGalaxyDots      ("SpinnerGalaxyDots",
                                                           R(16), T(1.3), C(ImColor(255, 255, 255)), S(0.2) * velocity, DT(6)); break;
+          case $(134) ImSpinner::SpinnerAsciiSymbolPoints("SpinnerAsciiSymbolPoints", "012345679ABCDEF",
+                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(4) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
