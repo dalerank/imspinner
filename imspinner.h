@@ -639,6 +639,45 @@ namespace ImSpinner
       }
     }
 
+    inline void SpinnerOrionDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int arcs = 4)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        ImGuiStorage* storage = window->DC.StateStorage;
+        const ImGuiID velocityId = window->GetID("##velocity");
+        const ImGuiID vtimeId = window->GetID("##velocitytime");
+
+        float velocity = storage->GetFloat(velocityId, 0.f);
+        float vtime = storage->GetFloat(vtimeId, 0.f);
+
+        float dtime = ImFmod((float)vtime, IM_PI);
+        float start = (vtime += velocity);
+        if (dtime > 0.f && dtime < PI_DIV_2)
+        {
+            velocity += 0.001f * speed;
+        }
+        else if (dtime > IM_PI * 0.9f && dtime < IM_PI)
+        {
+            velocity -= 0.01f * speed;
+        }
+        if (velocity > 0.1f) velocity = 0.1f;
+        if (velocity < 0.01f) velocity = 0.01f;
+
+        storage->SetFloat(velocityId, velocity);
+        storage->SetFloat(vtimeId, vtime);
+
+        window->DrawList->AddCircleFilled(centre, thickness, color, 8);
+
+        for (int j = 1; j < arcs; ++j) {
+            const float r = (radius / arcs) * j;
+            for (int i = 0; i < j + 1; i++)
+            {
+                const float a = start + (i * PI_2_DIV(j+1));
+                window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r), thickness, color, 8);
+            }
+        }
+    }
+
     inline void SpinnerTwinAng(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f, float angle = IM_PI)
     {
       const float radius = ImMax(radius1, radius2);
@@ -3222,6 +3261,8 @@ namespace ImSpinner
                                                           R(16), T(2), C(ImColor(255, 0, 0)), S(8) * velocity, AMN(0.f)); break;
           case $(131) ImSpinner::SpinnerSolarScaleBalls ("SpinnerSolarScaleBalls",
                                                           R(16), T(1.3), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(1) * velocity, DT(36)); break;
+          case $(132) ImSpinner::SpinnerOrionDots       ("SpinnerOrionDots",
+                                                          R(16), T(1.3), C(ImColor(255, 255, 255)), S(4) * velocity, DT(12)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
