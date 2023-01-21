@@ -1426,6 +1426,20 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerSolarScaleBalls(const char *label, float radius, float thickness, const ImColor &ball = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t balls = 4)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 16.f);
+        const float bg_angle_offset = PI_2 / num_segments;
+
+        for (int i = 0; i < balls; ++i) {
+            const float rb = (radius / balls) * 1.3f * (i + 1);
+            const float a = start * (1.0 + 0.1f * i);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * rb, centre.y + ImSin(a) * rb), ((thickness * 2.f) / balls) * i, ball);
+        }
+    }
+
     inline void SpinnerSolarArcs(const char *label, float radius, float thickness, const ImColor &ball = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t balls = 4)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3198,14 +3212,16 @@ namespace ImSpinner
                                                           R(16), T(6), C(ImColor(255, 255, 255)), S(4) * velocity, ImMax<int>(int(ImSin((float)ImGui::GetTime() * 0.5f) * 8), 3)); break;
           case $(126) ImSpinner::SpinnerSevenSegments   ("SpinnerSevenSegments", "012345679ABCDEF",
                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(4) * velocity); break;
-          case $(127) ImSpinner::SpinnerSolarBalls       ("SpinnerSolarBalls",
+          case $(127) ImSpinner::SpinnerSolarBalls      ("SpinnerSolarBalls",
                                                           R(16), T(4), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(5) * velocity, DT(4)); break;
           case $(128) ImSpinner::SpinnerSolarArcs       ("SpinnerSolarArcs",
                                                           R(16), T(4), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(5) * velocity, DT(4)); break;
           case $(129) ImSpinner::SpinnerRainbow         ("Spinner",
                                                           R(16), T(2), ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f), S(8) * velocity, AMN(0.f), AMX(PI_2), DT(3)); break;
-          case $(130) ImSpinner::SpinnerRotatingHeart    ("SpinnerRotatedHeart",
+          case $(130) ImSpinner::SpinnerRotatingHeart   ("SpinnerRotatedHeart",
                                                           R(16), T(2), C(ImColor(255, 0, 0)), S(8) * velocity, AMN(0.f)); break;
+          case $(131) ImSpinner::SpinnerSolarScaleBalls ("SpinnerSolarScaleBalls",
+                                                          R(16), T(1.3), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(1) * velocity, DT(36)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
