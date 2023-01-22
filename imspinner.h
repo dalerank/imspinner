@@ -3349,7 +3349,11 @@ namespace ImSpinner
           case $(135) ImSpinner::SpinnerRainbowCircle   ("SpinnerRainbowCircle",
                                                           R(16), T(4), C(ImColor::HSV(0.25f, 0.8f, 0.8f)), S(1) * velocity, DT(4)); break;
           case $(136) ImSpinner::SpinnerRainbowCircle   ("SpinnerRainbowCircle2",
-                                                             R(16), T(2), ImColor::HSV(hue * 0.001f, 0.8f, 0.8f), S(2) * velocity, DT(8), D(0)); break;
+                                                          R(16), T(2), ImColor::HSV(hue * 0.001f, 0.8f, 0.8f), S(2) * velocity, DT(8), D(0)); break;
+          case $(137) ImSpinner::Spinner<e_st_vdots>    ("SpinnerVDots2",
+                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.1f) * velocity}, Dots{DT(2)}, MiddleDots{6}); break;
+          case $(138) ImSpinner::Spinner<e_st_vdots>    ("SpinnerVDots3",
+                                                             Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.9f) * velocity}, Dots{DT(3)}, MiddleDots{6}); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
