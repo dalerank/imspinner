@@ -1554,6 +1554,42 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerRainbowCircle(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4, int mode = 1)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = (float)ImGui::GetTime() * speed;
+        num_segments *= 2;
+        const float bg_angle_offset = IM_PI / num_segments;
+
+        float out_h, out_s, out_v;
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+
+        for (int i = 0; i < arcs; ++i)
+        {
+            float max_angle = IM_PI - ImFmod(start /* * (1.0 + 0.1f * i) */, IM_PI + PI_DIV_2 + PI_DIV(8));
+            max_angle = ImMin(IM_PI, max_angle + (PI_DIV_2 / arcs) * i);
+            const float rb = (radius / arcs) * 1.1f * (i + 1);
+
+            ImColor c = ImColor::HSV(out_h + i * (0.8f / arcs), out_s, out_v);
+            const int draw_segments = ImMax<int>(0, max_angle / bg_angle_offset);
+
+            for (int j = 0; j < 2; j++)
+            {
+                const float mul = j % 2 ? -1 : 1;
+                const float py = (j % 2 ? -0.5f : 0.5f) * thickness;
+                const float alpha_start = (j % 2 ? 0 : IM_PI) * mode;
+                window->DrawList->PathClear();
+                for (size_t i = 0; i <= draw_segments + 1; i++)
+                {
+                    const float a = (i * bg_angle_offset);
+                    window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(IM_PI - alpha_start - a) * rb, centre.y + ImSin(a) * rb * mul + py));
+                }
+                window->DrawList->PathStroke(c, false, thickness * 0.8f);
+            }
+        }
+    }
+
     inline void SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int dots = 1, bool shadow = false)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3310,6 +3346,10 @@ namespace ImSpinner
                                                           R(16), T(1.3), C(ImColor(255, 255, 255)), S(0.2) * velocity, DT(6)); break;
           case $(134) ImSpinner::SpinnerAsciiSymbolPoints("SpinnerAsciiSymbolPoints", "012345679ABCDEF",
                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(4) * velocity); break;
+          case $(135) ImSpinner::SpinnerRainbowCircle   ("SpinnerRainbowCircle",
+                                                          R(16), T(4), C(ImColor::HSV(0.25f, 0.8f, 0.8f)), S(1) * velocity, DT(4)); break;
+          case $(136) ImSpinner::SpinnerRainbowCircle   ("SpinnerRainbowCircle2",
+                                                             R(16), T(2), ImColor::HSV(hue * 0.001f, 0.8f, 0.8f), S(2) * velocity, DT(8), D(0)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
