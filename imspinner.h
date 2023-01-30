@@ -1948,9 +1948,8 @@ namespace ImSpinner
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      ImColor c = color;
       float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
-      c.Value.w = ImMax(0.1f, ImMin(lerp_koeff, 1.f));
+      ImColor c = color_alpha(color, ImMax(0.1f, ImMin(lerp_koeff, 1.f)));
       float dr = radius - thickness - 3;
       window->DrawList->AddCircleFilled(centre, dr, bg, num_segments);
       window->DrawList->AddCircleFilled(centre, dr, c, num_segments);
@@ -2582,6 +2581,40 @@ namespace ImSpinner
       }
     }
 
+    inline void SpinnerSquareRandomDots(const char *label, float radius, float thickness, const ImColor &bg, const ImColor &color, float speed)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float offset_block = radius * 2.f / 3.f;
+        ImVec2 lt{centre.x - offset_block, centre.y - offset_block};
+
+        int start = (int)ImFmod((float)ImGui::GetTime() * speed, 9.f);
+
+        ImGuiStorage* storage = window->DC.StateStorage;
+        const ImGuiID vtimeId = window->GetID("##vtime");
+        const ImGuiID vvald = window->GetID("##vval");
+        int vtime = storage->GetInt(vtimeId, 0);
+        int vval = storage->GetInt(vvald, 0);
+
+        if (vtime != start) {
+            vval = rand() % 9;
+            storage->SetInt(vvald, vval);
+            storage->SetInt(vtimeId, start);
+        }
+
+
+        const ImVec2ih poses[] = {{0, 0}, {1, 0}, {2, 0}, {2, 1}, {2, 2}, {1, 2}, {0, 2}, {0, 1}, {1, 1}};
+
+        int ti = 0;
+        for (const auto &rpos: poses)
+        {
+            const ImColor &c = (ti == vval) ? color : bg;
+            window->DrawList->AddCircleFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block), thickness,
+                                              color_alpha(c, 1.f));
+            ti++;
+        }
+    }
+
     inline void SpinnerScaleBlocks(const char *label, float radius, float thickness, const ImColor &color, float speed)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -2703,7 +2736,7 @@ namespace ImSpinner
           const float ar = arc_angle * arc_num + (i * angle_offset) - PI_DIV_2 - PI_DIV_4;
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * (radius * r), centre.y + ImSin(ar) * (radius * r)));
         }
-        window->DrawList->PathFillConvex(color_alpha(color, 1.f));
+        window->DrawList->PathFillConvex(color_alpha(c, 1.f));
       }
     }
 
@@ -3354,6 +3387,8 @@ namespace ImSpinner
                                                           Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.1f) * velocity}, Dots{DT(2)}, MiddleDots{6}); break;
           case $(138) ImSpinner::Spinner<e_st_vdots>    ("SpinnerVDots3",
                                                           Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.9f) * velocity}, Dots{DT(3)}, MiddleDots{6}); break;
+          case $(139) ImSpinner::SpinnerSquareRandomDots("SpinnerSquareRandomDots",
+                                                          R(16), T(2.8f), C(ImColor(255, 255, 255, 30)), CB(ImColor::HSV(hue * 0.005f, 0.8f, 0.8f)), S(5) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
