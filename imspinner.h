@@ -142,7 +142,7 @@ namespace ImSpinner
 #define SPINNER_HEADER(pos, size, centre, num_segments) ImVec2 pos, size, centre; int num_segments; if (!detail::SpinnerBegin(label, radius, pos, size, centre, num_segments)) { return; }; ImGuiWindow *window = ImGui::GetCurrentWindow(); \
     auto circle = [&] (auto point_func, auto dbc, auto dth) { window->DrawList->PathClear(); for (int i = 0; i < num_segments; i++) { ImVec2 p = point_func(i); window->DrawList->PathLineTo(ImVec2(centre.x + p.x, centre.y + p.y)); } window->DrawList->PathStroke(dbc, false, dth); }
     
-    inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w = alpha; return c; }
+    inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w = alpha * ImGui::GetStyle().Alpha; return c; }
     
     /*
         const char *label: A string label for the spinner, used to identify it in ImGui.
@@ -170,7 +170,7 @@ namespace ImSpinner
                 const float a =  a_min + ((float)i / (float)num_segments) * (a_max - a_min);
                 const float rspeed = a + (float)ImGui::GetTime() * speed;
                 return ImVec2(ImCos(rspeed) * rb, ImSin(rspeed) * rb);
-            }, color, thickness);
+            }, color_alpha(color, 1.f), thickness);
         }
     }
 
@@ -194,10 +194,10 @@ namespace ImSpinner
 
         circle([&] (int i) {
             const float a = PI_2 * i / num_segments;
-            const float x = (scale(16) * pow(sin(a), 3));
-            const float y = -1 * (scale(13) * cos(a) - scale(5) * cos(2 * a) - scale(2) * cos(3 * a) - cos(4 * a));
+            const float x = (scale(16) * ImPow(ImSin(a), 3));
+            const float y = -1.f * (scale(13) * ImCos(a) - scale(5) * ImCos(2 * a) - scale(2) * ImCos(3 * a) - ImCos(4 * a));
             return rotate(ImVec2(x, y), ang_min);
-        }, color, thickness); 
+        }, color_alpha(color, 1.f), thickness); 
     }
 
     inline void SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI)
@@ -209,12 +209,12 @@ namespace ImSpinner
         circle([&] (int i) {
             const float a = start + (i * (PI_2 / (num_segments - 1)));
             return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
-        }, bg, thickness);
+        }, color_alpha(bg, 1.f), thickness);
 
         circle([&] (int i) {
             const float a = start + (i * angle / num_segments);
             return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
-        }, color, thickness);
+        }, color_alpha(color, 1.f), thickness);
     }
 
     inline void SpinnerLoadingRing(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, int segments = 5)
@@ -224,7 +224,10 @@ namespace ImSpinner
         const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
         const float bg_angle_offset = PI_2 / num_segments - 1;
 
-        circle([&] (int i) { return ImVec2(ImCos(i * bg_angle_offset) * radius, ImSin(i * bg_angle_offset) * radius); }, bg, thickness);
+        num_segments *= 2;
+        circle([&] (int i) { 
+            return ImVec2(ImCos(i * bg_angle_offset) * radius, ImSin(i * bg_angle_offset) * radius);
+        }, color_alpha(bg, 1.f), thickness);
 
         float out_h, out_s, out_v;
         ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
@@ -238,7 +241,7 @@ namespace ImSpinner
             const float begin_ang = start_ang - PI_DIV_2 + delta_angle * i;
             ImColor c = ImColor::HSV(out_h + i * (1.f / segments * 2.f), out_s, out_v);
             window->DrawList->PathArcTo(centre, radius, begin_ang, begin_ang + delta_angle, num_segments);
-            window->DrawList->PathStroke(c, false, thickness);
+            window->DrawList->PathStroke(color_alpha(c, 1.f), false, thickness);
         }
     }
 
@@ -249,10 +252,10 @@ namespace ImSpinner
       const float start = (float)ImGui::GetTime() * speed;
       const float bg_angle_offset = PI_2 / (num_segments - 1);
       
-      circle([&] (int i) { return ImVec2(ImCos(i * bg_angle_offset) * radius, ImSin(i * bg_angle_offset) * radius); }, bg, thickness);
+      circle([&] (int i) { return ImVec2(ImCos(i * bg_angle_offset) * radius, ImSin(i * bg_angle_offset) * radius); }, color_alpha(bg, 1.f), thickness);
 
-      window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(start) * radius, centre.y + ImSin(start) * radius), color, thickness * 2);
-      window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(start * 0.5f) * radius / 2.f, centre.y + ImSin(start * 0.5f) * radius / 2.f), color, thickness * 2);
+      window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(start) * radius, centre.y + ImSin(start) * radius), color_alpha(color, 1.f), thickness * 2);
+      window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(start * 0.5f) * radius / 2.f, centre.y + ImSin(start * 0.5f) * radius / 2.f), color_alpha(color, 1.f), thickness * 2);
     }
 
     inline void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f, bool sequence = true)
@@ -272,7 +275,7 @@ namespace ImSpinner
 
       circle([&] (int i) {
           return ImVec2(ImCos(i * bg_angle_offset) * radius1, ImSin(i * bg_angle_offset) * radius1);
-      }, bg, thickness);
+      }, color_alpha(bg, 1.f), thickness);
 
       if (sequence) { radius_b -= (0.005f * speed); radius_b = ImMax(radius_k, ImMax(0.8f, radius_b)); } 
       else { radius_b = (1.f - radius_k); }
@@ -281,7 +284,7 @@ namespace ImSpinner
       float radius_tb = sequence ? ImMax(radius_k, radius_b) * radius : (radius_b * radius);
       circle([&] (int i) {
           return ImVec2(ImCos(i * bg_angle_offset) * radius_tb, ImSin(i * bg_angle_offset) * radius_tb);
-      }, bg, thickness);
+      }, color_alpha(bg, 1.f), thickness);
     }
 
     inline void SpinnerDoubleFadePulsar(const char *label, float radius, float /*thickness*/, const ImColor &bg = 0xffffff80, float speed = 2.8f)
@@ -356,7 +359,9 @@ namespace ImSpinner
             for (size_t i = 0; i <= lines; i++)
             {
                 float a = (i * bg_angle_offset);
-                window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin), ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax), c, 1.f);
+                window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin),
+                                          ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax),
+                                          color_alpha(c, 1.f), 1.f);
             }
         }
     }
@@ -394,7 +399,7 @@ namespace ImSpinner
                     th = thcorrect(i);
             }
 
-            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(-a) * radius, centre.y + ImSin(-a) * radius), th, color, 8);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(-a) * radius, centre.y + ImSin(-a) * radius), th, color_alpha(color, 1.f), 8);
         }
     }
 
@@ -409,7 +414,7 @@ namespace ImSpinner
         for (size_t i = 0; i <= dots; i++)
         {
             float a = ImFmod(start + (i * bg_angle_offset), PI_2);
-            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(-a) * radius, centre.y + ImSin(-a) * radius), thickness / 2, bgcolor, 8);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(-a) * radius, centre.y + ImSin(-a) * radius), thickness / 2, color_alpha(bgcolor, 1.f), 8);
         }
 
         window->DrawList->PathClear();
@@ -420,7 +425,7 @@ namespace ImSpinner
             const float a = start + (i * angle_offset);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
         }
-        window->DrawList->PathStroke(color, false, thickness);
+        window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
     }
 
     inline void SpinnerBounceDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3)
@@ -441,7 +446,7 @@ namespace ImSpinner
         float sina = ImSin(a * heightSpeed);
         float y =  centre.y + sina * thickness * heightKoeff;
 
-        window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), ImMin(y, centre.y)), thickness, color, 8);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), ImMin(y, centre.y)), thickness, color_alpha(color, 1.f), 8);
       }
     }
 
@@ -461,8 +466,8 @@ namespace ImSpinner
             const float sina = ImSin((start + (IM_PI - i * offset)) * heightSpeed);
             const float y = ImMin(centre.y + sina * thickness * heightKoeff, centre.y);
             const float deltay = ImAbs(y - centre.y);
-            window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), y), thickness, color, 8);
-            window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), y + 2 * deltay), thickness, color, 8);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), y), thickness, color_alpha(color, 1.f), 8);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), y + 2 * deltay), thickness, color_alpha(color, 1.f), 8);
         }
     }
 
@@ -487,7 +492,7 @@ namespace ImSpinner
             const float y2 = ImMin(sinb, 0.f) * (hradius * offset_k);
             const float y3 = (y + y2);
             const float deltay = ImAbs(y - centre.y);
-            ImColor c = ImColor::HSV(out_h + i * ((1.f / dots) * 2.f), out_s, out_v);
+            ImColor c = color_alpha(ImColor::HSV(out_h + i * ((1.f / dots) * 2.f), out_s, out_v), 1.f);
             ImVec2 p1(centre.x - hsize + i * (thickness * nextItemKoeff), y3);
             ImVec2 p2(centre.x - hsize + i * (thickness * nextItemKoeff), y3 + 2 * deltay);
             window->DrawList->AddCircleFilled(p1, thickness, c, 8);
@@ -512,7 +517,7 @@ namespace ImSpinner
             float a = start + (IM_PI - i * offset);
             float y = centre.y + ImSin(a) * (size.y / 2.f);
             ImColor c = ImColor::HSV(out_h + i * (1.f / dots * 2.f), out_s, out_v);
-            window->DrawList->AddCircleFilled(ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff, y), thickness, c, lt);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff, y), thickness, color_alpha(c, 1.f), lt);
         }
     }
 
@@ -565,7 +570,7 @@ namespace ImSpinner
           const float a = start + (IM_PI - i * PI_DIV(dots));
           const float th = thickness * ImSin(a * heightSpeed);
           window->DrawList->AddCircleFilled(ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff, centre.y), thickness, color_alpha(color, 0.1f), lt);
-          window->DrawList->AddCircleFilled(ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff, centre.y), th, color, lt);
+          window->DrawList->AddCircleFilled(ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff, centre.y), th, color_alpha(color, 1.f), lt);
         }
     }
 
@@ -587,7 +592,7 @@ namespace ImSpinner
           if (offset < thickness) { th = offset; }
           if (offset > size.x - thickness) { th = size.x - offset; }
         
-          window->DrawList->AddCircleFilled(ImVec2(pos.x + offset - thickness, centre.y), th, color, 8);
+          window->DrawList->AddCircleFilled(ImVec2(pos.x + offset - thickness, centre.y), th, color_alpha(color, 1.f), 8);
         }
     }
 
@@ -612,12 +617,12 @@ namespace ImSpinner
       storage->SetFloat(velocityId, velocity);
       storage->SetFloat(vtimeId, vtime);
 
-      window->DrawList->AddCircleFilled(centre, thickness, color, 8);
+      window->DrawList->AddCircleFilled(centre, thickness, color_alpha(color, 1.f), 8);
 
       for (int i = 0; i < dots; i++)
       {
         const float a = start + (i * PI_2_DIV(dots));
-        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, color, 8);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, color_alpha(color, 1.f), 8);
       }
     }
 
@@ -643,14 +648,14 @@ namespace ImSpinner
         storage->SetFloat(velocityId, velocity);
         storage->SetFloat(vtimeId, vtime);
 
-        window->DrawList->AddCircleFilled(centre, thickness, color, 8);
+        window->DrawList->AddCircleFilled(centre, thickness, color_alpha(color, 1.f), 8);
 
         for (int j = 1; j < arcs; ++j) {
             const float r = (radius / (arcs + 1)) * j;
             for (int i = 0; i < j + 1; i++)
             {
                 const float a = start + (i * PI_2_DIV(j+1));
-                window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r), thickness, color, 8);
+                window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r), thickness, color_alpha(color, 1.f), 8);
             }
         }
     }
@@ -677,14 +682,14 @@ namespace ImSpinner
         storage->SetFloat(velocityId, velocity);
         storage->SetFloat(vtimeId, vtime);
 
-        window->DrawList->AddCircleFilled(centre, thickness, color, 8);
+        window->DrawList->AddCircleFilled(centre, thickness, color_alpha(color, 1.f), 8);
 
         for (int j = 1; j < arcs; ++j) {
             const float r = ((j / (float)arcs) * radius);
             for (int i = 0; i < arcs; i++)
             {
                 const float a = start * (1.f + j * 0.1f) + (i * PI_2_DIV(arcs));
-                window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r), thickness, color, 8);
+                window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r), thickness, color_alpha(color, 1.f), 8);
             }
         }
     }
@@ -707,7 +712,7 @@ namespace ImSpinner
           break;
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1));
       }
-      window->DrawList->PathStroke(color1, false, thickness);
+      window->DrawList->PathStroke(color_alpha(color1, 1.f), false, thickness);
 
       window->DrawList->PathClear();
       for (size_t i = 0; i < num_segments / 2; i++)
@@ -717,7 +722,7 @@ namespace ImSpinner
           break;
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2));
       }
-      window->DrawList->PathStroke(color2, false, thickness);
+      window->DrawList->PathStroke(color_alpha(color2, 1.f), false, thickness);
     }
 
     inline void SpinnerFilling(const char *label, float radius, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f)
@@ -730,7 +735,7 @@ namespace ImSpinner
       circle([&] (auto i) {
           const float a = (i * angle_offset);
           return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
-      }, color1, thickness);
+      }, color_alpha(color1, 1.f), thickness);
 
       window->DrawList->PathClear();
       for (size_t i = 0; i < 2 * num_segments / 2; i++)
@@ -740,7 +745,7 @@ namespace ImSpinner
           break;
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
       }
-      window->DrawList->PathStroke(color2, false, thickness);
+      window->DrawList->PathStroke(color_alpha(color2, 1.f), false, thickness);
     }
 
     inline void SpinnerTopup(const char *label, float radius1, float radius2, const ImColor &color = 0xff0000ff, const ImColor &fg = 0xffffffff, const ImColor &bg = 0xffffffff, float speed = 2.8f)
@@ -749,7 +754,7 @@ namespace ImSpinner
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
-      window->DrawList->AddCircleFilled(centre, radius1, bg, num_segments);
+      window->DrawList->AddCircleFilled(centre, radius1, color_alpha(bg, 1.f), num_segments);
 
       const float abegin = (PI_DIV_2) - start;
       const float aend = (PI_DIV_2) + start;
@@ -757,9 +762,15 @@ namespace ImSpinner
 
       window->DrawList->PathClear();
       window->DrawList->PathArcTo(centre, radius1, abegin, aend, num_segments * 2);
-      window->DrawList->PathFillConvex(color);
 
-      window->DrawList->AddCircleFilled(centre, radius2, fg, num_segments);
+      ImDrawListFlags save = window->DrawList->Flags;
+      window->DrawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
+        
+      window->DrawList->PathFillConvex(color_alpha(color, 1.f));
+
+      window->DrawList->AddCircleFilled(centre, radius2, color_alpha(fg, 1.f), num_segments);
+
+      window->DrawList->Flags = save;
     }
 
     inline void SpinnerTwinAng180(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f)
@@ -789,7 +800,7 @@ namespace ImSpinner
 
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ared) * radius2, centre.y + ImSin(ared) * radius2));
       }
-      window->DrawList->PathStroke(color2, false, thickness);
+      window->DrawList->PathStroke(color_alpha(color2, 1.f), false, thickness);
 
       window->DrawList->PathClear();
       for (size_t i = 0; i <= 2 * num_segments + 1; i++)
@@ -803,7 +814,7 @@ namespace ImSpinner
 
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1));
       }
-      window->DrawList->PathStroke(color1, false, thickness);
+      window->DrawList->PathStroke(color_alpha(color1, 1.f), false, thickness);
     }
 
     inline void SpinnerTwinAng360(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed1 = 2.8f, float speed2 = 2.5f)
@@ -834,7 +845,7 @@ namespace ImSpinner
 
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ared) * radius2, centre.y + ImSin(ared) * radius2));
       }
-      window->DrawList->PathStroke(color2, false, thickness);
+      window->DrawList->PathStroke(color_alpha(color2, 1.f), false, thickness);
 
       window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments + 1; i++)
@@ -849,7 +860,7 @@ namespace ImSpinner
 
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(-ared) * radius1, centre.y + ImSin(-ared) * radius1));
       }
-      window->DrawList->PathStroke(color1, false, thickness);
+      window->DrawList->PathStroke(color_alpha(color1, 1.f), false, thickness);
     }
 
     inline void SpinnerIncDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6)
@@ -882,16 +893,14 @@ namespace ImSpinner
       for (size_t i = 0; i < dots * 2; i++)
       {
         float a = start + (i * bg_angle_offset);
-        ImColor c = color;
-        c.Value.w = 0.1f;
+        ImColor c = color_alpha(color, 0.1f);
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, c, 8);
       }
 
       for (size_t i = 0; i < dots; i++)
       {
         float a = start + (i * bg_angle_offset);
-        ImColor c = color;
-        c.Value.w = ImMax(0.1f, i / (float)dots);
+        ImColor c = color_alpha(color, ImMax(0.1f, i / (float)dots));
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, c, 8);
       }
     }
@@ -912,8 +921,7 @@ namespace ImSpinner
       for (size_t i = 0; i < bars; i++)
       {
         float a = start + (IM_PI - i * offset);
-        ImColor c = color;
-        c.Value.w = ImMax(0.1f, ImSin(a * heightSpeed));
+        ImColor c = color_alpha(color, ImMax(0.1f, ImSin(a * heightSpeed)));
         float h = (scale ? (0.6f + 0.4f * c.Value.w) : 1.f) * size.y / 2;
         window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) - w / 2, centre.y - h * yOffsetKoeftt),
                                         ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) + w / 2, centre.y + h * yOffsetKoeftt), c);
@@ -934,8 +942,7 @@ namespace ImSpinner
       for (size_t i = 0; i <= bars; i++)
       {
         float a = start + (i * bg_angle_offset);
-        ImColor c = color;
-        c.Value.w = ImMax(0.1f, i / (float)bars);
+        ImColor c = color_alpha(color, ImMax(0.1f, i / (float)bars));
         window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin), ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax), c, thickness);
       }
     }
@@ -958,12 +965,12 @@ namespace ImSpinner
         float a = start + (IM_PI - i * offset);
         float h = (0.4f + 0.6f * ImMax(0.1f, ImSin(a * heightSpeed))) * (size.y / 2);
         window->DrawList->AddRectFilled(ImVec2(centre.x + style.FramePadding.x + i * (w * nextItemKoeff) - w / 2, centre.y - h * yOffsetKoeftt),
-                                        ImVec2(centre.x + style.FramePadding.x + i * (w * nextItemKoeff) + w / 2, centre.y + h * yOffsetKoeftt), color);
+                                        ImVec2(centre.x + style.FramePadding.x + i * (w * nextItemKoeff) + w / 2, centre.y + h * yOffsetKoeftt), color_alpha(color, 1.f));
         if (i == 0)
           continue;
 
         window->DrawList->AddRectFilled(ImVec2(centre.x + style.FramePadding.x - i * (w * nextItemKoeff) - w / 2, centre.y - h * yOffsetKoeftt),
-                                        ImVec2(centre.x + style.FramePadding.x - i * (w * nextItemKoeff) + w / 2, centre.y + h * yOffsetKoeftt), color);
+                                        ImVec2(centre.x + style.FramePadding.x - i * (w * nextItemKoeff) + w / 2, centre.y + h * yOffsetKoeftt), color_alpha(color, 1.f));
       }
     }
 
@@ -981,7 +988,7 @@ namespace ImSpinner
         const float a = start + (i * bg_angle_offset);
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1));
       }
-      window->DrawList->PathStroke(bg, false, thickness);
+      window->DrawList->PathStroke(color_alpha(bg, 1.f), false, thickness);
 
       const float angle_offset = angle / num_segments;
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
@@ -993,7 +1000,7 @@ namespace ImSpinner
             const float a = arc_start * arc_num + start + (i * angle_offset);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2));
           }
-          window->DrawList->PathStroke(color, false, thickness);
+          window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
       }
     }
 
@@ -1008,8 +1015,7 @@ namespace ImSpinner
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
       {
         window->DrawList->PathClear();
-        ImColor c = color;
-        c.Value.w = ImMax(0.1f, arc_num / (float)arcs);
+        ImColor c = color_alpha(color, ImMax(0.1f, arc_num / (float)arcs));
         for (size_t i = 0; i <= num_segments; i++)
         {
           const float a = start + arc_angle * arc_num + (i * angle_offset);
@@ -1062,7 +1068,7 @@ namespace ImSpinner
           c.Value.w = ImMax(0.05f, c.Value.w);
         }
        
-        window->DrawList->PathStroke(c, false, thickness);
+        window->DrawList->PathStroke(color_alpha(c, 1.f), false, thickness);
       }
     }
 
@@ -1077,7 +1083,7 @@ namespace ImSpinner
         for (size_t arc_num = 0; arc_num < 4; ++arc_num)
         {
             float a = arc_angle * arc_num;
-            ImColor c = color;
+            ImColor c = color_alpha(color, 1.f);
             if (start < PI_2) {
                 c.Value.w = (start > a && start < (a + arc_angle))
                                 ? 1.f - (start - a) / (float)arc_angle
@@ -1090,6 +1096,7 @@ namespace ImSpinner
                                 : (startk < a ? 1.f : 0.f);
                 c.Value.w = ImMax(0.05f, c.Value.w);
             }
+            c.Value.w *= ImGui::GetStyle().Alpha;
             a -= PI_DIV_4;
             const float r = radius * 1.4f;
             const bool right = ImSin(a) > 0;
@@ -1113,7 +1120,7 @@ namespace ImSpinner
         if (!text || !*text)
             return;
 
-        const float start = ImFmod((float)ImGui::GetTime() * speed, strlen(text));
+        const float start = ImFmod((float)ImGui::GetTime() * speed, (float)strlen(text));
         const ImFontGlyph* glyph = ImGui::GetCurrentContext()->Font->FindGlyph(text[(int)start]);
 
         ImVec2 pp(centre.x - radius, centre.y - radius);
@@ -1122,10 +1129,10 @@ namespace ImSpinner
         int out_width, out_height;
         atlas->GetTexDataAsAlpha8(&bitmap, &out_width, &out_height);
 
-        const int U1 = glyph->U1 * out_width;
-        const int U0 = glyph->U0 * out_width;
-        const int V1 = glyph->V1 * out_height;
-        const int V0 = glyph->V0 * out_height;
+        const int U1 = (int)(glyph->U1 * out_width);
+        const int U0 = (int)(glyph->U0 * out_width);
+        const int V1 = (int)(glyph->V1 * out_height);
+        const int V0 = (int)(glyph->V0 * out_height);
         const float px = size.x / (U1 - U0);
         const float py = size.y / (V1 - V0);
         
@@ -1146,7 +1153,7 @@ namespace ImSpinner
         if (!text || !*text)
             return;
 
-        const float start = ImFmod((float)ImGui::GetTime() * speed, strlen(text));
+        const float start = ImFmod((float)ImGui::GetTime() * speed, (float)strlen(text));
 
         struct Segment { ImVec2 b, e; };
         const float q = 1.f, hq = q * 0.5f, xq = thickness / radius;
@@ -1205,7 +1212,7 @@ namespace ImSpinner
             ImVec2 p1(centre.x + radius * s.b.x, centre.y + radius * s.b.y);
             ImVec2 p2(centre.x + radius * s.e.x, centre.y + radius * s.e.y);
 
-            window->DrawList->AddLine(p1, p2, color, thickness);
+            window->DrawList->AddLine(p1, p2, color_alpha(color, 1.f), thickness);
         };
 
         auto draw_symbol = [&] (const int* sq) {
@@ -1236,13 +1243,13 @@ namespace ImSpinner
             const float delta = (start - PI_2) / overt;
             if (delta < 0.5f) {
                 c.Value.w = 1.f - delta * 2.f;
-                window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), c, thickness);
+                window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), color_alpha(c, 1.f), thickness);
             } else {
                 c.Value.w = (delta - 0.5f) * 2.f;
-                window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), color, thickness);
+                window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), color_alpha(color, 1.f), thickness);
             }
         } else {
-            window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), color, thickness);
+            window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), color_alpha(color, 1.f), thickness);
         }
 
         if (start < PI_2) {
@@ -1261,7 +1268,7 @@ namespace ImSpinner
                 case 2: p1.x += ht; p2.x += ht; p2.x = p1.x + (p2.x - p1.x) * segment_progress; break;
                 case 3: p1.y += ht; p2.y -= ht; p2.y = p1.y + (p2.y - p1.y) * segment_progress; break;
                 }
-                window->DrawList->AddLine(p1, p2, color, thickness);
+                window->DrawList->AddLine(p1, p2, color_alpha(color, 1.f), thickness);
             }
         }
     }
@@ -1280,7 +1287,7 @@ namespace ImSpinner
             float a = arc_angle * arc_num;
             a -= PI_DIV_4;
             ImVec2 pp(centre.x + ImCos(a) * best_radius, centre.y + ImSin(a) * best_radius);
-            window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), color, thickness);
+            window->DrawList->AddLine(ImVec2(pp.x - ht, pp.y), ImVec2(pp.x + ht, pp.y), color_alpha(color, 1.f), thickness);
         }
 
         const bool grow = start < IM_PI;
@@ -1302,7 +1309,7 @@ namespace ImSpinner
             case 3: p1.y += ht; p2.y -= ht;
                 p1.y = grow ? p1.y : p1.y + (p2.y - p1.y) * (1.f - segment_progress); p2.y = grow ? p1.y + (p2.y - p1.y) * segment_progress : p2.y; break;
             }
-            window->DrawList->AddLine(p1, p2, color, thickness);
+            window->DrawList->AddLine(p1, p2, color_alpha(color, 1.f), thickness);
         }
     }
 
@@ -1321,28 +1328,16 @@ namespace ImSpinner
         ImColor c = color;
         if (start < PI_2) {
           c.Value.w = 0.f;
-          if (start > a && start < (a + arc_angle))
-          {
-            c.Value.w = 1.f - (start - a) / (float)arc_angle;
-          }
-          else if (start < a)
-          {
-            c.Value.w = 1.f;
-          }
+          if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
+          else if (start < a) { c.Value.w = 1.f; }
           c.Value.w = ImMax(0.f, 1.f - c.Value.w);
         }
         else
         {
           const float startk = start - PI_2;
           c.Value.w = 0.f;
-          if (startk > a && startk < (a + arc_angle))
-          {
-            c.Value.w = 1.f - (startk - a) / (float)arc_angle;
-          }
-          else if (startk < a)
-          {
-            c.Value.w = 1.f;
-          }
+          if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
+          else if (startk < a) { c.Value.w = 1.f; }
         }
 
         window->DrawList->PathClear();
@@ -1352,7 +1347,13 @@ namespace ImSpinner
           const float ar = arc_angle * arc_num + (i * angle_offset) - PI_DIV_2 - PI_DIV_4;
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
         }
+
+        //ImDrawListFlags save = window->DrawList->Flags;
+        //window->DrawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
+        c.Value.w *= ImGui::GetStyle().Alpha;
         window->DrawList->PathFillConvex(c);
+
+        //window->DrawList->Flags = save;
       }
     }
 
@@ -1364,7 +1365,7 @@ namespace ImSpinner
       const float arc_angle = PI_2 / (float)arcs;
       const float angle_offset = arc_angle / num_segments;
 
-      window->DrawList->AddCircleFilled(centre, radius, bg, num_segments * 2);
+      window->DrawList->AddCircleFilled(centre, radius, color_alpha(bg, 1.f), num_segments * 2);
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
       {
         const float b = arc_angle * arc_num - PI_DIV_2;
@@ -1373,14 +1374,8 @@ namespace ImSpinner
 
         ImColor c = color;
         c.Value.w = 0.f;
-        if (start > a && start < (a + arc_angle))
-        {
-          c.Value.w = 1.f - (start - a) / (float)arc_angle;
-        }
-        else if (start < a)
-        {
-          c.Value.w = 1.f;
-        }
+        if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
+        else if (start < a) { c.Value.w = 1.f; }
         c.Value.w = ImMax(0.f, 1.f - c.Value.w);
         
         window->DrawList->PathClear();
@@ -1390,6 +1385,7 @@ namespace ImSpinner
           const float ar = arc_angle * arc_num + (i * angle_offset) - PI_DIV_2;
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
         }
+        c.Value.w *= ImGui::GetStyle().Alpha;
         window->DrawList->PathFillConvex(c);
       }
     }
@@ -1411,7 +1407,7 @@ namespace ImSpinner
             const float ar_b = (i * (pi_mul_2 / num_segments));
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar_b) * radius, centre.y + ImSin(ar_b) * radius));
         }
-        window->DrawList->PathStroke(bg, false, thickness);
+        window->DrawList->PathStroke(color_alpha(bg, 1.f), false, thickness);
 
         for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
         {
@@ -1433,7 +1429,7 @@ namespace ImSpinner
                 const float ar_b = arc_angle * arc_num + (i * angle_offset) - pi_div_2;
                 window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar_b) * radius, centre.y + ImSin(ar_b) * radius));
             }
-            window->DrawList->PathStroke(c, false, thickness);
+            window->DrawList->PathStroke(color_alpha(c, 1.f), false, thickness);
         }
     }
 
@@ -1461,7 +1457,7 @@ namespace ImSpinner
                 const float ar = start_a + arc_angle * arc_num + (i * angle_offset) - PI_DIV_2;
                 window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
             }
-            window->DrawList->PathFillConvex(ImColor::HSV(out_h + (1.f / arcs) * arc_num, out_s, out_v, 0.7f));
+            window->DrawList->PathFillConvex(color_alpha(ImColor::HSV(out_h + (1.f / arcs) * arc_num, out_s, out_v, 0.7f), 1.f));
         }
     }
 
@@ -1479,13 +1475,13 @@ namespace ImSpinner
         const float a = start + (i * bg_angle_offset);
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1));
       }
-      window->DrawList->PathStroke(bg, false, thickness);
+      window->DrawList->PathStroke(color_alpha(bg, 1.f), false, thickness);
 
       for (size_t b_num = 0; b_num < balls; ++b_num)
       {
         float b_start = PI_2 / balls;
         const float a = b_start * b_num + start;
-        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2), b_thickness, ball);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2), b_thickness, color_alpha(ball, 1.f));
       }
     }
 
@@ -1498,13 +1494,13 @@ namespace ImSpinner
 
         for (int i = 0; i < balls; ++i) {
             const float rb = (radius / balls) * 1.3f * (i + 1);
-            window->DrawList->AddCircle(centre, rb, bg, num_segments, thickness * 0.3f);
+            window->DrawList->AddCircle(centre, rb, color_alpha(bg, 1.f), num_segments, thickness * 0.3f);
         }
 
         for (int i = 0; i < balls; ++i) {
             const float rb = (radius / balls) * 1.3f * (i + 1);
-            const float a = start * (1.0 + 0.1f * i);
-            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * rb, centre.y + ImSin(a) * rb), thickness, ball);
+            const float a = start * (1.0f + 0.1f * i);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * rb, centre.y + ImSin(a) * rb), thickness, color_alpha(ball, 1.f));
         }
     }
 
@@ -1517,8 +1513,8 @@ namespace ImSpinner
 
         for (int i = 0; i < balls; ++i) {
             const float rb = (radius / balls) * 1.3f * (i + 1);
-            const float a = start * (1.0 + 0.1f * i);
-            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * rb, centre.y + ImSin(a) * rb), ((thickness * 2.f) / balls) * i, ball);
+            const float a = start * (1.0f + 0.1f * i);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * rb, centre.y + ImSin(a) * rb), ((thickness * 2.f) / balls) * i, color_alpha(ball, 1.f));
         }
     }
 
@@ -1533,28 +1529,28 @@ namespace ImSpinner
         {
             const float rb = (radius / balls) * 1.3f * (i + 1);
             const float bg_angle_offset = IM_PI / half_segments;
-            const float mul = i % 2 ? -1 : 1;
+            const int mul = i % 2 ? -1 : 1;
             window->DrawList->PathClear();
-            for (size_t i = 0; i <= half_segments; i++)
+            for (size_t ii = 0; ii <= half_segments; ii++)
             {
-                const float a = (i * bg_angle_offset);
+                const float a = (ii * bg_angle_offset);
                 window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * rb, centre.y + ImSin(a) * rb * mul));
             }
-            window->DrawList->PathStroke(bg, false, thickness * 0.8f);
+            window->DrawList->PathStroke(color_alpha(bg, 1.f), false, thickness * 0.8f);
         }
 
         for (int i = 0; i < balls; ++i)
         {
             const float rb = (radius / balls) * 1.3f * (i + 1);
-            const float a = ImFmod(start * (1.0 + 0.1f * i), PI_2);
-            const float mul = i % 2 ? -1 : 1;
+            const float a = ImFmod(start * (1.0f + 0.1f * i), PI_2);
+            const int mul = i % 2 ? -1 : 1;
             float y = ImSin(a) * rb;
             if ((y > 0 && mul < 0) || (y < 0 && mul > 0)) y = -y;
-            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * rb, centre.y + y), thickness, ball);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * rb, centre.y + y), thickness, color_alpha(ball, 1.f));
         }
     }
 
-    inline void SpinnerRainbowCircle(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4, int mode = 1)
+    inline void SpinnerRainbowCircle(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4, float mode = 1)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1572,20 +1568,20 @@ namespace ImSpinner
             const float rb = (radius / arcs) * 1.1f * (i + 1);
 
             ImColor c = ImColor::HSV(out_h + i * (0.8f / arcs), out_s, out_v);
-            const int draw_segments = ImMax<int>(0, max_angle / bg_angle_offset);
+            const int draw_segments = ImMax<int>(0, (int)(max_angle / bg_angle_offset));
 
             for (int j = 0; j < 2; j++)
             {
-                const float mul = j % 2 ? -1 : 1;
+                const int mul = j % 2 ? -1 : 1;
                 const float py = (j % 2 ? -0.5f : 0.5f) * thickness;
                 const float alpha_start = (j % 2 ? 0 : IM_PI) * mode;
                 window->DrawList->PathClear();
-                for (size_t i = 0; i <= draw_segments + 1; i++)
+                for (size_t ii = 0; ii <= draw_segments + 1; ii++)
                 {
-                    const float a = (i * bg_angle_offset);
+                    const float a = (ii * bg_angle_offset);
                     window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(IM_PI - alpha_start - a) * rb, centre.y + ImSin(a) * rb * mul + py));
                 }
-                window->DrawList->PathStroke(c, false, thickness * 0.8f);
+                window->DrawList->PathStroke(color_alpha(c, 1.f), false, thickness * 0.8f);
             }
         }
     }
@@ -1617,7 +1613,7 @@ namespace ImSpinner
               float sign = ((i % 2 == 0) ? 1.f : -1.f);
               float offset = (i == 0) ? 0.f : (floorf((i+1) / 2.f + 0.1f) * sign * 2.f * thickness);
               float maxht = ImMax(ImSin(ImFmod(hmax, IM_PI)), (0.7f + rkoeff[i % 9])) * radius;
-              window->DrawList->AddCircleFilled(ImVec2(centre.x + offset, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, c, 8);
+              window->DrawList->AddCircleFilled(ImVec2(centre.x + offset, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, color_alpha(c, 1.f), 8);
           }
       }
     }
@@ -1636,7 +1632,7 @@ namespace ImSpinner
       {
         float a = start + (i * bg_angle_offset);
         float th = thickness * ImMax(0.1f, i / (float)dots);
-        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), th, color, 8);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), th, color_alpha(color, 1.f), 8);
       }
     }
 
@@ -1654,7 +1650,7 @@ namespace ImSpinner
         const float a = start1 + (i * angle_offset);
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1));
       }
-      window->DrawList->PathStroke(c1, false, thickness);
+      window->DrawList->PathStroke(color_alpha(c1, 1.f), false, thickness);
 
       float start2 = (float)ImGui::GetTime() * 1.2f * speed;
       window->DrawList->PathClear();
@@ -1663,7 +1659,7 @@ namespace ImSpinner
         const float a = start2 + (i * angle_offset);
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(-a) * radius2, centre.y + ImSin(-a) * radius2));
       }
-      window->DrawList->PathStroke(c2, false, thickness);
+      window->DrawList->PathStroke(color_alpha(c2, 1.f), false, thickness);
 
       float start3 = (float)ImGui::GetTime() * 0.9f * speed;
       window->DrawList->PathClear();
@@ -1672,7 +1668,7 @@ namespace ImSpinner
         const float a = start3 + (i * angle_offset);
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius3, centre.y + ImSin(a) * radius3));
       }
-      window->DrawList->PathStroke(c3, false, thickness);
+      window->DrawList->PathStroke(color_alpha(c3, 1.f), false, thickness);
     }
 
     inline void SpinnerAngEclipse(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, float angle = IM_PI)
@@ -1689,7 +1685,7 @@ namespace ImSpinner
         const float a1 = start + ((i+1) * angle_offset);
         window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
                                   ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
-                                  color,
+                                  color_alpha(color, 1.f),
                                   th * i);
       }
     }
@@ -1709,12 +1705,12 @@ namespace ImSpinner
         const float a1 = startI + ((i + 1) * angle_offset);
         window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius),
                                   ImVec2(centre.x + ImCos(a1) * radius, centre.y + ImSin(a1) * radius),
-                                  colorI,
+                                  color_alpha(colorI, 1.f),
                                   th * i);
       }
       const float ai_end = startI + (num_segments * angle_offset);
       ImVec2 circle_i_center{centre.x + ImCos(ai_end) * radius, centre.y + ImSin(ai_end) * radius};
-      window->DrawList->AddCircleFilled(circle_i_center, thickness / 2.f, colorI, num_segments);
+      window->DrawList->AddCircleFilled(circle_i_center, thickness / 2.f, color_alpha(colorI, 1.f), num_segments);
 
       const float rv = reverse ? -1.f : 1.f;
       const float yang_radius = (radius - yang_detlta_r);
@@ -1724,12 +1720,12 @@ namespace ImSpinner
         const float a1 = startY + IM_PI + ((i+1) * angle_offset);
         window->DrawList->AddLine(ImVec2(centre.x + ImCos(a * rv) * yang_radius, centre.y + ImSin(a * rv) * yang_radius),
                                   ImVec2(centre.x + ImCos(a1 * rv) * yang_radius, centre.y + ImSin(a1 * rv) * yang_radius),
-                                  colorY,
+                                  color_alpha(colorY, 1.f),
                                   th * i);
       }
       const float ay_end = startY + IM_PI + (num_segments * angle_offset);
       ImVec2 circle_y_center{centre.x + ImCos(ay_end * rv) * yang_radius, centre.y + ImSin(ay_end * rv) * yang_radius};
-      window->DrawList->AddCircleFilled(circle_y_center, thickness / 2.f, colorY, num_segments);
+      window->DrawList->AddCircleFilled(circle_y_center, thickness / 2.f, color_alpha(colorY, 1.f), num_segments);
     }
 
 
@@ -1741,8 +1737,8 @@ namespace ImSpinner
       const float radius1 = (0.3f + 0.3f * ImSin(start)) * radius;
       const float radius2 = radius - radius1;
 
-      window->DrawList->AddCircleFilled(ImVec2(centre.x - radius + radius1, centre.y), radius1, color, num_segments);
-      window->DrawList->AddCircleFilled(ImVec2(centre.x - radius + radius1 * 1.2f + radius2, centre.y), radius2, color, num_segments);
+      window->DrawList->AddCircleFilled(ImVec2(centre.x - radius + radius1, centre.y), radius1, color_alpha(color, 1.f), num_segments);
+      window->DrawList->AddCircleFilled(ImVec2(centre.x - radius + radius1 * 1.2f + radius2, centre.y), radius2, color_alpha(color, 1.f), num_segments);
     }
 
     inline void SpinnerRotateGooeyBalls(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls)
@@ -1757,7 +1753,7 @@ namespace ImSpinner
       for (int i = 0; i <= balls; i++)
       {
         const float a = rstart + (i * angle_offset);
-        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, color, num_segments);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, color_alpha(color, 1.f), num_segments);
       }
     }
 
@@ -1778,7 +1774,7 @@ namespace ImSpinner
         ImVec2 p2(tri_centre.x + ImCos(-a + PI_2 / 3.f) * radius1, tri_centre.y + ImSin(-a + PI_2 / 3.f) * radius1);
         ImVec2 p3(tri_centre.x + ImCos(-a - PI_2 / 3.f) * radius1, tri_centre.y + ImSin(-a - PI_2 / 3.f) * radius1);
         ImVec2 points[] = {p1, p2, p3};
-        window->DrawList->AddConvexPolyFilled(points, 3, color);
+        window->DrawList->AddConvexPolyFilled(points, 3, color_alpha(color, 1.f));
       }
     }
 
@@ -1800,7 +1796,7 @@ namespace ImSpinner
             for (int pi = 0; pi < pnt; ++pi) {
                 points[pi] = {tri_centre.x + ImCos(begin_a + pi * PI_2 / pnt) * radius1, tri_centre.y + ImSin(begin_a + pi * PI_2 / pnt) * radius1};
             }
-            window->DrawList->AddConvexPolyFilled(points.data(), pnt, color);
+            window->DrawList->AddConvexPolyFilled(points.data(), pnt, color_alpha(color, 1.f));
         }
     }
 
@@ -1823,7 +1819,7 @@ namespace ImSpinner
             for (int pi = 0; pi < 4; ++pi) {
                 points[pi] = {tri_centre.x + ImCos(begin_a+ pi * PI_DIV_2) * radius1, tri_centre.y + ImSin(begin_a + pi * PI_DIV_2) * radius1};
             }
-            window->DrawList->AddConvexPolyFilled(points.data(), 4, color);
+            window->DrawList->AddConvexPolyFilled(points.data(), 4, color_alpha(color, 1.f));
         }
     }
 
@@ -1842,7 +1838,7 @@ namespace ImSpinner
         {
           window->DrawList->AddLine(ImVec2(centre.x + ImCos(start + b(i)) * radius, centre.y + ImSin(start + b(i)) * radius),
                                     ImVec2(centre.x + ImCos(start + e(i)) * radius, centre.y + ImSin(start + e(i)) * radius),
-                                    color,
+                                    color_alpha(color, 1.f),
                                     th(i));
         }
 
@@ -1883,13 +1879,13 @@ namespace ImSpinner
         const float s_drop_radius = radius - thickness / 2.f - (drop_radius_th * i);
         window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * s_drop_radius, centre.y + ImSin(a) * s_drop_radius),
                                   ImVec2(centre.x + ImCos(a1) * s_drop_radius, centre.y + ImSin(a1) * s_drop_radius),
-                                  color,
+                                  color_alpha(color, 1.f),
                                   th * 2.f * i);
       }
       const float ai_end = start + (num_segments * angle_offset);
       const float f_drop_radius = radius - thickness / 2.f - thickness_drop;
       ImVec2 circle_i_center{centre.x + ImCos(ai_end) * f_drop_radius, centre.y + ImSin(ai_end) * f_drop_radius};
-      window->DrawList->AddCircleFilled(circle_i_center, thickness_drop, color, num_segments);
+      window->DrawList->AddCircleFilled(circle_i_center, thickness_drop, color_alpha(color, 1.f), num_segments);
 
       window->DrawList->PathClear();
       for (int i = 0; i <= num_segments; i++)
@@ -1897,7 +1893,7 @@ namespace ImSpinner
         const float a = (i * bg_angle_offset);
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
       }
-      window->DrawList->PathStroke(bg, false, thickness);
+      window->DrawList->PathStroke(color_alpha(bg, 1.f), false, thickness);
     }
 
     inline void SpinnerSurroundedIndicator(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f) 
@@ -1905,7 +1901,7 @@ namespace ImSpinner
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       float lerp_koeff = (ImSin((float)ImGui::GetTime() * speed) + 1.f) * 0.5f;
-      window->DrawList->AddCircleFilled(centre, thickness, bg, num_segments);
+      window->DrawList->AddCircleFilled(centre, thickness, color_alpha(bg, 1.f), num_segments);
       window->DrawList->AddCircleFilled(centre, thickness, color_alpha(color, ImMax(0.1f, ImMin(lerp_koeff, 1.f))), num_segments);
 
       auto PathArc = [&] (auto c, auto th) {
@@ -1913,7 +1909,7 @@ namespace ImSpinner
         const float bg_angle_offset = PI_2 / num_segments;
         for (int i = 0; i <= num_segments; i++)
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(i * bg_angle_offset) * radius, centre.y + ImSin(i * bg_angle_offset) * radius));
-        window->DrawList->PathStroke(c, false, th);
+        window->DrawList->PathStroke(color_alpha(c, 1.f), false, th);
       };
       
       lerp_koeff = (ImSin((float)ImGui::GetTime() * speed * 1.6f) + 1.f) * 0.5f;
@@ -1936,7 +1932,7 @@ namespace ImSpinner
             const float bg_angle_offset = PI_DIV(2) / num_segments;
             for (int i = 0; i <= num_segments; i++)
                 window->DrawList->PathLineTo(ImVec2(pc.x + ImCos(as + i * bg_angle_offset) * r, pc.y + ImSin(as + i * bg_angle_offset) * r));
-            window->DrawList->PathStroke(c, false, th);
+            window->DrawList->PathStroke(color_alpha(c, 1.f), false, th);
         };
 
         const float interval = (size.x * 0.7f) / dots;
@@ -1986,8 +1982,8 @@ namespace ImSpinner
         }
       };
 
-      draw_sectors(0, [&] (auto) { ImColor rc = bg; rc.Value.w = 0.1f; return rc; });
-      draw_sectors(start, [&] (auto i) { ImColor rc = bg; rc.Value.w = (i / (float)bars) - 0.5f; return rc; });
+      draw_sectors(0, [&] (auto) { return color_alpha(bg, 0.1f); });
+      draw_sectors(start, [&] (auto i) { return color_alpha(bg, (i / (float)bars) - 0.5f); });
     }
 
     using LeafColor = ImColor (int);
@@ -2014,7 +2010,7 @@ namespace ImSpinner
           float left = s + (i * angle_offset) - angle_offset_t;
           float right = s + (i * angle_offset) + angle_offset_t;
           auto points = get_points(left, right);
-          window->DrawList->AddConvexPolyFilled(points.data(), 3, color_func((int)i));
+          window->DrawList->AddConvexPolyFilled(points.data(), 3, color_alpha(color_func((int)i), 1.f));
         }
       };
 
@@ -2049,11 +2045,11 @@ namespace ImSpinner
 
       draw_gradient([&] (auto i) { return (i) * angle_offset; },
                     [&] (auto i) { return (i + 1) * angle_offset; },
-                    [&] (auto i) { ImColor rc = color; rc.Value.w = (i / (float)num_segments); return rc; });
+                    [&] (auto i) { return color_alpha(color, (i / (float)num_segments)); });
 
       draw_gradient([&] (auto i) { return (num_segments + i) * angle_offset; },
                     [&] (auto i) { return (num_segments + i + 1) * angle_offset; },
-                    [&] (auto i) { ImColor rc = color; rc.Value.w = 1.f - (i / (float)num_segments); return rc; });
+                    [&] (auto i) { return color_alpha(color, 1.f - (i / (float)num_segments)); });
     }
 
     inline void SpinnerRotateSegments(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4, size_t layers = 1)
@@ -2075,7 +2071,7 @@ namespace ImSpinner
             const float a = start * (1 + 0.1f * layer) + arc_angle * arc_num + (i * angle_offset);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a * reverse) * r, centre.y + ImSin(a * reverse) * r));
           }
-          window->DrawList->PathStroke(color, false, thickness);
+          window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
         }
 
         r -= (thickness + 1);
@@ -2104,7 +2100,7 @@ namespace ImSpinner
       
           window->DrawList->AddLine(ImVec2(centre.x + xy0.first, centre.y + xy0.second),
               ImVec2(centre.x + xy1.first, centre.y + xy1.second),
-              color,
+              color_alpha(color, 1.f),
               th * i);
       }
     }
@@ -2123,7 +2119,7 @@ namespace ImSpinner
         const float a = (i * bg_angle_offset);
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * bg_radius, centre.y + ImSin(a) * bg_radius));
       }
-      window->DrawList->PathStroke(color, false, bg_radius / 2);
+      window->DrawList->PathStroke(color_alpha(color, 1.f), false, bg_radius / 2);
 
       const float rmin = bg_radius;
       const float rmax = radius;
@@ -2131,7 +2127,9 @@ namespace ImSpinner
       for (size_t i = 0; i <= pins; i++)
       {
         float a = start + (i * pin_angle_offset);
-        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin), ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax), color, thickness);
+        window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin),
+                                  ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax),
+                                  color_alpha(color, 1.f), thickness);
       }
     }
 
@@ -2151,14 +2149,16 @@ namespace ImSpinner
                 const float a = (i * bg_angle_offset);
                 window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r));
             }
-            window->DrawList->PathStroke(c, false, th);
+            window->DrawList->PathStroke(color_alpha(c, 1.f), false, th);
         };
 
         auto draw_pins = [window, centre, pins, start] (float rmin, float rmax, const ImColor &c, float th) {
             const float pin_angle_offset = PI_2 / pins;
             for (size_t i = 0; i <= pins; i++)             {
                 float a = start + (i * pin_angle_offset);
-                window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin), ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax), c, th);
+                window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin),
+                                          ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax),
+                                          color_alpha(c, 1.f), th);
             }
         };
 
@@ -2187,7 +2187,7 @@ namespace ImSpinner
           float yy = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
           window->DrawList->PathLineTo({xx, yy});
         }
-        window->DrawList->PathStroke(color, false, thickness);
+        window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
 
         float anga = ImFmod(start, PI_2);
         float x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
@@ -2202,7 +2202,7 @@ namespace ImSpinner
 
       ImColor pcolors[3] = {ImColor(255, 0, 0), ImColor(0, 255, 0), ImColor(0, 0, 255)};
       for (int i = 0; i < elipses; ++i) {
-        window->DrawList->AddCircleFilled(ppos[i], thickness * 2, pcolors[i], int(num_segments / 3.f));
+        window->DrawList->AddCircleFilled(ppos[i], thickness * 2, color_alpha(pcolors[i], 1.f), int(num_segments / 3.f));
       }
     }
 
@@ -2219,8 +2219,7 @@ namespace ImSpinner
             float b = radius / 2.f; 
 
             const float bg_angle_offset = PI_2 / (num_segments - 1);
-            ImColor c = color;
-            c.Value.w = tr;
+            ImColor c = color_alpha(color, tr);
             window->DrawList->PathClear();
             for (int i = 0; i < num_segments; ++i) {
                 float anga = (i * bg_angle_offset);
@@ -2250,8 +2249,7 @@ namespace ImSpinner
             float a = r;
             float b = r / delta_a; 
 
-            ImColor c = color;
-            c.Value.w = tr;
+            ImColor c = color_alpha(color, tr);
             window->DrawList->PathClear();
             for (int i = 0; i < num_segments; ++i) {
                 float anga = (i *  PI_2 / (num_segments - 1));
@@ -2288,8 +2286,7 @@ namespace ImSpinner
             float a = r;
             float b = r / 4.f; 
 
-            ImColor c = color;
-            c.Value.w = tr;
+            ImColor c = color_alpha(color, tr);
             window->DrawList->PathClear();
             for (int i = 0; i < num_segments; ++i) {
                 float anga = (i * PI_2 / (num_segments - 1));
@@ -2345,7 +2342,7 @@ namespace ImSpinner
                 const float yy = b * ImSin(ared) * ImCos(alpha) - a * ImCos(ared) * ImSin(alpha) + pos.y + y;
                 window->DrawList->PathLineTo(ImVec2(xx, yy));
             }
-            window->DrawList->PathStroke(color, false, thickness);
+            window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
         };
 
         for (int i = 0; i < elipses; ++i)
@@ -2388,7 +2385,7 @@ namespace ImSpinner
                 const float yy = b * ImSin(ared) * ImCos(alpha) - a * ImCos(ared) * ImSin(alpha) + pos.y + y;
                 window->DrawList->PathLineTo(ImVec2(xx, yy));
             }
-            window->DrawList->PathStroke(color, false, thickness);
+            window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
         };
 
         for (int i = 0; i < elipses; ++i)
@@ -2419,9 +2416,9 @@ namespace ImSpinner
           pts[i].y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
         }
         for (size_t i = 1; i < num_segments; ++i) {
-          window->DrawList->AddLine(pts[i-1], pts[i], color, thickness);
+          window->DrawList->AddLine(pts[i-1], pts[i], color_alpha(color, 1.f), thickness);
         }
-        window->DrawList->AddLine(pts[num_segments-1], pts[0], color, thickness);
+        window->DrawList->AddLine(pts[num_segments-1], pts[0], color_alpha(color, 1.f), thickness);
       };
 
       for (int i = 0; i < elipses; ++i) {
@@ -2446,7 +2443,7 @@ namespace ImSpinner
       {
         const float a = rstart + (i * angle_offset);
         ImColor c = rainbow ? ImColor::HSV(out_h + i * (1.f / balls) + colorback, out_s, out_v) : color;
-        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, c, num_segments);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, color_alpha(c, 1.f), num_segments);
       }
     }
 
@@ -2469,7 +2466,7 @@ namespace ImSpinner
             const float radius1 = ImMin(radius * rmul, radius);
             const float a = (i * angle_offset);
             ImColor c = rainbow ? ImColor::HSV(out_h + i * (1.f / balls) + colorback, out_s, out_v) : color;
-            window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), c, thickness);
+            window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), color_alpha(c, 1.f), thickness);
         }
     }
 
@@ -2488,7 +2485,7 @@ namespace ImSpinner
             float x = centre.x + (a + b * angle) * ImCos(start + angle);
             float y = centre.y + (a + b * angle) * ImSin(start + angle);
 
-            window->DrawList->AddLine(last, ImVec2(x, y), color, thickness);
+            window->DrawList->AddLine(last, ImVec2(x, y), color_alpha(color, 1.f), thickness);
             last = ImVec2(x, y);
         }
     }
@@ -2508,7 +2505,7 @@ namespace ImSpinner
                 float x = centre.x + (a + b * angle) * ImCos((start + angle) * side);
                 float y = centre.y + (a + b * angle) * ImSin((start + angle) * side);
 
-                window->DrawList->AddCircleFilled(ImVec2(x, y), thickness, color);
+                window->DrawList->AddCircleFilled(ImVec2(x, y), thickness, color_alpha(color, 1.f));
             }
         };
 
@@ -2530,13 +2527,13 @@ namespace ImSpinner
       for (int i = 0; i < bars; i++)
       {
         float a = start + (IM_PI - i * offset);
-        ImColor c = color;
-        c.Value.w = ImMax(0.1f, ImSin(a * heightSpeed));
+        ImColor c = color_alpha(color, ImMax(0.1f, ImSin(a * heightSpeed)));
         float h = mode ? ImSin(a) * size.y / 2.f
                        : (0.6f + 0.4f * c.Value.w) * size.y;
         float halfs = mode ? 0 : size.y / 2.f;
         window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) - thickness / 2, centre.y + halfs),
-                                        ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + halfs - h * yOffsetKoeftt), c);
+                                        ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + halfs - h * yOffsetKoeftt),
+                                        c);
       }
     }
 
@@ -2558,7 +2555,8 @@ namespace ImSpinner
         ImColor c = ImColor::HSV(out_h + i * 0.1f, out_s, out_v);
         float h = (0.6f + 0.4f * ImSin(start + (1.f + rkoeff[i % 6] * i * hspeed)) ) * size.y;
         window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) - thickness / 2, centre.y + size.y / 2.f),
-                                        ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + size.y / 2.f - h * yOffsetKoeftt), c);
+                                        ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + size.y / 2.f - h * yOffsetKoeftt),
+                                        color_alpha(c, 1.f));
       }
     }
 
@@ -2578,7 +2576,8 @@ namespace ImSpinner
       {
           const ImColor &c = (ti == start) ? color : bg;
           window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
-                                          ImVec2(lt.x + rpos.x * (offset_block) + thickness, lt.y + rpos.y * offset_block + thickness), c);
+                                          ImVec2(lt.x + rpos.x * (offset_block) + thickness, lt.y + rpos.y * offset_block + thickness),
+                                          color_alpha(c, 1.f));
           ti++;
       }
     }
@@ -2598,7 +2597,8 @@ namespace ImSpinner
       {
         float h = (0.8f + 0.4f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[ti % 9])));
         window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
-                                        ImVec2(lt.x + rpos.x * (offset_block) + h * thickness, lt.y + rpos.y * offset_block + h * thickness), color);
+                                        ImVec2(lt.x + rpos.x * (offset_block) + h * thickness, lt.y + rpos.y * offset_block + h * thickness),
+                                        color_alpha(color, 1.f));
         ti++;
       }
     }
@@ -2623,7 +2623,8 @@ namespace ImSpinner
             const float strict = (0.5f + 0.5f * ImSin((float)-ImGui::GetTime() * speed + offsets[ti % 9]));
             const float side = ImClamp<float>(strict + 0.1f, 0.1f, 1.f) * hside;
             window->DrawList->AddRectFilled(ImVec2(lt.x + hside + (rpos.x * offset_block) - side, lt.y + hside + (rpos.y * offset_block) - side),
-                                            ImVec2(lt.x + hside + (rpos.x * offset_block) + side, lt.y + hside + (rpos.y * offset_block) + side), c);
+                                            ImVec2(lt.x + hside + (rpos.x * offset_block) + side, lt.y + hside + (rpos.y * offset_block) + side),
+                                            color_alpha(c, 1.f));
             ti++;
         }
     }
@@ -2646,7 +2647,8 @@ namespace ImSpinner
         for (int j = 0; j < num_segments; ++j) {
           float h = (0.6f + 0.3f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[i % 6][2] * 2.f) + (2.f * rkoeff[i % 6][0] * j * j_k))) * (radius * 2.f * rkoeff[i][2]);
           window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + j * j_k, centre.y + size.y / 2.f),
-                                          ImVec2(pos.x + style.FramePadding.x + (j + 1) * (j_k), centre.y + size.y / 2.f - h), c);
+                                          ImVec2(pos.x + style.FramePadding.x + (j + 1) * (j_k), centre.y + size.y / 2.f - h),
+                                          color_alpha(c, 1.f));
         }
       }
     }
@@ -2663,9 +2665,8 @@ namespace ImSpinner
         const float b = arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
         const float e = arc_angle * arc_num + arc_angle - PI_DIV_2 - PI_DIV_4;
         const float a = arc_angle * arc_num;
-        ImColor c = color;
         float h = (0.6f + 0.3f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[arc_num % 6][2] * 2.f) + (2 * rkoeff[arc_num % 6][0])));
-        c.Value.w = h;
+        ImColor c = color_alpha(color, h);
 
         window->DrawList->PathClear();
         window->DrawList->PathLineTo(centre);
@@ -2702,7 +2703,7 @@ namespace ImSpinner
           const float ar = arc_angle * arc_num + (i * angle_offset) - PI_DIV_2 - PI_DIV_4;
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * (radius * r), centre.y + ImSin(ar) * (radius * r)));
         }
-        window->DrawList->PathFillConvex(c);
+        window->DrawList->PathFillConvex(color_alpha(color, 1.f));
       }
     }
 
@@ -2732,7 +2733,7 @@ namespace ImSpinner
           float left = s + (i * angle_offset) - angle_offset_t;
           float right = s + (i * angle_offset) + angle_offset_t;
           auto points = get_points(left, right, r);
-          window->DrawList->AddConvexPolyFilled(points.data(), 4, color_func(i));
+          window->DrawList->AddConvexPolyFilled(points.data(), 4, color_alpha(color_func(i), 1.f));
         }
       };
 
@@ -2790,7 +2791,7 @@ namespace ImSpinner
                 if (arc > dangle)
                     break;
             }
-            window->DrawList->PathStroke(color, false, thickness);
+            window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
         };
 
         draw_spring(1);
@@ -2835,7 +2836,7 @@ namespace ImSpinner
             const float r1 = ImMax(rmin * rmul, rmin);
             const float r2 = ImMax(radius * rmul, radius);
             auto points = get_points(left, right, r1, r2);
-            window->DrawList->AddConvexPolyFilled(points.data(), 4, rc);
+            window->DrawList->AddConvexPolyFilled(points.data(), 4, color_alpha(rc, 1.f));
         }
     }
 
@@ -2865,7 +2866,7 @@ namespace ImSpinner
             rc.Value.w = ImMax(rmul, 0.1f);
             rmul *= 1.f + ImSin(rmul * IM_PI);
             const float r = ImMax(radius * rmul, radius);
-            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(left) * r, centre.y + ImSin(left) * r), thickness, rc, num_segments);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(left) * r, centre.y + ImSin(left) * r), thickness, color_alpha(rc, 1.f), num_segments);
         }
     }
 
@@ -2895,7 +2896,7 @@ namespace ImSpinner
             ImVec2 ppos = get_rotated_ellipse_pos((IM_PI * (float)i/ elipses) + PI_DIV_4, start + PI_DIV_2 * i);
             const float y_delta = ImAbs(centre.y - ppos.y);
             float th_koeff = ImMax((y_delta / size.y) * 4.f, 0.5f);
-            window->DrawList->AddCircleFilled(ppos, th_koeff * thickness, ImColor::HSV(out_h + i * 0.5f, out_s, out_v), num_segments);
+            window->DrawList->AddCircleFilled(ppos, th_koeff * thickness, color_alpha(ImColor::HSV(out_h + i * 0.5f, out_s, out_v), 1.f), num_segments);
         }
     }
 
@@ -2910,8 +2911,7 @@ namespace ImSpinner
             const float start_offset = j * radius / 3.f;
             const float rmax = ImFmod((start + start_offset), radius);
 
-            ImColor c = color;
-            c.Value.w = ImSin((radius - rmax) / radius * IM_PI);
+            ImColor c = color_alpha(color, ImSin((radius - rmax) / radius * IM_PI));
             for (size_t i = 0; i < lines; i++)
             {
                 float a = (i * bg_angle_offset);
@@ -2940,7 +2940,7 @@ namespace ImSpinner
                 const float r = rr - (0.2f * (i % 2)) * rr;
                 window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r));
             }
-            window->DrawList->PathStroke(ImColor::HSV(out_h + (j * 1.f / circles), out_s, out_v), false, thickness);
+            window->DrawList->PathStroke(color_alpha(ImColor::HSV(out_h + (j * 1.f / circles), out_s, out_v), 1.f), false, thickness);
         }
     }
 
@@ -2957,10 +2957,10 @@ namespace ImSpinner
             const float ay = ((i / 90.f) * PI_2 * ang_max);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ax) * radius, centre.y + ImSin(ay) * radius));
         }
-        window->DrawList->PathStroke(color, false, thickness);
+        window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
 
         start = (start < IM_PI) ? (start * 2.f) : (PI_2 - start) * 2.f;
-        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(start * ang_min) * radius, centre.y + ImSin(start * ang_max) * radius), thickness * 4.f, color, num_segments);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(start * ang_min) * radius, centre.y + ImSin(start * ang_max) * radius), thickness * 4.f, color_alpha(color, 1.f), num_segments);
     }
 
     inline void SpinnerDnaDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8, float delta = 0.5f, bool mode = 0)
@@ -2982,7 +2982,7 @@ namespace ImSpinner
             ImColor c = ImColor::HSV(out_h + i * (1.f / dots * 2.f), out_s, out_v);
             ImVec2 p = mode ? ImVec2(pp, centre.y - (size.y * 0.5f) + i * thickness * nextItemKoeff)
                             : ImVec2(centre.x - (size.x * 0.5f) + i * thickness * nextItemKoeff, pp);
-            window->DrawList->AddCircleFilled(p, thickness * th_koeff, c, lt);
+            window->DrawList->AddCircleFilled(p, thickness * th_koeff, color_alpha(c, 1.f), lt);
             return p;
         };
 
@@ -2990,7 +2990,7 @@ namespace ImSpinner
         for (int i = 0; i < dots; i++) {
             ImVec2 p1 = draw_point(0, i);
             ImVec2 p2 = draw_point(IM_PI, i);
-            window->DrawList->AddLine(p1, p2, color, thickness * 0.5f);
+            window->DrawList->AddLine(p1, p2, color_alpha(color, 1.f), thickness * 0.5f);
         }
     }
 
@@ -3339,11 +3339,11 @@ namespace ImSpinner
           case $(130) ImSpinner::SpinnerRotatingHeart   ("SpinnerRotatedHeart",
                                                           R(16), T(2), C(ImColor(255, 0, 0)), S(8) * velocity, AMN(0.f)); break;
           case $(131) ImSpinner::SpinnerSolarScaleBalls ("SpinnerSolarScaleBalls",
-                                                          R(16), T(1.3), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(1) * velocity, DT(36)); break;
+                                                          R(16), T(1.3f), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(1) * velocity, DT(36)); break;
           case $(132) ImSpinner::SpinnerOrionDots       ("SpinnerOrionDots",
-                                                          R(16), T(1.3), C(ImColor(255, 255, 255)), S(4) * velocity, DT(12)); break;
+                                                          R(16), T(1.3f), C(ImColor(255, 255, 255)), S(4) * velocity, DT(12)); break;
           case $(133) ImSpinner::SpinnerGalaxyDots      ("SpinnerGalaxyDots",
-                                                          R(16), T(1.3), C(ImColor(255, 255, 255)), S(0.2) * velocity, DT(6)); break;
+                                                          R(16), T(1.3f), C(ImColor(255, 255, 255)), S(0.2f) * velocity, DT(6)); break;
           case $(134) ImSpinner::SpinnerAsciiSymbolPoints("SpinnerAsciiSymbolPoints", "012345679ABCDEF",
                                                           R(16), T(2), C(ImColor(255, 255, 255)), S(4) * velocity); break;
           case $(135) ImSpinner::SpinnerRainbowCircle   ("SpinnerRainbowCircle",
@@ -3353,7 +3353,7 @@ namespace ImSpinner
           case $(137) ImSpinner::Spinner<e_st_vdots>    ("SpinnerVDots2",
                                                           Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.1f) * velocity}, Dots{DT(2)}, MiddleDots{6}); break;
           case $(138) ImSpinner::Spinner<e_st_vdots>    ("SpinnerVDots3",
-                                                             Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.9f) * velocity}, Dots{DT(3)}, MiddleDots{6}); break;
+                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.9f) * velocity}, Dots{DT(3)}, MiddleDots{6}); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
