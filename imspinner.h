@@ -2604,7 +2604,6 @@ namespace ImSpinner
 
 
         const ImVec2ih poses[] = {{0, 0}, {1, 0}, {2, 0}, {2, 1}, {2, 2}, {1, 2}, {0, 2}, {0, 1}, {1, 1}};
-
         int ti = 0;
         for (const auto &rpos: poses)
         {
@@ -2669,7 +2668,6 @@ namespace ImSpinner
       const ImGuiStyle &style = GImGui->Style;
       const float hspeed = 0.1f + ImSin((float)ImGui::GetTime() * 0.1f) * 0.05f;
       constexpr float rkoeff[6][3] = {{0.15f, 0.1f, 0.1f}, {0.033f, 0.15f, 0.8f}, {0.017f, 0.25f, 0.6f}, {0.037f, 0.1f, 0.4f}, {0.25f, 0.1f, 0.3f}, {0.11f, 0.1f, 0.2f}};
-      const float i_k = radius / bars;
       const float j_k = radius * 2.f / num_segments;
       float out_h, out_s, out_v;
       ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
@@ -2677,13 +2675,35 @@ namespace ImSpinner
       {
         ImColor c = ImColor::HSV(out_h - i * 0.1f, out_s, out_v);
         c.Value.w = rkoeff[i % 6][1];
+        c.Value.w *= ImGui::GetStyle().Alpha;
         for (int j = 0; j < num_segments; ++j) {
-          float h = (0.6f + 0.3f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[i % 6][2] * 2.f) + (2.f * rkoeff[i % 6][0] * j * j_k))) * (radius * 2.f * rkoeff[i][2]);
+          float h = (0.6f + 0.3f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[i % 6][2] * 2.f) + (2.f * rkoeff[i % 6][0] * j * j_k))) * (radius * 2.f * rkoeff[i % 6][2]);
           window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + j * j_k, centre.y + size.y / 2.f),
                                           ImVec2(pos.x + style.FramePadding.x + (j + 1) * (j_k), centre.y + size.y / 2.f - h),
-                                          color_alpha(c, 1.f));
+                                          c);
         }
       }
+    }
+
+    inline void SpinnerFluidPoints(const char *label, float radius, float thickness, const ImColor &color, float speed, size_t dots = 6, float delta = 0.35f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const ImGuiStyle &style = GImGui->Style;
+        const float rkoeff[3] = {0.033f, 0.3f, 0.8f};
+        const float hspeed = 0.1f + ImSin((float)ImGui::GetTime() * 0.1f) * 0.05f;
+        const float j_k = radius * 2.f / num_segments;
+
+        float out_h, out_s, out_v;
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+        for (int j = 0; j < num_segments; ++j) {
+            float h = (0.6f + delta * ImSin((float)ImGui::GetTime() * (speed * rkoeff[2] * 2.f) + (2.f * rkoeff[0] * j * j_k))) * (radius * 2.f * rkoeff[2]);
+            for (int i = 0; i < dots; i++) {
+                ImColor c = ImColor::HSV(out_h - i * 0.1f, out_s, out_v);;
+                c.Value.w *= ImGui::GetStyle().Alpha;
+                window->DrawList->AddCircleFilled(ImVec2(pos.x + style.FramePadding.x + j * j_k, centre.y + size.y / 2.f - (h / dots) * i), thickness, c);
+            }
+        }
     }
 
     inline void SpinnerArcPolarFade(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
@@ -3389,6 +3409,8 @@ namespace ImSpinner
                                                           Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.9f) * velocity}, Dots{DT(3)}, MiddleDots{6}); break;
           case $(139) ImSpinner::SpinnerSquareRandomDots("SpinnerSquareRandomDots",
                                                           R(16), T(2.8f), C(ImColor(255, 255, 255, 30)), CB(ImColor::HSV(hue * 0.005f, 0.8f, 0.8f)), S(5) * velocity); break;
+          case $(140) ImSpinner::SpinnerFluidPoints     ("SpinnerFluidPoints",
+                                                          R(16), (2.8f), C(ImColor(0, 0, 255)), S(3.8f) * velocity, Dots{DT(4)}, D(0.45f)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
