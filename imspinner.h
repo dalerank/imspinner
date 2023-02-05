@@ -1741,6 +1741,25 @@ namespace ImSpinner
       window->DrawList->AddCircleFilled(ImVec2(centre.x - radius + radius1 * 1.2f + radius2, centre.y), radius2, color_alpha(color, 1.f), num_segments);
     }
 
+    inline void SpinnerDotsLoading(const char *label, float radius, float thickness, const ImColor &color, const ImColor &bg, float speed)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
+        const float radius1 = (2.f * ImSin(start)) * radius;
+
+        float startb = ImFmod(start, PI_DIV_2);
+        float lenb = startb < PI_DIV_2 ? ImAbs((0.5f * ImSin(start * 2)) * radius) : radius * 0.5f;
+        float radius2 = radius * 0.25f;
+
+        float deltae = thickness - ImMin(thickness, ImMax<float>(0, (2.f * radius - radius1 + thickness + lenb) * 0.25f));
+        float deltag = ImMin(thickness, ImAbs(centre.x - radius + radius1 + thickness + lenb - centre.x - radius) * 0.25f);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x - radius, centre.y), radius2 + deltag, color_alpha(bg, 1.f), num_segments);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + radius + thickness, centre.y), radius2 + deltae, color_alpha(bg, 1.f), num_segments);
+
+        window->DrawList->AddRectFilled(ImVec2(centre.x - radius + radius1 - thickness - lenb, centre.y - thickness), ImVec2(centre.x - radius + radius1 + thickness + lenb, centre.y + thickness), color_alpha(color, 1.f), thickness);
+    }
+
     inline void SpinnerRotateGooeyBalls(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3410,7 +3429,9 @@ namespace ImSpinner
           case $(139) ImSpinner::SpinnerSquareRandomDots("SpinnerSquareRandomDots",
                                                           R(16), T(2.8f), C(ImColor(255, 255, 255, 30)), CB(ImColor::HSV(hue * 0.005f, 0.8f, 0.8f)), S(5) * velocity); break;
           case $(140) ImSpinner::SpinnerFluidPoints     ("SpinnerFluidPoints",
-                                                          R(16), (2.8f), C(ImColor(0, 0, 255)), S(3.8f) * velocity, Dots{DT(4)}, D(0.45f)); break;
+                                                          R(16), T(2.8f), C(ImColor(0, 0, 255)), S(3.8f) * velocity, Dots{DT(4)}, D(0.45f)); break;
+          case $(141) ImSpinner::SpinnerDotsLoading     ("SpinnerDotsLoading",
+                                                          R(16), T(4.f), C(ImColor(255, 255, 255)), CB(ImColor(255, 255, 255, 124)), S(2.f) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
