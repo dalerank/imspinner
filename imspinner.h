@@ -83,6 +83,8 @@ namespace ImSpinner
 #undef DECLPROP
 
     namespace detail {
+      // SpinnerBegin is a function that starts a spinner widget, used to display an animation indicating that
+      // a task is in progress. It returns true if the widget is visible and can be used, or false if it should be skipped.
       inline bool SpinnerBegin(const char *label, float radius, ImVec2 &pos, ImVec2 &size, ImVec2 &centre, int &num_segments) {
         ImGuiWindow *window = ImGui::GetCurrentWindow();
         if (window->SkipItems)
@@ -93,6 +95,7 @@ namespace ImSpinner
         const ImGuiID id = window->GetID(label);
 
         pos = window->DC.CursorPos;
+        // The size of the spinner is set to twice the radius, plus some padding based on the style
         size = ImVec2((radius) * 2, (radius + style.FramePadding.y) * 2);
 
         const ImRect bb(pos, ImVec2(pos.x + size.x, pos.y + size.y));
@@ -101,6 +104,7 @@ namespace ImSpinner
         num_segments = window->DrawList->_CalcCircleAutoSegmentCount(radius);
 
         centre = bb.GetCenter();
+        // If the item cannot be added to the window, return false
         if (!ImGui::ItemAdd(bb, id))
           return false;
 
@@ -174,24 +178,29 @@ namespace ImSpinner
         }
     }
 
+    // This function draws a rotating heart spinner. 
     inline void SpinnerRotatingHeart(const char *label, float radius, float thickness, const ImColor &color, float speed, float ang_min = 0.f)
     {
+        // Calculate the position and size of the spinner, as well as the number of segments it will be divided into.
         SPINNER_HEADER(pos, size, centre, num_segments);
+
+        // Calculate the start angle of the spinner based on the current time and speed.
         const float start = (float)ImGui::GetTime() * speed;
 
-        num_segments *= 1.5f;
-        auto rotate = [] (const ImVec2 &point, float angle) {
-            const float s = ImSin(angle);
-            const float c = ImCos(angle);
-            float x = point.x * c - point.y * s;
-            float y = point.x * s + point.y * c;
+        // Modify the number of segments to ensure the heart shape is complete.
+        num_segments = (num_segments * 3) / 2;
 
-            return ImVec2(x, y);
+        // Create a lambda function to rotate points.
+        auto rotate = [] (const ImVec2 &point, float angle) {
+            const float s = ImSin(angle), c = ImCos(angle);
+            return ImVec2(point.x * c - point.y * s, point.x * s + point.y * c);
         };
 
+        // Calculate the radius of the bottom of the heart.
         const float rb = radius * ImMax(0.8f, ImSin(start * 2));
         auto scale = [rb] (auto v) { return v / 16.f * rb; };
 
+        // Draw the heart spinner by calling the circle function, passing in a lambda function that defines the shape of the heart.
         circle([&] (int i) {
             const float a = PI_2 * i / num_segments;
             const float x = (scale(16) * ImPow(ImSin(a), 3));
@@ -200,17 +209,23 @@ namespace ImSpinner
         }, color_alpha(color, 1.f), thickness); 
     }
 
+    // SpinnerAng is a function that draws a spinner widget with a given angle.
     inline void SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI)
     {
+        // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
         SPINNER_HEADER(pos, size, centre, num_segments);
 
+        // The start angle of the spinner is calculated based on the current time and the specified speed.
         const float start = (float)ImGui::GetTime() * speed;
 
+        // Draw the background of the spinner using the `circle` function, with the specified background color and thickness.
         circle([&] (int i) {
+            // Calculate the angle for each segment based on the start angle and the number of segments.
             const float a = start + (i * (PI_2 / (num_segments - 1)));
             return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
         }, color_alpha(bg, 1.f), thickness);
 
+        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
         circle([&] (int i) {
             const float a = start + (i * angle / num_segments);
             return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
@@ -470,6 +485,36 @@ namespace ImSpinner
             window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), y + 2 * deltay), thickness, color_alpha(color, 1.f), 8);
         }
     }
+
+    inline void SpinnerDotsToPoints(const char *label, float radius, float thickness, float offset_k, const ImColor &color = 0xffffffff, float speed = 1.8f, size_t dots = 5)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float nextItemKoeff = 3.5f;
+        const float hsize = dots * (thickness * nextItemKoeff) / 2.f - (thickness * nextItemKoeff) * 0.5f;
+        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+        const float offset = PI_DIV(dots);
+
+        float out_h, out_s, out_v;
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+        if (start < PI_DIV_2) {
+            const float sina = ImSin(start);
+            for (size_t i = 0; i < dots; i++) {
+                const float xx = ImMax(sina * (i * (thickness * nextItemKoeff)), 0.f);
+                ImColor c = color_alpha(ImColor::HSV(out_h + i * ((1.f / dots) * 2.f), out_s, out_v), 1.f);
+                window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + xx, centre.y), thickness, c, 8);
+            }
+        } else {
+            for (size_t i = 0; i < dots; i++) {
+                const float sina = ImSin(ImMax(start - (IM_PI / dots) * i, PI_DIV_2));
+                const float xx = ImMax(1.f * (i * (thickness * nextItemKoeff)), 0.f);
+                const float th = sina * thickness;
+                ImColor c = color_alpha(ImColor::HSV(out_h + i * ((1.f / dots) * 2.f), out_s, out_v), 1.f);
+                window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + xx, centre.y), th, c, 8);
+            }
+        }
+    }
+    //const float sina = ImSin( ImFmod((start + (IM_PI - i * offset)), PI_DIV_2));
 
     inline void SpinnerDotsToBar(const char *label, float radius, float thickness, float offset_k, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 5)
     {
@@ -1504,7 +1549,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerSolarScaleBalls(const char *label, float radius, float thickness, const ImColor &ball = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t balls = 4)
+    inline void SpinnerSolarScaleBalls(const char *label, float radius, float thickness, const ImColor &ball = 0xffffffff, float speed = 2.8f, size_t balls = 4)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -3411,7 +3456,7 @@ namespace ImSpinner
           case $(130) ImSpinner::SpinnerRotatingHeart   ("SpinnerRotatedHeart",
                                                           R(16), T(2), C(ImColor(255, 0, 0)), S(8) * velocity, AMN(0.f)); break;
           case $(131) ImSpinner::SpinnerSolarScaleBalls ("SpinnerSolarScaleBalls",
-                                                          R(16), T(1.3f), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(1) * velocity, DT(36)); break;
+                                                          R(16), T(1.3f), C(ImColor(255, 0, 0)), S(1) * velocity, DT(36)); break;
           case $(132) ImSpinner::SpinnerOrionDots       ("SpinnerOrionDots",
                                                           R(16), T(1.3f), C(ImColor(255, 255, 255)), S(4) * velocity, DT(12)); break;
           case $(133) ImSpinner::SpinnerGalaxyDots      ("SpinnerGalaxyDots",
@@ -3432,6 +3477,8 @@ namespace ImSpinner
                                                           R(16), T(2.8f), C(ImColor(0, 0, 255)), S(3.8f) * velocity, Dots{DT(4)}, D(0.45f)); break;
           case $(141) ImSpinner::SpinnerDotsLoading     ("SpinnerDotsLoading",
                                                           R(16), T(4.f), C(ImColor(255, 255, 255)), CB(ImColor(255, 255, 255, 124)), S(2.f) * velocity); break;
+          case $(142) ImSpinner::SpinnerDotsToPoints    ("SpinnerDotsToPoints", R(16),
+                                                          T(3), D(0.5f), C(ImColor::HSV(0.31f, 0.8f, 0.8f)), S(1.8) * velocity, DT(5)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
