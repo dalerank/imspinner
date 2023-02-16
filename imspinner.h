@@ -582,6 +582,32 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerThreeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+        const float nextItemKoeff = 2.5f;
+        const float offset = size.x / 4.f;
+
+        float ab = start;
+        int msize = 2;
+        if (start < IM_PI) { ab = 0; msize = 1; }
+        for (size_t i = 0; i < msize; i++)
+        {
+            float a = ab + i * IM_PI - PI_DIV_2;
+            window->DrawList->AddCircleFilled(ImVec2(centre.x - offset + ImSin(a) * offset, centre.y + ImCos(a) * offset), thickness, color_alpha(color, 1.f), lt);
+        }
+
+        float ba = start; msize = 2;
+        if (start > IM_PI && start < PI_2) { ba = 0; msize = 1; }
+        for (size_t i = 0; i < msize; i++)
+        {
+            float a = -ba + i * IM_PI + PI_DIV_2;
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + offset + ImSin(a) * offset, centre.y + ImCos(a) * offset), thickness, color_alpha(color, 1.f), lt);
+        }
+    }
+
     inline void SpinnerMultiFadeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3152,7 +3178,7 @@ namespace ImSpinner
       constexpr int num_spinners = 150;
       constexpr int table_width = 550;
       int sidex = int(table_width / widget_size);
-      int sidey = int(num_spinners / sidex);
+      int sidey = int(num_spinners / sidex) + 1;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, float> __rr; auto R = [] (float v) { if (!__rr.count(cci)) { __rr[cci] = v; }; return __rr[cci]; };
@@ -3479,6 +3505,8 @@ namespace ImSpinner
                                                           R(16), T(4.f), C(ImColor(255, 255, 255)), CB(ImColor(255, 255, 255, 124)), S(2.f) * velocity); break;
           case $(142) ImSpinner::SpinnerDotsToPoints    ("SpinnerDotsToPoints", R(16),
                                                           T(3), D(0.5f), C(ImColor::HSV(0.31f, 0.8f, 0.8f)), S(1.8) * velocity, DT(5)); break;
+          case $(143) ImSpinner::SpinnerThreeDots       ("SpinnerThreeDots", R(16),
+                                                          T(6), C(ImColor(255, 255, 255)), S(4) * velocity, DT(8)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
