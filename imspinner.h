@@ -43,6 +43,7 @@
 
 namespace ImSpinner
 {
+#define COMMA ,
 #define DECLPROP(name,type,def) struct name { type value = def; operator type() { return value; } };
     enum SpinnerTypeT {
       e_st_rainbow = 0,
@@ -68,9 +69,9 @@ namespace ImSpinner
     DECLPROP (Radius, float, 16.f)
     DECLPROP (Speed, float, 1.f)
     DECLPROP (Thickness, float, 1.f)
-    DECLPROP (Color, ImColor, 0xffffffff)
-    DECLPROP (BgColor, ImColor, 0xffffffff)
-    DECLPROP (AltColor, ImColor, 0xffffffff)
+    DECLPROP (Color, ImColor, {1.f COMMA 1.f COMMA 1.f COMMA 1.f})
+    DECLPROP (BgColor, ImColor, {1.f COMMA 1.f COMMA 1.f COMMA 1.f})
+    DECLPROP (AltColor, ImColor, {1.f COMMA 1.f COMMA 1.f COMMA 1.f})
     DECLPROP (Angle, float, IM_PI)
     DECLPROP (AngleMin, float, IM_PI)
     DECLPROP (AngleMax, float, IM_PI)
@@ -210,7 +211,7 @@ namespace ImSpinner
     }
 
     // SpinnerAng is a function that draws a spinner widget with a given angle.
-    inline void SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI)
+    inline void SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, float angle = IM_PI)
     {
         // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -232,7 +233,7 @@ namespace ImSpinner
         }, color_alpha(color, 1.f), thickness);
     }
 
-    inline void SpinnerLoadingRing(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, int segments = 5)
+    inline void SpinnerLoadingRing(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, int segments = 5)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -260,7 +261,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerClock(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f)
+    inline void SpinnerClock(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -273,7 +274,7 @@ namespace ImSpinner
       window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(start * 0.5f) * radius / 2.f, centre.y + ImSin(start * 0.5f) * radius / 2.f), color_alpha(color, 1.f), thickness * 2);
     }
 
-    inline void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg = 0xffffff80, float speed = 2.8f, bool sequence = true)
+    inline void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, bool sequence = true)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -302,7 +303,7 @@ namespace ImSpinner
       }, color_alpha(bg, 1.f), thickness);
     }
 
-    inline void SpinnerDoubleFadePulsar(const char *label, float radius, float /*thickness*/, const ImColor &bg = 0xffffff80, float speed = 2.8f)
+    inline void SpinnerDoubleFadePulsar(const char *label, float radius, float /*thickness*/, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -323,7 +324,7 @@ namespace ImSpinner
       window->DrawList->AddCircleFilled(centre, radius_b * radius, color_alpha(bg, ImMin(0.3f, radius_b)), num_segments);
     }
 
-    inline void SpinnerTwinPulsar(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int rings = 2)
+    inline void SpinnerTwinPulsar(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int rings = 2)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -342,7 +343,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerFadePulsar(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, int rings = 2)
+    inline void SpinnerFadePulsar(const char *label, float radius, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int rings = 2)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -357,7 +358,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerCircularLines(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 1.8f, int lines = 8)
+    inline void SpinnerCircularLines(const char *label, float radius, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 1.8f, int lines = 8)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -381,7 +382,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerDots(const char *label, float *nextdot, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 12, float minth = -1.f)
+    inline void SpinnerDots(const char *label, float *nextdot, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t dots = 12, float minth = -1.f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -418,7 +419,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerVDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bgcolor = 0xffffffff, float speed = 2.8f, size_t dots = 12, size_t mdots = 6)
+    inline void SpinnerVDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bgcolor = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t dots = 12, size_t mdots = 6)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -443,7 +444,7 @@ namespace ImSpinner
         window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
     }
 
-    inline void SpinnerBounceDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3)
+    inline void SpinnerBounceDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t dots = 3)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -465,7 +466,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerZipDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 5)
+    inline void SpinnerZipDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t dots = 5)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -486,7 +487,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerDotsToPoints(const char *label, float radius, float thickness, float offset_k, const ImColor &color = 0xffffffff, float speed = 1.8f, size_t dots = 5)
+    inline void SpinnerDotsToPoints(const char *label, float radius, float thickness, float offset_k, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 1.8f, size_t dots = 5)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -516,7 +517,7 @@ namespace ImSpinner
     }
     //const float sina = ImSin( ImFmod((start + (IM_PI - i * offset)), PI_DIV_2));
 
-    inline void SpinnerDotsToBar(const char *label, float radius, float thickness, float offset_k, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 5)
+    inline void SpinnerDotsToBar(const char *label, float radius, float thickness, float offset_k, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t dots = 5)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -546,7 +547,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerWaveDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8)
+    inline void SpinnerWaveDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int lt = 8)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -566,7 +567,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerFadeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8)
+    inline void SpinnerFadeDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int lt = 8)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -582,7 +583,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerThreeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8)
+    inline void SpinnerThreeDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int lt = 8)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -608,7 +609,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerMultiFadeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8)
+    inline void SpinnerMultiFadeDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int lt = 8)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -627,7 +628,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8)
+    inline void SpinnerScaleDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int lt = 8)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -645,7 +646,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerMovingDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 3)
+    inline void SpinnerMovingDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t dots = 3)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -667,7 +668,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerRotateDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int dots = 2)
+    inline void SpinnerRotateDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int dots = 2)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -697,7 +698,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerOrionDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int arcs = 4)
+    inline void SpinnerOrionDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int arcs = 4)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -731,7 +732,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerGalaxyDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int arcs = 4)
+    inline void SpinnerGalaxyDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int arcs = 4)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -765,7 +766,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerTwinAng(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f, float angle = IM_PI)
+    inline void SpinnerTwinAng(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = {1.f,1.f,1.f,1.f}, const ImColor &color2 = {1.f,0.f,0.f,1.f}, float speed = 2.8f, float angle = IM_PI)
     {
       const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -796,7 +797,7 @@ namespace ImSpinner
       window->DrawList->PathStroke(color_alpha(color2, 1.f), false, thickness);
     }
 
-    inline void SpinnerFilling(const char *label, float radius, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f)
+    inline void SpinnerFilling(const char *label, float radius, float thickness, const ImColor &color1 = {1.f,1.f,1.f,1.f}, const ImColor &color2 = {1.f,0.f,0.f,1.f}, float speed = 2.8f)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -819,7 +820,7 @@ namespace ImSpinner
       window->DrawList->PathStroke(color_alpha(color2, 1.f), false, thickness);
     }
 
-    inline void SpinnerTopup(const char *label, float radius1, float radius2, const ImColor &color = 0xff0000ff, const ImColor &fg = 0xffffffff, const ImColor &bg = 0xffffffff, float speed = 2.8f)
+    inline void SpinnerTopup(const char *label, float radius1, float radius2, const ImColor &color = {1.f,0.f,0.f,1.f}, const ImColor &fg = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,1.f}, float speed = 2.8f)
     {
       const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -844,7 +845,7 @@ namespace ImSpinner
       window->DrawList->Flags = save;
     }
 
-    inline void SpinnerTwinAng180(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed = 2.8f)
+    inline void SpinnerTwinAng180(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = {1.f,1.f,1.f,1.f}, const ImColor &color2 = {1.f,0.f,0.f,1.f}, float speed = 2.8f)
     {
       const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -888,7 +889,7 @@ namespace ImSpinner
       window->DrawList->PathStroke(color_alpha(color1, 1.f), false, thickness);
     }
 
-    inline void SpinnerTwinAng360(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = 0xffffffff, const ImColor &color2 = 0xff0000ff, float speed1 = 2.8f, float speed2 = 2.5f)
+    inline void SpinnerTwinAng360(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = {1.f,1.f,1.f,1.f}, const ImColor &color2 = {1.f,0.f,0.f,1.f}, float speed1 = 2.8f, float speed2 = 2.5f)
     {
       const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -934,7 +935,7 @@ namespace ImSpinner
       window->DrawList->PathStroke(color_alpha(color1, 1.f), false, thickness);
     }
 
-    inline void SpinnerIncDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6)
+    inline void SpinnerIncDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t dots = 6)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -951,7 +952,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerIncFullDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 4)
+    inline void SpinnerIncFullDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t dots = 4)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -976,7 +977,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerFadeBars(const char *label, float w, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t bars = 3, bool scale = false)
+    inline void SpinnerFadeBars(const char *label, float w, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t bars = 3, bool scale = false)
     {
       float radius = (w * 0.5f) * bars;
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -999,7 +1000,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerBarsRotateFade(const char *label, float rmin, float rmax , float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t bars = 6)
+    inline void SpinnerBarsRotateFade(const char *label, float rmin, float rmax , float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t bars = 6)
     {
       float radius = rmax;
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -1018,7 +1019,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerBarsScaleMiddle(const char *label, float w, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t bars = 3)
+    inline void SpinnerBarsScaleMiddle(const char *label, float w, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t bars = 3)
     {
       float radius = (w) * bars;
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -1045,7 +1046,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerAngTwin(const char *label, float radius1, float radius2, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI, size_t arcs = 1)
+    inline void SpinnerAngTwin(const char *label, float radius1, float radius2, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, float angle = IM_PI, size_t arcs = 1)
     {
       float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -1075,7 +1076,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerArcRotation(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerArcRotation(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t arcs = 4)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1096,7 +1097,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerArcFade(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerArcFade(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t arcs = 4)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1143,7 +1144,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerSquareStrokeFade(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    inline void SpinnerSquareStrokeFade(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1184,7 +1185,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerAsciiSymbolPoints(const char *label, const char* text, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    inline void SpinnerAsciiSymbolPoints(const char *label, const char* text, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1211,13 +1212,13 @@ namespace ImSpinner
             for (int y = V0, ppy = 0; y < V1; y++, ppy++) {
                ImVec2 point(pp.x + (ppx * px), pp.y + (ppy * py));
                const unsigned char alpha = bitmap[out_width * y + x];
-               window->DrawList->AddCircleFilled(point, thickness * 1.5f, color_alpha(0x80808080, alpha / 255.f));
+               window->DrawList->AddCircleFilled(point, thickness * 1.5f, color_alpha({.5f,.5f,.5f,.5f}, alpha / 255.f));
                window->DrawList->AddCircleFilled(point, thickness, color_alpha(color, alpha / 255.f));
             }
         }
     }
 
-    inline void SpinnerSevenSegments(const char *label, const char* text, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    inline void SpinnerSevenSegments(const char *label, const char* text, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1298,7 +1299,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerSquareStrokeFill(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    inline void SpinnerSquareStrokeFill(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1344,7 +1345,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerSquareStrokeLoading(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    inline void SpinnerSquareStrokeLoading(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1384,7 +1385,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerFilledArcFade(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerFilledArcFade(const char *label, float radius, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t arcs = 4)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1428,7 +1429,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerFilledArcColor(const char *label, float radius, const ImColor &color = 0xffff0000, const ImColor &bg = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerFilledArcColor(const char *label, float radius, const ImColor &color = {1.f,1.f,0.f,0.f}, const ImColor &bg = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t arcs = 4)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1461,7 +1462,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerFilledArcRing(const char *label, float radius, float thickness, const ImColor &color = 0xffff0000, const ImColor &bg = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerFilledArcRing(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,0.f,0.f}, const ImColor &bg = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t arcs = 4)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1504,7 +1505,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerArcWedges(const char *label, float radius, const ImColor &color = 0xffff0000, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerArcWedges(const char *label, float radius, const ImColor &color = {1.f,1.f,0.f,0.f}, float speed = 2.8f, size_t arcs = 4)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1532,7 +1533,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerTwinBall(const char *label, float radius1, float radius2, float thickness, float b_thickness, const ImColor &ball = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t balls = 2)
+    inline void SpinnerTwinBall(const char *label, float radius1, float radius2, float thickness, float b_thickness, const ImColor &ball = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, size_t balls = 2)
     {
       float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -1556,7 +1557,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerSolarBalls(const char *label, float radius, float thickness, const ImColor &ball = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t balls = 4)
+    inline void SpinnerSolarBalls(const char *label, float radius, float thickness, const ImColor &ball = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, size_t balls = 4)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1575,7 +1576,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerSolarScaleBalls(const char *label, float radius, float thickness, const ImColor &ball = 0xffffffff, float speed = 2.8f, size_t balls = 4)
+    inline void SpinnerSolarScaleBalls(const char *label, float radius, float thickness, const ImColor &ball = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t balls = 4)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1589,7 +1590,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerSolarArcs(const char *label, float radius, float thickness, const ImColor &ball = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t balls = 4)
+    inline void SpinnerSolarArcs(const char *label, float radius, float thickness, const ImColor &ball = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, size_t balls = 4)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1621,7 +1622,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerRainbowCircle(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4, float mode = 1)
+    inline void SpinnerRainbowCircle(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t arcs = 4, float mode = 1)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1657,7 +1658,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int dots = 1, bool shadow = false)
+    inline void SpinnerBounceBall(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int dots = 1, bool shadow = false)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1689,7 +1690,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t dots = 6)
+    inline void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t dots = 6)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1707,7 +1708,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerAngTriple(const char *label, float radius1, float radius2, float radius3, float thickness, const ImColor &c1 = 0xffffffff, const ImColor &c2 = 0xffffff80, const ImColor &c3 = 0xffffffff, float speed = 2.8f, float angle = IM_PI)
+    inline void SpinnerAngTriple(const char *label, float radius1, float radius2, float radius3, float thickness, const ImColor &c1 = {1.f,1.f,1.f,1.f}, const ImColor &c2 = {1.f,1.f,1.f,.5f}, const ImColor &c3 = {1.f,1.f,1.f,1.f}, float speed = 2.8f, float angle = IM_PI)
     {
       float radius = ImMax(ImMax(radius1, radius2), radius3);
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -1742,7 +1743,7 @@ namespace ImSpinner
       window->DrawList->PathStroke(color_alpha(c3, 1.f), false, thickness);
     }
 
-    inline void SpinnerAngEclipse(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, float angle = IM_PI)
+    inline void SpinnerAngEclipse(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, float angle = IM_PI)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1761,7 +1762,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerIngYang(const char *label, float radius, float thickness, bool reverse, float yang_detlta_r, const ImColor &colorI = 0xffffffff, const ImColor &colorY = 0xffffffff, float speed = 2.8f, float angle = IM_PI * 0.7f)
+    inline void SpinnerIngYang(const char *label, float radius, float thickness, bool reverse, float yang_detlta_r, const ImColor &colorI = {1.f,1.f,1.f,1.f}, const ImColor &colorY = {1.f,1.f,1.f,1.f}, float speed = 2.8f, float angle = IM_PI * 0.7f)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1913,7 +1914,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerMoonLine(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI)
+    inline void SpinnerMoonLine(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,0.f,0.f,0.f}, float speed = 2.8f, float angle = IM_PI)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1952,7 +1953,7 @@ namespace ImSpinner
                     [] (auto) { return 1.f; });
     }
 
-    inline void SpinnerCircleDrop(const char *label, float radius, float thickness, float thickness_drop, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float angle = IM_PI) 
+    inline void SpinnerCircleDrop(const char *label, float radius, float thickness, float thickness_drop, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, float angle = IM_PI)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1986,7 +1987,7 @@ namespace ImSpinner
       window->DrawList->PathStroke(color_alpha(bg, 1.f), false, thickness);
     }
 
-    inline void SpinnerSurroundedIndicator(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f) 
+    inline void SpinnerSurroundedIndicator(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2007,7 +2008,7 @@ namespace ImSpinner
       PathArc(color_alpha(color, 1.f - ImMax(0.1f, ImMin(lerp_koeff, 1.f))), thickness);
     }
 
-    inline void SpinnerWifiIndicator(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, float cangle = 0.f, int dots = 3) 
+    inline void SpinnerWifiIndicator(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, float cangle = 0.f, int dots = 3)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2034,7 +2035,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerTrianglesSelector(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t bars = 8) 
+    inline void SpinnerTrianglesSelector(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, size_t bars = 8)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2076,7 +2077,7 @@ namespace ImSpinner
     }
 
     using LeafColor = ImColor (int);
-    inline void SpinnerCamera(const char *label, float radius, float thickness, LeafColor *leaf_color, float speed = 2.8f, size_t bars = 8) 
+    inline void SpinnerCamera(const char *label, float radius, float thickness, LeafColor *leaf_color, float speed = 2.8f, size_t bars = 8)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2106,7 +2107,7 @@ namespace ImSpinner
       draw_sectors(start, leaf_color);
     }
 
-    inline void SpinnerFlowingGradient(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xff000000, float speed = 2.8f, float angle = IM_PI)
+    inline void SpinnerFlowingGradient(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,0.f,0.f,0.f}, float speed = 2.8f, float angle = IM_PI)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2141,7 +2142,7 @@ namespace ImSpinner
                     [&] (auto i) { return color_alpha(color, 1.f - (i / (float)num_segments)); });
     }
 
-    inline void SpinnerRotateSegments(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4, size_t layers = 1)
+    inline void SpinnerRotateSegments(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t arcs = 4, size_t layers = 1)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2168,7 +2169,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerLemniscate(const char* label, float radius, float thickness, const ImColor& color = 0xffffffff, float speed = 2.8f, float angle = IM_PI / 2.0f)
+    inline void SpinnerLemniscate(const char* label, float radius, float thickness, const ImColor& color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, float angle = IM_PI / 2.0f)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2194,7 +2195,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerRotateGear(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t pins = 12)
+    inline void SpinnerRotateGear(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t pins = 12)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2222,7 +2223,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerRotateWheel(const char *label, float radius, float thickness, const ImColor &bg_color = 0xffffffff, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t pins = 12)
+    inline void SpinnerRotateWheel(const char *label, float radius, float thickness, const ImColor &bg_color = {1.f,1.f,1.f,1.f}, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t pins = 12)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2256,7 +2257,7 @@ namespace ImSpinner
         draw_circle(radius, color, line_th);
     }
 
-    inline void SpinnerAtom(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
+    inline void SpinnerAtom(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int elipses = 3)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2295,7 +2296,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerPatternRings(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
+    inline void SpinnerPatternRings(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int elipses = 3)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2326,7 +2327,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerPatternEclipse(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3, float delta_a = 2.f, float delta_y = 0.f)
+    inline void SpinnerPatternEclipse(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int elipses = 3, float delta_a = 2.f, float delta_y = 0.f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2363,7 +2364,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerPatternSphere(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
+    inline void SpinnerPatternSphere(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int elipses = 3)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2398,7 +2399,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerRingSynchronous(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
+    inline void SpinnerRingSynchronous(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int elipses = 3)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2441,7 +2442,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerRingWatermarks(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
+    inline void SpinnerRingWatermarks(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int elipses = 3)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2485,7 +2486,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int elipses = 3)
+    inline void SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int elipses = 3)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2559,7 +2560,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerSpiral(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerSpiral(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t arcs = 4)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2579,7 +2580,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerSpiralEye(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    inline void SpinnerSpiralEye(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2796,7 +2797,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerArcPolarFade(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerArcPolarFade(const char *label, float radius, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t arcs = 4)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2822,7 +2823,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerArcPolarRadius(const char *label, float radius, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerArcPolarRadius(const char *label, float radius, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t arcs = 4)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2850,7 +2851,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerCaleidoscope(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t arcs = 6, int mode = 0)
+    inline void SpinnerCaleidoscope(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t arcs = 6, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2898,7 +2899,7 @@ namespace ImSpinner
     }
 
     // spinner idea by nitz 'Chris Dailey'
-    inline void SpinnerHboDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float minfade = 0.0f, float ryk = 0.f, float speed = 1.1f, size_t dots = 6)
+    inline void SpinnerHboDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float minfade = 0.0f, float ryk = 0.f, float speed = 1.1f, size_t dots = 6)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2913,7 +2914,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerSineArcs(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    inline void SpinnerSineArcs(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2941,7 +2942,7 @@ namespace ImSpinner
         draw_spring(-1);
     }
 
-    inline void SpinnerTrianglesShift(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t bars = 8) 
+    inline void SpinnerTrianglesShift(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, size_t bars = 8)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2983,7 +2984,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerPointsShift(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, const ImColor &bg = 0xffffff80, float speed = 2.8f, size_t bars = 8) 
+    inline void SpinnerPointsShift(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, const ImColor &bg = {1.f,1.f,1.f,.5f}, float speed = 2.8f, size_t bars = 8)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -3013,7 +3014,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerSwingDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f)
+    inline void SpinnerSwingDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -3043,7 +3044,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerCircularPoints(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 1.8f, int lines = 8)
+    inline void SpinnerCircularPoints(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 1.8f, int lines = 8)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -3063,7 +3064,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerCurvedCircle(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, size_t circles = 1) 
+    inline void SpinnerCurvedCircle(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, size_t circles = 1)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -3087,7 +3088,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerModCircle(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float ang_min = 1.f, float ang_max = 1.f, float speed = 2.8f)
+    inline void SpinnerModCircle(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float ang_min = 1.f, float ang_max = 1.f, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -3106,7 +3107,7 @@ namespace ImSpinner
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(start * ang_min) * radius, centre.y + ImSin(start * ang_max) * radius), thickness * 4.f, color_alpha(color, 1.f), num_segments);
     }
 
-    inline void SpinnerDnaDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8, float delta = 0.5f, bool mode = 0)
+    inline void SpinnerDnaDots(const char *label, float radius, float thickness, const ImColor &color = {1.f,1.f,1.f,1.f}, float speed = 2.8f, int lt = 8, float delta = 0.5f, bool mode = 0)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
