@@ -608,6 +608,91 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerFiveDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2 * 2);
+        const float nextItemKoeff = 2.5f;
+        const float offset = size.x / 4.f;
+
+        float ab = 0;
+        int msize = 1;
+        if (start < IM_PI) { ab = start; msize = 2; }
+        for (size_t i = 0; i < msize; i++)
+        {
+            float a = -ab + i * IM_PI - PI_DIV_2;
+            window->DrawList->AddCircleFilled(ImVec2(centre.x - offset + ImSin(a) * offset, centre.y + ImCos(a) * offset), thickness, color_alpha(color, 1.f), lt);
+        }
+
+        float ba = 0; msize = 1;
+        if (start > IM_PI && start < PI_2) { ba = start; msize = 2; }
+        for (size_t i = 0; i < msize; i++)
+        {
+            float a = -ba + i * IM_PI;
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(a) * offset, centre.y + offset + ImCos(a) * offset), thickness, color_alpha(color, 1.f), lt);
+        }
+
+        float bc = 0; msize = 1;
+        if (start > PI_2 && start < IM_PI * 3) { bc = start; msize = 2; }
+        for (size_t i = 0; i < msize; i++)
+        {
+            float a = -bc + i * IM_PI - IM_PI;
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(a) * offset, centre.y - offset + ImCos(a) * offset), thickness, color_alpha(color, 1.f), lt);
+        }
+
+        float bd = 0; msize = 1;
+        if (start > IM_PI * 3 && start < IM_PI * 4) { bd = start; msize = 2; }
+        for (size_t i = 0; i < msize; i++)
+        {
+            float a = -bd + i * IM_PI + PI_DIV_2;
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + offset + ImSin(a) * offset, centre.y + ImCos(a) * offset), thickness, color_alpha(color, 1.f), lt);
+        }
+    }
+
+    inline void Spinner4Caleidospcope(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+        const float nextItemKoeff = 2.5f;
+        const float offset = size.x / 4.f;
+
+        float ab = start;
+        int msize = 2;
+
+        float out_h, out_s, out_v;
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+        for (size_t i = 0; i < msize; i++)
+        {
+            float a = ab - i * IM_PI;
+            ImColor c = color_alpha(ImColor::HSV(out_h + (0.1f * i), out_s, out_v, 0.7f), 1.f);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x - offset + ImSin(a) * offset, centre.y + ImCos(a) * offset), thickness, c, lt);
+        }
+
+        for (size_t i = 0; i < msize; i++)
+        {
+            float a = ab + i * IM_PI + PI_DIV_2;
+            ImColor c = color_alpha(ImColor::HSV(out_h + 0.2f + (0.1f * i), out_s, out_v, 0.7f), 1.f);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(a) * offset, centre.y - offset + ImCos(a) * offset), thickness, c, lt);
+        }
+
+        float ba = start; msize = 2;
+        for (size_t i = 0; i < msize; i++)
+        {
+            float a = -ba + i * IM_PI + PI_DIV_2;
+            ImColor c = color_alpha(ImColor::HSV(out_h + 0.4f + (0.1f * i), out_s, out_v, 0.7f), 1.f);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + offset + ImSin(a) * offset, centre.y + ImCos(a) * offset), thickness, c, lt);
+        }
+
+        for (size_t i = 0; i < msize; i++)
+        {
+            float a = ab - i * IM_PI + PI_DIV_4;
+            ImColor c = color_alpha(ImColor::HSV(out_h + 0.6f + (0.1f * i), out_s, out_v, 0.7f), 1.f);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImSin(a) * offset, centre.y + offset + ImCos(a) * offset), thickness, c, lt);
+        }
+    }
+
     inline void SpinnerMultiFadeDots(const char *label, float radius, float thickness, const ImColor &color = 0xffffffff, float speed = 2.8f, int lt = 8)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3507,6 +3592,10 @@ namespace ImSpinner
                                                           T(3), D(0.5f), C(ImColor::HSV(0.31f, 0.8f, 0.8f)), S(1.8) * velocity, DT(5)); break;
           case $(143) ImSpinner::SpinnerThreeDots       ("SpinnerThreeDots", R(16),
                                                           T(6), C(ImColor(255, 255, 255)), S(4) * velocity, DT(8)); break;
+          case $(144) ImSpinner::Spinner4Caleidospcope  ("Spinner4Caleidospcope", R(16),
+                                                             T(6), ImColor::HSV(hue * 0.0031f, 0.8f, 0.8f), S(4) * velocity, DT(8)); break;
+          case $(145) ImSpinner::SpinnerFiveDots        ("SpinnerSixDots", R(16),
+                                                             T(6), C(ImColor(255, 255, 255)), S(4) * velocity, DT(8)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
