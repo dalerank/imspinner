@@ -149,7 +149,7 @@ namespace ImSpinner
 #define SPINNER_HEADER(pos, size, centre, num_segments) ImVec2 pos, size, centre; int num_segments; if (!detail::SpinnerBegin(label, radius, pos, size, centre, num_segments)) { return; }; ImGuiWindow *window = ImGui::GetCurrentWindow(); \
     auto circle = [&] (auto point_func, auto dbc, auto dth) { window->DrawList->PathClear(); for (int i = 0; i < num_segments; i++) { ImVec2 p = point_func(i); window->DrawList->PathLineTo(ImVec2(centre.x + p.x, centre.y + p.y)); } window->DrawList->PathStroke(dbc, false, dth); }
     
-    inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w = alpha * ImGui::GetStyle().Alpha; return c; }
+    inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w *= alpha * ImGui::GetStyle().Alpha; return c; }
     
     /*
         const char *label: A string label for the spinner, used to identify it in ImGui.
@@ -907,6 +907,33 @@ namespace ImSpinner
       window->DrawList->PathStroke(color_alpha(color2, 1.f), false, thickness);
     }
 
+    inline void SpinnerFillingMem(const char *label, float radius, float thickness, const ImColor &color, ImColor &colorbg, float speed)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+        const float angle_offset = PI_2_DIV(num_segments - 1);
+        num_segments *= 4;
+
+        circle([&] (auto i) {
+            const float a = (i * angle_offset);
+            return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
+        }, color_alpha(colorbg, 1.f), thickness);
+
+        if (start < 0.02f) {
+            colorbg = color;
+        }
+
+        window->DrawList->PathClear();
+        for (size_t i = 0; i < 2 * num_segments / 2; i++) {
+            const float a = (i * angle_offset);
+            if (a > start)
+                break;
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
+        }
+        window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
+    }
+
     inline void SpinnerTopup(const char *label, float radius1, float radius2, const ImColor &color = red, const ImColor &fg = white, const ImColor &bg = white, float speed = 2.8f)
     {
       const float radius = ImMax(radius1, radius2);
@@ -1255,7 +1282,6 @@ namespace ImSpinner
                                 : (startk < a ? 1.f : 0.f);
                 c.Value.w = ImMax(0.05f, c.Value.w);
             }
-            c.Value.w *= ImGui::GetStyle().Alpha;
             a -= PI_DIV_4;
             const float r = radius * 1.4f;
             const bool right = ImSin(a) > 0;
@@ -1268,7 +1294,7 @@ namespace ImSpinner
             case 2: p1.x += ht; p2.x += ht; break;
             case 3: p1.y += ht; p2.y += ht; break;
             }
-            window->DrawList->AddLine(p1, p2, c, thickness);
+            window->DrawList->AddLine(p1, p2, color_alpha(c, 1.f), thickness);
         }
     }
 
@@ -1509,8 +1535,7 @@ namespace ImSpinner
 
         //ImDrawListFlags save = window->DrawList->Flags;
         //window->DrawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
-        c.Value.w *= ImGui::GetStyle().Alpha;
-        window->DrawList->PathFillConvex(c);
+        window->DrawList->PathFillConvex(color_alpha(c, 1.f));
 
         //window->DrawList->Flags = save;
       }
@@ -1544,8 +1569,7 @@ namespace ImSpinner
           const float ar = arc_angle * arc_num + (i * angle_offset) - PI_DIV_2;
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
         }
-        c.Value.w *= ImGui::GetStyle().Alpha;
-        window->DrawList->PathFillConvex(c);
+        window->DrawList->PathFillConvex(color_alpha(c, 1.f));
       }
     }
 
@@ -1556,7 +1580,7 @@ namespace ImSpinner
         const float pi_div_2 = PI_DIV_2;
         const float pi_div_4 = PI_DIV_4;
         const float pi_mul_2 = PI_2;
-        const float start = ImFmod((float)ImGui::GetTime()* speed, pi_mul_2 + pi_div_4);
+        const float start = ImFmod((float)ImGui::GetTime() * speed, pi_mul_2 + pi_div_4);
         const float arc_angle = pi_mul_2 / (float)arcs;
         const float angle_offset = arc_angle / num_segments;
 
@@ -1574,14 +1598,10 @@ namespace ImSpinner
             const float e = arc_angle * arc_num + arc_angle - pi_div_2;
             const float a = arc_angle * arc_num;
 
-            ImColor c = color;
-            c.Value.w = 0.f;
-            if (start > pi_mul_2) { c.Value.w = (start - pi_mul_2) / pi_div_4; }
-            else if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
-            else if (start < a) { c.Value.w = 1.f; }
-
-            c.Value.w = ImMax(0.f, 1.f - c.Value.w);
-            c.Value.w *= ImGui::GetStyle().Alpha;
+            float alpha = 0.f;
+            if (start > pi_mul_2) { alpha = (start - pi_mul_2) / pi_div_4; }
+            else if (start > a && start < (a + arc_angle)) { alpha = 1.f - (start - a) / (float)arc_angle; }
+            else if (start < a) { alpha = 1.f; }
 
             window->DrawList->PathClear();
             for (size_t i = 0; i < num_segments + 1; i++)
@@ -1589,7 +1609,7 @@ namespace ImSpinner
                 const float ar_b = arc_angle * arc_num + (i * angle_offset) - pi_div_2;
                 window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar_b) * radius, centre.y + ImSin(ar_b) * radius));
             }
-            window->DrawList->PathStroke(c, false, thickness);
+            window->DrawList->PathStroke(color_alpha(color, ImMax(0.f, 1.f - alpha)), false, thickness);
         }
     }
 
@@ -1766,9 +1786,7 @@ namespace ImSpinner
       constexpr float rkoeff[9] = {0.1f, 0.15f, 0.17f, 0.25f, 0.31f, 0.19f, 0.08f, 0.24f, 0.9f};
       const int iterations = shadow ? 4 : 1;
       for (int j = 0; j < iterations; j++) {
-          ImColor c = color;
-          c.Value.w -= 0.15f * j;
-          c.Value.w *= ImGui::GetStyle().Alpha;
+          ImColor c = color_alpha(color, 1.f - 0.15f * j);
           for (int i = 0; i < dots; i++) {
               float start = ImFmod((float)ImGui::GetTime() * speed * (1 + rkoeff[i % 9]) - (IM_PI / 12.f) * j, IM_PI);
               float sign = ((i % 2 == 0) ? 1.f : -1.f);
@@ -2853,9 +2871,7 @@ namespace ImSpinner
       ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
       for (int i = 0; i < bars; i++)
       {
-        ImColor c = ImColor::HSV(out_h - i * 0.1f, out_s, out_v);
-        c.Value.w = rkoeff[i % 6][1];
-        c.Value.w *= ImGui::GetStyle().Alpha;
+        ImColor c = color_alpha(ImColor::HSV(out_h - i * 0.1f, out_s, out_v), rkoeff[i % 6][1]);
         for (int j = 0; j < num_segments; ++j) {
           float h = (0.6f + 0.3f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[i % 6][2] * 2.f) + (2.f * rkoeff[i % 6][0] * j * j_k))) * (radius * 2.f * rkoeff[i % 6][2]);
           window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + j * j_k, centre.y + size.y / 2.f),
@@ -2879,8 +2895,7 @@ namespace ImSpinner
         for (int j = 0; j < num_segments; ++j) {
             float h = (0.6f + delta * ImSin((float)ImGui::GetTime() * (speed * rkoeff[2] * 2.f) + (2.f * rkoeff[0] * j * j_k))) * (radius * 2.f * rkoeff[2]);
             for (int i = 0; i < dots; i++) {
-                ImColor c = ImColor::HSV(out_h - i * 0.1f, out_s, out_v);;
-                c.Value.w *= ImGui::GetStyle().Alpha;
+                ImColor c = color_alpha(ImColor::HSV(out_h - i * 0.1f, out_s, out_v), 1.f);
                 window->DrawList->AddCircleFilled(ImVec2(pos.x + style.FramePadding.x + j * j_k, centre.y + size.y / 2.f - (h / dots) * i), thickness, c);
             }
         }
@@ -3265,6 +3280,7 @@ namespace ImSpinner
       static float widget_size = 50.f;
 
       static ImVec2 selected{0, 0};
+      static ImColor spinner_filling_meb_bg;
       constexpr int num_spinners = 150;
       constexpr int table_width = 550;
       int sidex = int(table_width / widget_size);
@@ -3598,9 +3614,11 @@ namespace ImSpinner
           case $(143) ImSpinner::SpinnerThreeDots       ("SpinnerThreeDots", R(16),
                                                           T(6), C(ImColor(255, 255, 255)), S(4) * velocity, DT(8)); break;
           case $(144) ImSpinner::Spinner4Caleidospcope  ("Spinner4Caleidospcope", R(16),
-                                                             T(6), ImColor::HSV(hue * 0.0031f, 0.8f, 0.8f), S(4) * velocity, DT(8)); break;
+                                                          T(6), ImColor::HSV(hue * 0.0031f, 0.8f, 0.8f), S(4) * velocity, DT(8)); break;
           case $(145) ImSpinner::SpinnerFiveDots        ("SpinnerSixDots", R(16),
-                                                             T(6), C(ImColor(255, 255, 255)), S(4) * velocity, DT(8)); break;
+                                                          T(6), C(ImColor(255, 255, 255)), S(4) * velocity, DT(8)); break;
+          case $(146) ImSpinner::SpinnerFillingMem      ("SpinnerFillingMem",
+                                                          R(16), T(6), ImColor::HSV(hue * 0.001f, 0.8f, 0.8f), spinner_filling_meb_bg, S(4) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
