@@ -3327,158 +3327,158 @@ namespace ImSpinner
           case $( 0) ImSpinner::Spinner<e_st_rainbow>   ("Spinner",
                                                           Radius{R(16)}, Thickness{T(2)}, Color{ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f)}, Speed{S(8) * velocity}, AngleMin{AMN(0.f)}, AngleMax{AMX(PI_2)}); break;
           case $( 1) ImSpinner::Spinner<e_st_angle>     ("SpinnerAng",
-                                                          Radius{R(16)}, Thickness{T(2)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor(255, 255, 255, 128))}, Speed{S(8) * velocity}, Angle{A(IM_PI)}); break;
+                                                          Radius{R(16)}, Thickness{T(2)}, Color{C(white)}, BgColor{CB(ImColor(255, 255, 255, 128))}, Speed{S(8) * velocity}, Angle{A(IM_PI)}); break;
           case $( 2) ImSpinner::Spinner<e_st_dots>      ("SpinnerDots",
-                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, FloatPtr{&nextdot}, Speed{S(1) * velocity}, Dots{DT(12)}, MinThickness{-1.f}); break;
+                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(white)}, FloatPtr{&nextdot}, Speed{S(1) * velocity}, Dots{DT(12)}, MinThickness{-1.f}); break;
           case $( 3) ImSpinner::Spinner<e_st_ang>       ("SpinnerAngNoBg",
-                                                          Radius{R(16)}, Thickness{T(2)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor(255, 255, 255, 0))}, Speed{S(6) * velocity}, Angle{A(IM_PI)}); break;
+                                                          Radius{R(16)}, Thickness{T(2)}, Color{C(white)}, BgColor{CB(ImColor(255, 255, 255, 0))}, Speed{S(6) * velocity}, Angle{A(IM_PI)}); break;
           case $( 4) ImSpinner::Spinner<e_st_ang>       ("SpinnerAng270",
-                                                          Radius{R(16)}, Thickness{T(2)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor(255, 255, 255, 128))}, Speed{S(6) * velocity}, Angle{A(0.75f * PI_2)}); break;
+                                                          Radius{R(16)}, Thickness{T(2)}, Color{C(white)}, BgColor{CB(ImColor(255, 255, 255, 128))}, Speed{S(6) * velocity}, Angle{A(0.75f * PI_2)}); break;
           case $( 5) ImSpinner::Spinner<e_st_ang>       ("SpinnerAng270NoBg",
-                                                          Radius{R(16)}, Thickness{T(2)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor(255, 255, 255, 0))}, Speed{S(6) * velocity}, Angle{A(0.75f * PI_2)}); break;
+                                                          Radius{R(16)}, Thickness{T(2)}, Color{C(white)}, BgColor{CB(ImColor(255, 255, 255, 0))}, Speed{S(6) * velocity}, Angle{A(0.75f * PI_2)}); break;
           case $( 6) ImSpinner::Spinner<e_st_vdots>     ("SpinnerVDots",
-                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.7f) * velocity}, Dots{DT(12)}, MiddleDots{6}); break;
+                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(white)}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.7f) * velocity}, Dots{DT(12)}, MiddleDots{6}); break;
           case $( 7) ImSpinner::Spinner<e_st_bounce_ball>("SpinnerBounceBall",
-                                                          Radius{R(16)}, Thickness{T(6)}, Color{C(ImColor(255, 255, 255))}, Speed{S(4) * velocity}, Dots{DT(1)}); break;
+                                                          Radius{R(16)}, Thickness{T(6)}, Color{C(white)}, Speed{S(4) * velocity}, Dots{DT(1)}); break;
           case $( 8) ImSpinner::Spinner<e_st_eclipse>   ("SpinnerAngEclipse",
-                                                          Radius{R(16)}, Thickness{T(5)}, Color{C(ImColor(255, 255, 255))}, Speed{S(6) * velocity}); break;
+                                                          Radius{R(16)}, Thickness{T(5)}, Color{C(white)}, Speed{S(6) * velocity}); break;
           case $( 9) ImSpinner::Spinner<e_st_ingyang>   ("SpinnerIngYang",
-                                                          Radius{R(16)}, Thickness{T(5)}, Reverse{false}, Delta{D(0.f)}, Color{C(ImColor(255, 255, 255))}, AltColor{ImColor(255, 0, 0)}, Speed{S(4) * velocity}, Angle{A(IM_PI * 0.8f)}); break;
+                                                          Radius{R(16)}, Thickness{T(5)}, Reverse{false}, Delta{D(0.f)}, Color{C(white)}, AltColor{ImColor(255, 0, 0)}, Speed{S(4) * velocity}, Angle{A(IM_PI * 0.8f)}); break;
           case $(10) ImSpinner::SpinnerBarChartSine     ("SpinnerBarChartSine",
-                                                          R(16), 4, C(ImColor(255, 255, 255)), S(6.8f) * velocity, 4, 0); break;
+                                                          R(16), 4, C(white), S(6.8f) * velocity, 4, 0); break;
           case $(11) ImSpinner::SpinnerBounceDots       ("SpinnerBounceDots", R(16),
-                                                          T(6), C(ImColor(255, 255, 255)), S(6) * velocity, DT(3)); break;
+                                                          T(6), C(white), S(6) * velocity, DT(3)); break;
           case $(12) ImSpinner::SpinnerFadeDots         ("SpinnerFadeDots", R(16),
-                                                          T(6), C(ImColor(255, 255, 255)), S(8) * velocity, DT(8)); break;
+                                                          T(6), C(white), S(8) * velocity, DT(8)); break;
           case $(13) ImSpinner::SpinnerScaleDots        ("SpinnerScaleDots", R(16),
-                                                          T(6), C(ImColor(255, 255, 255)), S(7) * velocity, DT(8)); break;
+                                                          T(6), C(white), S(7) * velocity, DT(8)); break;
           case $(14) ImSpinner::SpinnerMovingDots       ("SpinnerMovingDots", R(16),
-                                                          T(6), C(ImColor(255, 255, 255)), S(30) * velocity, DT(3)); break;
+                                                          T(6), C(white), S(30) * velocity, DT(3)); break;
           case $(15) ImSpinner::SpinnerRotateDots       ("SpinnerRotateDots",
-                                                          R(16), T(6), C(ImColor(255, 255, 255)), S(4) * velocity, DT(2)); break;
+                                                          R(16), T(6), C(white), S(4) * velocity, DT(2)); break;
           case $(16) ImSpinner::SpinnerTwinAng          ("SpinnerTwinAng",
-                                                          R(16), 16, T(6), C(ImColor(255, 255, 255)), CB(ImColor(255, 0, 0)), S(4) * velocity, A(IM_PI)); break;
+                                                          R(16), 16, T(6), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity, A(IM_PI)); break;
           case $(17) ImSpinner::SpinnerClock            ("SpinnerClock",
-                                                          R(16), T(2), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(4) * velocity); break;
+                                                          R(16), T(2), C(ImColor(255, 0, 0)), CB(white), S(4) * velocity); break;
           case $(18) ImSpinner::SpinnerIngYang          ("SpinnerIngYangR",
-                                                          R(16), T(5), true, 0.1f, C(ImColor(255, 255, 255)), CB(ImColor(255, 0, 0)), S(4) * velocity, A(IM_PI * 0.8f)); break;
+                                                          R(16), T(5), true, 0.1f, C(white), CB(ImColor(255, 0, 0)), S(4) * velocity, A(IM_PI * 0.8f)); break;
           case $(19) ImSpinner::SpinnerBarChartSine     ("SpinnerBarChartSine2",
                                                           R(16), T(4), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(4.8f) * velocity, 4, 1); break;
           case $(20) ImSpinner::SpinnerTwinAng180       ("SpinnerTwinAng",
-                                                          R(16), 12, T(4), C(ImColor(255, 255, 255)), CB(ImColor(255, 0, 0)), S(4) * velocity); break;
+                                                          R(16), 12, T(4), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity); break;
           case $(21) ImSpinner::SpinnerTwinAng360       ("SpinnerTwinAng360",
-                                                          R(16), 11, T(4), C(ImColor(255, 255, 255)), CB(ImColor(255, 0, 0)), S(4) * velocity); break;
+                                                          R(16), 11, T(4), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity); break;
           case $(22) ImSpinner::SpinnerIncDots          ("SpinnerIncDots",
-                                                          R(16), T(4), C(ImColor(255, 255, 255)), S(5.6f) * velocity, 6); break;
+                                                          R(16), T(4), C(white), S(5.6f) * velocity, 6); break;
           case $(23) nextdot2 -= 0.2f * velocity;
                      ImSpinner::SpinnerDots             ("SpinnerDotsWoBg",
-                                                          &nextdot2, R(16), T(4), C(ImColor(255, 255, 255)), S(0.3f) * velocity, 12, 0.f); break;
+                                                          &nextdot2, R(16), T(4), C(white), S(0.3f) * velocity, 12, 0.f); break;
           case $(24) ImSpinner::SpinnerIncScaleDots     ("SpinnerIncScaleDots",
-                                                          R(16), T(4), C(ImColor(255, 255, 255)), S(6.6f) * velocity, 6); break;
+                                                          R(16), T(4), C(white), S(6.6f) * velocity, 6); break;
           case $(25) ImSpinner::SpinnerAng              ("SpinnerAng90",
-                                                          R(16), T(6), C(ImColor(255, 255, 255)), CB(ImColor(255, 255, 255, 128)), S(8.f) * velocity, A(PI_DIV_2)); break;
+                                                          R(16), T(6), C(white), CB(ImColor(255, 255, 255, 128)), S(8.f) * velocity, A(PI_DIV_2)); break;
           case $(26) ImSpinner::SpinnerAng              ("SpinnerAng90",
-                                                          R(16), 6, C(ImColor(255, 255, 255)), CB(ImColor(255, 255, 255, 0)), S(8.5f) * velocity, A(PI_DIV_2)); break;
+                                                          R(16), 6, C(white), CB(ImColor(255, 255, 255, 0)), S(8.5f) * velocity, A(PI_DIV_2)); break;
           case $(27) ImSpinner::SpinnerFadeBars         ("SpinnerFadeBars",
-                                                          10, C(ImColor(255, 255, 255)), S(4.8f) * velocity, 3); break;
+                                                          10, C(white), S(4.8f) * velocity, 3); break;
           case $(28) ImSpinner::SpinnerPulsar           ("SpinnerPulsar",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(1) * velocity); break;
+                                                          R(16), T(2), C(white), S(1) * velocity); break;
           case $(29) ImSpinner::SpinnerIngYang          ("SpinnerIngYangR2",
-                                                          R(16), T(5), true, 3.f, C(ImColor(255, 255, 255)), CB(ImColor(255, 0, 0)), S(4) * velocity, A(IM_PI * 0.8f)); break;
+                                                          R(16), T(5), true, 3.f, C(white), CB(ImColor(255, 0, 0)), S(4) * velocity, A(IM_PI * 0.8f)); break;
           case $(30) ImSpinner::SpinnerBarChartRainbow  ("SpinnerBarChartRainbow",
                                                           R(16), T(4), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(6.8f) * velocity, 4); break;
           case $(31) ImSpinner::SpinnerBarsRotateFade   ("SpinnerBarsRotateFade",
-                                                          8, 18, T(4), C(ImColor(255, 255, 255)), S(7.6f) * velocity, 6); break;
+                                                          8, 18, T(4), C(white), S(7.6f) * velocity, 6); break;
           case $(32) ImSpinner::SpinnerFadeBars         ("SpinnerFadeScaleBars",
-                                                          10, C(ImColor(255, 255, 255)), S(6.8f) * velocity, 3, true); break;
+                                                          10, C(white), S(6.8f) * velocity, 3, true); break;
           case $(33) ImSpinner::SpinnerBarsScaleMiddle  ("SpinnerBarsScaleMiddle",
-                                                          6, C(ImColor(255, 255, 255)), S(8.8f) * velocity, 3); break;
+                                                          6, C(white), S(8.8f) * velocity, 3); break;
           case $(34) ImSpinner::SpinnerAngTwin          ("SpinnerAngTwin1",
-                                                          R(16), 13, T(2), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(6) * velocity, A(PI_DIV_2)); break;
+                                                          R(16), 13, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2)); break;
           case $(35) ImSpinner::SpinnerAngTwin          ("SpinnerAngTwin2",
-                                                          13, 16, T(2), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(6) * velocity, A(PI_DIV_2)); break;
+                                                          13, 16, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2)); break;
           case $(36) ImSpinner::SpinnerAngTwin          ("SpinnerAngTwin3",
-                                                          13, 16, T(2), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(6) * velocity, A(PI_DIV_2), 2); break;
+                                                          13, 16, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2), 2); break;
           case $(37) ImSpinner::SpinnerAngTwin          ("SpinnerAngTwin4",
-                                                          R(16), 13, T(2), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(6) * velocity, A(PI_DIV_2), 2); break;
+                                                          R(16), 13, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2), 2); break;
           case $(38) ImSpinner::SpinnerTwinPulsar       ("SpinnerTwinPulsar",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(0.5f) * velocity, 2); break;
+                                                          R(16), T(2), C(white), S(0.5f) * velocity, 2); break;
           case $(39) ImSpinner::SpinnerAngTwin          ("SpinnerAngTwin4",
                                                           R(14), 13, T(3), C(ImColor(255, 0, 0)), CB(ImColor(0, 0, 0, 0)), S(5) * velocity, A(IM_PI / 1.5f), 2); break;
           case $(40) ImSpinner::SpinnerBlocks           ("SpinnerBlocks",
                                                           R(16), T(7), C(ImColor(255, 255, 255, 30)), CB(ImColor::HSV(hue * 0.005f, 0.8f, 0.8f)), S(5) * velocity); break;
           case $(41) ImSpinner::SpinnerTwinBall         ("SpinnerTwinBall",
-                                                          R(16), 11, T(2), 2.5f, C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(6) * velocity, 2); break;
+                                                          R(16), 11, T(2), 2.5f, C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, 2); break;
           case $(42) ImSpinner::SpinnerTwinBall         ("SpinnerTwinBall2",
-                                                          R(15), 19, T(2), 2.f, C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(6) * velocity, 3); break;
+                                                          R(15), 19, T(2), 2.f, C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, 3); break;
           case $(43) ImSpinner::SpinnerTwinBall         ("SpinnerTwinBall2",
-                                                          16, 16, T(2), 5.f, C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(5) * velocity, 1); break;
+                                                          16, 16, T(2), 5.f, C(ImColor(255, 0, 0)), CB(white), S(5) * velocity, 1); break;
           case $(44) ImSpinner::SpinnerAngTriple        ("SpinnerAngTriple",
-                                                          16, 13, 10, T(1.3f), C(ImColor(255, 255, 255)), ImColor(255, 0, 0), ImColor(255, 255, 255), S(5) * velocity, A(1.5f * IM_PI)); break;
+                                                          16, 13, 10, T(1.3f), C(white), ImColor(255, 0, 0), white, S(5) * velocity, A(1.5f * IM_PI)); break;
           case $(45) ImSpinner::SpinnerIncFullDots      ("SpinnerIncFullDots",
-                                                          R(16), T(4), C(ImColor(255, 255, 255)), S(5.6f) * velocity, 4); break; 
+                                                          R(16), T(4), C(white), S(5.6f) * velocity, 4); break; 
           case $(46) ImSpinner::SpinnerGooeyBalls       ("SpinnerGooeyBalls",
-                                                          R(16), C(ImColor(255, 255, 255)), S(2.f) * velocity); break;
+                                                          R(16), C(white), S(2.f) * velocity); break;
           case $(47) ImSpinner::SpinnerRotateGooeyBalls ("SpinnerRotateGooeyBalls2",
-                                                          R(16), T(5), C(ImColor(255, 255, 255)), S(6.f) * velocity, 2); break;
+                                                          R(16), T(5), C(white), S(6.f) * velocity, 2); break;
           case $(48) ImSpinner::SpinnerRotateGooeyBalls ("SpinnerRotateGooeyBalls3",
-                                                          R(16), T(5), C(ImColor(255, 255, 255)), S(6.f) * velocity, 3); break;
+                                                          R(16), T(5), C(white), S(6.f) * velocity, 3); break;
           case $(49) ImSpinner::SpinnerMoonLine         ("SpinnerMoonLine",
                                                           R(16), T(3), C(ImColor(200, 80, 0)), ImColor(80, 80, 80), S(5) * velocity); break;
           case $(50) ImSpinner::SpinnerArcRotation      ("SpinnerArcRotation",
-                                                          R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity, 4); break;
+                                                          R(13), T(5), C(white), S(3) * velocity, 4); break;
           case $(51) ImSpinner::SpinnerFluid            ("SpinnerFluid",
                                                           R(16), C(ImColor(0, 0, 255)), S(3.8f) * velocity, 4); break;
           case $(52) ImSpinner::SpinnerArcFade          ("SpinnerArcFade",
-                                                          R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity, 4); break;
+                                                          R(13), T(5), C(white), S(3) * velocity, 4); break;
           case $(53) ImSpinner::SpinnerFilling          ("SpinnerFilling",
-                                                          R(16), T(6), C(ImColor(255, 255, 255)), CB(ImColor(255, 0, 0)), S(4) * velocity); break;
+                                                          R(16), T(6), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity); break;
           case $(54) ImSpinner::SpinnerTopup            ("SpinnerTopup",
-                                                          R(16), 12, C(ImColor(255, 0, 0)), ImColor(80, 80, 80), CB(ImColor(255, 255, 255)), S(1) * velocity);  break;
+                                                          R(16), 12, C(ImColor(255, 0, 0)), ImColor(80, 80, 80), CB(white), S(1) * velocity);  break;
           case $(55) ImSpinner::SpinnerFadePulsar       ("SpinnerFadePulsar",
-                                                          R(16), C(ImColor(255, 255, 255)), S(1.5f) * velocity, 1);  break;
+                                                          R(16), C(white), S(1.5f) * velocity, 1);  break;
           case $(56) ImSpinner::SpinnerFadePulsar       ("SpinnerFadePulsar2",
-                                                          R(16), C(ImColor(255, 255, 255)), S(0.9f) * velocity, 2); break;
+                                                          R(16), C(white), S(0.9f) * velocity, 2); break;
           case $(57) ImSpinner::SpinnerPulsar           ("SpinnerPulsar",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(1) * velocity, false); break;
+                                                          R(16), T(2), C(white), S(1) * velocity, false); break;
           case $(58) ImSpinner::SpinnerDoubleFadePulsar ("SpinnerDoubleFadePulsar",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(2) * velocity); break;
+                                                          R(16), T(2), C(white), S(2) * velocity); break;
           case $(59) ImSpinner::SpinnerFilledArcFade    ("SpinnerFilledArcFade",
-                                                          R(16), C(ImColor(255, 255, 255)), S(4) * velocity, 4); break;
+                                                          R(16), C(white), S(4) * velocity, 4); break;
           case $(60) ImSpinner::SpinnerFilledArcFade    ("SpinnerFilledArcFade6",
-                                                          R(16), C(ImColor(255, 255, 255)), S(6) * velocity, 6); break;
+                                                          R(16), C(white), S(6) * velocity, 6); break;
           case $(61) ImSpinner::SpinnerFilledArcFade    ("SpinnerFilledArcFade6",
-                                                          R(16), C(ImColor(255, 255, 255)), S(8) * velocity, 12); break;
+                                                          R(16), C(white), S(8) * velocity, 12); break;
           case $(62) ImSpinner::SpinnerFilledArcColor   ("SpinnerFilledArcColor",
-                                                          R(16), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(2.8f) * velocity, 4); break;
+                                                          R(16), C(ImColor(255, 0, 0)), CB(white), S(2.8f) * velocity, 4); break;
           case $(63) ImSpinner::SpinnerCircleDrop       ("SpinnerCircleDrop",
-                                                          R(16), T(1.5f), 4.f, C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(2.8f) * velocity, A(IM_PI)); break;
+                                                          R(16), T(1.5f), 4.f, C(ImColor(255, 0, 0)), CB(white), S(2.8f) * velocity, A(IM_PI)); break;
           case $(64) ImSpinner::SpinnerSurroundedIndicator("SpinnerSurroundedIndicator",
-                                                          R(16), T(5), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(7.8f) * velocity); break;
+                                                          R(16), T(5), C(ImColor(0, 0, 0)), CB(white), S(7.8f) * velocity); break;
           case $(65) ImSpinner::SpinnerTrianglesSelector ("SpinnerTrianglesSelector",
-                                                          R(16), T(8), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(4.8f) * velocity, 8); break;
+                                                          R(16), T(8), C(ImColor(0, 0, 0)), CB(white), S(4.8f) * velocity, 8); break;
           case $(66) ImSpinner::SpinnerFlowingGradient  ("SpinnerFlowingFradient",
                                                           R(16), T(6), C(ImColor(200, 80, 0)), CB(ImColor(80, 80, 80)), S(5) * velocity, A(PI_2)); break;
           case $(67) ImSpinner::SpinnerRotateSegments   ("SpinnerRotateSegments",
-                                                          R(16), T(4), C(ImColor(255, 255, 255)), S(3) * velocity, 4); break;
+                                                          R(16), T(4), C(white), S(3) * velocity, 4); break;
           case $(68) ImSpinner::SpinnerRotateSegments   ("SpinnerRotateSegments2",
-                                                          R(16), T(3), C(ImColor(255, 255, 255)), S(2.4f) * velocity, 4, 2); break;
+                                                          R(16), T(3), C(white), S(2.4f) * velocity, 4, 2); break;
           case $(69) ImSpinner::SpinnerRotateSegments   ("SpinnerRotateSegments3",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, 4, 3); break;
+                                                          R(16), T(2), C(white), S(2.1f) * velocity, 4, 3); break;
           case $(70) ImSpinner::SpinnerLemniscate       ("SpinnerLemniscate",
-                                                          R(20), T(3), C(ImColor(255, 255, 255)), S(2.1f) * velocity, 3); break;
+                                                          R(20), T(3), C(white), S(2.1f) * velocity, 3); break;
           case $(71) ImSpinner::SpinnerRotateGear       ("SpinnerRotateGear",
-                                                          R(16), T(6), C(ImColor(255, 255, 255)), S(2.1f) * velocity, 8); break;
+                                                          R(16), T(6), C(white), S(2.1f) * velocity, 8); break;
           case $(72) ImSpinner::SpinnerRotatedAtom      ("SpinnerRotatedAtom",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, 3); break;
+                                                          R(16), T(2), C(white), S(2.1f) * velocity, 3); break;
           case $(73) ImSpinner::SpinnerAtom             ("SpinnerAtom",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(4.1f) * velocity, 3); break;
+                                                          R(16), T(2), C(white), S(4.1f) * velocity, 3); break;
           case $(74) ImSpinner::SpinnerRainbowBalls     ("SpinnerRainbowBalls",
                                                           R(16), T(4), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, 5); break;
           case $(75) ImSpinner::SpinnerCamera           ("SpinnerCamera",
                                                           R(16), T(8), [] (int i) { return ImColor::HSV(i * 0.25f, 0.8f, 0.8f); }, S(4.8f) * velocity, 8); break;
           case $(76) ImSpinner::SpinnerArcPolarFade     ("SpinnerArcPolarFade",
-                                                          R(16), C(ImColor(255, 255, 255)), S(6) * velocity, 6); break;
+                                                          R(16), C(white), S(6) * velocity, 6); break;
           case $(77) ImSpinner::SpinnerArcPolarRadius   ("SpinnerArcPolarRadius",
                                                           R(16), C(ImColor::HSV(0.25f, 0.8f, 0.8f)), S(6.f) * velocity, 6); break;
           case $(78) ImSpinner::SpinnerCaleidoscope     ("SpinnerArcPolarPies",
@@ -3488,135 +3488,135 @@ namespace ImSpinner
           case $(80) ImSpinner::SpinnerScaleBlocks      ("SpinnerScaleBlocks",
                                                           R(16), T(8), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(5) * velocity); break;
           case $(81) ImSpinner::SpinnerRotateTriangles  ("SpinnerRotateTriangles",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(6.f) * velocity, 3); break;
+                                                          R(16), T(2), C(white), S(6.f) * velocity, 3); break;
           case $(82) ImSpinner::SpinnerArcWedges        ("SpinnerArcWedges",
                                                           R(16), C(ImColor::HSV(0.3f, 0.8f, 0.8f)), S(2.8f) * velocity, 4); break;
           case $(83) ImSpinner::SpinnerScaleSquares     ("SpinnerScaleSquares",
                                                           R(16), T(8), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(5) * velocity); break;
           case $(84) ImSpinner::SpinnerHboDots          ("SpinnerMovingDots", R(16),
-                                                          T(4), C(ImColor(255, 255, 255)), 0.f, 0.f, S(1.1f) * velocity, DT(6)); break;
+                                                          T(4), C(white), 0.f, 0.f, S(1.1f) * velocity, DT(6)); break;
           case $(85) ImSpinner::SpinnerHboDots          ("SpinnerMovingDots2", R(16),
-                                                          T(4), C(ImColor(255, 255, 255)), 0.1f, 0.5f, S(1.1f) * velocity, DT(6)); break;
+                                                          T(4), C(white), 0.1f, 0.5f, S(1.1f) * velocity, DT(6)); break;
           case $(86) ImSpinner::Spinner<e_st_bounce_ball>("SpinnerBounceBall3",
-                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, Speed{S(3.2f) * velocity}, Dots{DT(5)}); break;
+                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(white)}, Speed{S(3.2f) * velocity}, Dots{DT(5)}); break;
           case $(87) ImSpinner::SpinnerBounceBall       ("SpinnerBounceBallShadow",
-                                                          R(16), T(4), C(ImColor(255, 255, 255)), S(2.2f) * velocity, DT(1), true); break;
+                                                          R(16), T(4), C(white), S(2.2f) * velocity, DT(1), true); break;
           case $(88) ImSpinner::SpinnerBounceBall       ("SpinnerBounceBall5Shadow",
-                                                          R(16), T(4), C(ImColor(255, 255, 255)), S(3.6f) * velocity, DT(5), true); break;
+                                                          R(16), T(4), C(white), S(3.6f) * velocity, DT(5), true); break;
           case $(89) ImSpinner::SpinnerSquareStrokeFade ("SpinnerSquareStrokeFade",
-                                                          R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
+                                                          R(13), T(5), C(white), S(3) * velocity); break;
           case $(90) ImSpinner::SpinnerSquareStrokeFill ("SpinnerSquareStrokeFill",
-                                                          R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
+                                                          R(13), T(5), C(white), S(3) * velocity); break;
           case $(91) ImSpinner::SpinnerSwingDots        ("SpinnerSwingDots",
                                                           R(16), T(6), C(ImColor(255, 0, 0)), S(4.1f) * velocity); break;
           case $(92) ImSpinner::SpinnerRotateWheel      ("SpinnerRotateWheel",
-                                                          R(16), T(10), C(ImColor(255, 255, 0)), CB(ImColor(255, 255, 255)), S(2.1f) * velocity, 8); break;
+                                                          R(16), T(10), C(ImColor(255, 255, 0)), CB(white), S(2.1f) * velocity, 8); break;
           case $(93) ImSpinner::SpinnerWaveDots         ("SpinnerWaveDots", R(16),
-                                                          T(3), C(ImColor(255, 255, 255)), S(6) * velocity, DT(8)); break;
+                                                          T(3), C(white), S(6) * velocity, DT(8)); break;
           case $(94) ImSpinner::SpinnerRotateShapes     ("SpinnerRotateShapes",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(6.f) * velocity, DT(4), MDT(4)); break;
+                                                          R(16), T(2), C(white), S(6.f) * velocity, DT(4), MDT(4)); break;
           case $(95) ImSpinner::SpinnerSquareStrokeLoading("SpinnerSquareStrokeLoanding",
-                                                          R(13), T(5), C(ImColor(255, 255, 255)), S(3) * velocity); break;
+                                                          R(13), T(5), C(white), S(3) * velocity); break;
           case $(96) ImSpinner::SpinnerSinSquares       ("SpinnerSinSquares",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(1.f) * velocity); break;
+                                                          R(16), T(2), C(white), S(1.f) * velocity); break;
           case $(97) ImSpinner::SpinnerZipDots          ("SpinnerZipDots", R(16),
-                                                          T(3), C(ImColor(255, 255, 255)), S(6) * velocity, DT(5)); break;
+                                                          T(3), C(white), S(6) * velocity, DT(5)); break;
           case $(98) ImSpinner::SpinnerDotsToBar        ("SpinnerDotsToBar", R(16),
                                                           T(3), D(0.5f), C(ImColor::HSV(0.31f, 0.8f, 0.8f)), S(5) * velocity, DT(5)); break;
           case $(99) ImSpinner::SpinnerSineArcs         ("SpinnerSineArcs", R(16),
-                                                          T(1), C(ImColor(255, 255, 255)), S(3) * velocity);
+                                                          T(1), C(white), S(3) * velocity);
           case $(100) ImSpinner::SpinnerTrianglesShift  ("SpinnerTrianglesShift",
-                                                          R(16), T(8), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(1.8f) * velocity, DT(8)); break;
+                                                          R(16), T(8), C(ImColor(0, 0, 0)), CB(white), S(1.8f) * velocity, DT(8)); break;
           case $(101) ImSpinner::SpinnerCircularLines   ("SpinnerCircularLines",
-                                                          R(16), C(ImColor(255, 255, 255)), S(1.5f) * velocity, DT(8));  break;
+                                                          R(16), C(white), S(1.5f) * velocity, DT(8));  break;
           case $(102) ImSpinner::SpinnerLoadingRing     ("SpinnerLoadingRing",
-                                                          R(16), T(6), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255, 128)), S(1.f) * velocity, DT(5)); break;
+                                                          R(16), T(6), C(red), CB(ImColor(255, 255, 255, 128)), S(1.f) * velocity, DT(5)); break;
           case $(103) ImSpinner::SpinnerPatternRings    ("SpinnerPatternRings",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(4.1f) * velocity, DT(3)); break;
+                                                          R(16), T(2), C(white), S(4.1f) * velocity, DT(3)); break;
           case $(104) ImSpinner::SpinnerPatternSphere   ("SpinnerPatternSphere",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(6)); break;
+                                                          R(16), T(2), C(white), S(2.1f) * velocity, DT(6)); break;
           case $(105) ImSpinner::SpinnerRingSynchronous ("SpinnerRingSnchronous",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(3)); break;
+                                                          R(16), T(2), C(white), S(2.1f) * velocity, DT(3)); break;
           case $(106) ImSpinner::SpinnerRingWatermarks  ("SpinnerRingWatermarks",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(2.1f) * velocity, DT(3)); break;
+                                                          R(16), T(2), C(white), S(2.1f) * velocity, DT(3)); break;
           case $(107) ImSpinner::SpinnerFilledArcRing   ("SpinnerFilledArcRing",
-                                                          R(16), T(6), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(2.8f) * velocity, DT(8)); break;
+                                                          R(16), T(6), C(red), CB(white), S(2.8f) * velocity, DT(8)); break;
           case $(108) ImSpinner::SpinnerPointsShift     ("SpinnerPointsShift",
-                                                          R(16), T(3), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(1.8f) * velocity, DT(10)); break;
+                                                          R(16), T(3), C(ImColor(0, 0, 0)), CB(white), S(1.8f) * velocity, DT(10)); break;
           case $(109) ImSpinner::SpinnerCircularPoints  ("SpinnerCircularPoints",
-                                                          R(16), T(1.2f), C(ImColor(255, 255, 255)), S(10.f) * velocity, DT(7));  break;
+                                                          R(16), T(1.2f), C(white), S(10.f) * velocity, DT(7));  break;
           case $(110) ImSpinner::SpinnerCurvedCircle    ("SpinnerCurvedCircle",
-                                                          R(16), T(1.2f), C(ImColor(255, 255, 255)), S(1.f) * velocity, DT(3));  break;
+                                                          R(16), T(1.2f), C(white), S(1.f) * velocity, DT(3));  break;
           case $(111) ImSpinner::SpinnerModCircle       ("SpinnerModCirclre",
-                                                          R(16), T(1.2f), C(ImColor(255, 255, 255)), AMN(1.f), AMX(2.f), S(3.f) * velocity);  break;
+                                                          R(16), T(1.2f), C(white), AMN(1.f), AMX(2.f), S(3.f) * velocity);  break;
           case $(112) ImSpinner::SpinnerModCircle       ("SpinnerModCirclre2",
-                                                          R(16), T(1.2f), C(ImColor(255, 255, 255)), AMN(1.11f), AMX(3.33f), S(3.f) * velocity);  break;
+                                                          R(16), T(1.2f), C(white), AMN(1.11f), AMX(3.33f), S(3.f) * velocity);  break;
           case $(113) ImSpinner::SpinnerPatternEclipse  ("SpinnerPatternEclipse",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(4.1f) * velocity, DT(5), AMN(2.f), AMX(0.f)); break;
+                                                          R(16), T(2), C(white), S(4.1f) * velocity, DT(5), AMN(2.f), AMX(0.f)); break;
           case $(114) ImSpinner::SpinnerPatternEclipse  ("SpinnerPatternEclipse2",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(4.1f) * velocity, DT(9), AMN(4.f), AMX(1.f)); break;
+                                                          R(16), T(2), C(white), S(4.1f) * velocity, DT(9), AMN(4.f), AMX(1.f)); break;
           case $(115) ImSpinner::SpinnerMultiFadeDots   ("SpinnerMultiFadeDots", R(16),
-                                                          T(2), C(ImColor(255, 255, 255)), S(8) * velocity, DT(8)); break;
+                                                          T(2), C(white), S(8) * velocity, DT(8)); break;
           case $(116) ImSpinner::SpinnerRainbowShot     ("SpinnerRainbowShot",
                                                           R(16), T(4), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(5)); break;
           case $(117) ImSpinner::SpinnerSpiral          ("SpinnerSpiral",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(6) * velocity, DT(5)); break;
+                                                          R(16), T(2), C(white), S(6) * velocity, DT(5)); break;
           case $(118) ImSpinner::SpinnerSpiralEye       ("SpinnerSpiralEye",
-                                                          R(16), T(1), C(ImColor(255, 255, 255)), S(3) * velocity); break;
+                                                          R(16), T(1), C(white), S(3) * velocity); break;
           case $(119) ImSpinner::SpinnerWifiIndicator   ("SpinnerWifiIndicator",
-                                                          R(16), T(1.5f), C(ImColor(0, 0, 0)), CB(ImColor(255, 255, 255)), S(7.8f) * velocity, AMN(5.52f), DT(3)); break;
+                                                          R(16), T(1.5f), C(ImColor(0, 0, 0)), CB(white), S(7.8f) * velocity, AMN(5.52f), DT(3)); break;
           case $(120) ImSpinner::SpinnerHboDots         ("SpinnerMovingDots3", R(16),
-                                                          T(2), C(ImColor(255, 255, 255)), 0.f, 0.f, S(1.1f) * velocity, DT(10)); break;
+                                                          T(2), C(white), 0.f, 0.f, S(1.1f) * velocity, DT(10)); break;
           case $(121) ImSpinner::SpinnerHboDots         ("SpinnerMovingDots4", R(16),
-                                                          T(4), C(ImColor(255, 255, 255)), 0.1f, 0.5f, S(1.1f) * velocity, DT(2)); break;
+                                                          T(4), C(white), 0.1f, 0.5f, S(1.1f) * velocity, DT(2)); break;
           case $(122) ImSpinner::SpinnerHboDots         ("SpinnerMovingDots5", R(16),
-                                                          T(4), C(ImColor(255, 255, 255)), 0.1f, 0.5f, S(1.1f) * velocity, DT(3)); break;
+                                                          T(4), C(white), 0.1f, 0.5f, S(1.1f) * velocity, DT(3)); break;
           case $(123) ImSpinner::SpinnerDnaDots         ("SpinnerDnaDotsH", R(16),
-                                                          T(3), C(ImColor(255, 255, 255)), S(2) * velocity, DT(8), D(0.25f)); break;
+                                                          T(3), C(white), S(2) * velocity, DT(8), D(0.25f)); break;
           case $(124) ImSpinner::SpinnerDnaDots         ("SpinnerDnaDotsV", R(16),
-                                                          T(3), C(ImColor(255, 255, 255)), S(2) * velocity, DT(8), D(0.25f), true); break;
+                                                          T(3), C(white), S(2) * velocity, DT(8), D(0.25f), true); break;
           case $(125) ImSpinner::SpinnerRotateDots      ("SpinnerRotateDots2",
-                                                          R(16), T(6), C(ImColor(255, 255, 255)), S(4) * velocity, ImMax<int>(int(ImSin((float)ImGui::GetTime() * 0.5f) * 8), 3)); break;
+                                                          R(16), T(6), C(white), S(4) * velocity, ImMax<int>(int(ImSin((float)ImGui::GetTime() * 0.5f) * 8), 3)); break;
           case $(126) ImSpinner::SpinnerSevenSegments   ("SpinnerSevenSegments", "012345679ABCDEF",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(4) * velocity); break;
+                                                          R(16), T(2), C(white), S(4) * velocity); break;
           case $(127) ImSpinner::SpinnerSolarBalls      ("SpinnerSolarBalls",
-                                                          R(16), T(4), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(5) * velocity, DT(4)); break;
+                                                          R(16), T(4), C(red), CB(white), S(5) * velocity, DT(4)); break;
           case $(128) ImSpinner::SpinnerSolarArcs       ("SpinnerSolarArcs",
-                                                          R(16), T(4), C(ImColor(255, 0, 0)), CB(ImColor(255, 255, 255)), S(5) * velocity, DT(4)); break;
+                                                          R(16), T(4), C(red), CB(white), S(5) * velocity, DT(4)); break;
           case $(129) ImSpinner::SpinnerRainbow         ("Spinner",
                                                           R(16), T(2), ImColor::HSV(++hue * 0.005f, 0.8f, 0.8f), S(8) * velocity, AMN(0.f), AMX(PI_2), DT(3)); break;
           case $(130) ImSpinner::SpinnerRotatingHeart   ("SpinnerRotatedHeart",
-                                                          R(16), T(2), C(ImColor(255, 0, 0)), S(8) * velocity, AMN(0.f)); break;
+                                                          R(16), T(2), C(red), S(8) * velocity, AMN(0.f)); break;
           case $(131) ImSpinner::SpinnerSolarScaleBalls ("SpinnerSolarScaleBalls",
-                                                          R(16), T(1.3f), C(ImColor(255, 0, 0)), S(1) * velocity, DT(36)); break;
+                                                          R(16), T(1.3f), C(red), S(1) * velocity, DT(36)); break;
           case $(132) ImSpinner::SpinnerOrionDots       ("SpinnerOrionDots",
-                                                          R(16), T(1.3f), C(ImColor(255, 255, 255)), S(4) * velocity, DT(12)); break;
+                                                          R(16), T(1.3f), C(white), S(4) * velocity, DT(12)); break;
           case $(133) ImSpinner::SpinnerGalaxyDots      ("SpinnerGalaxyDots",
-                                                          R(16), T(1.3f), C(ImColor(255, 255, 255)), S(0.2f) * velocity, DT(6)); break;
+                                                          R(16), T(1.3f), C(white), S(0.2f) * velocity, DT(6)); break;
           case $(134) ImSpinner::SpinnerAsciiSymbolPoints("SpinnerAsciiSymbolPoints", "012345679ABCDEF",
-                                                          R(16), T(2), C(ImColor(255, 255, 255)), S(4) * velocity); break;
+                                                          R(16), T(2), C(white), S(4) * velocity); break;
           case $(135) ImSpinner::SpinnerRainbowCircle   ("SpinnerRainbowCircle",
                                                           R(16), T(4), C(ImColor::HSV(0.25f, 0.8f, 0.8f)), S(1) * velocity, DT(4)); break;
           case $(136) ImSpinner::SpinnerRainbowCircle   ("SpinnerRainbowCircle2",
                                                           R(16), T(2), ImColor::HSV(hue * 0.001f, 0.8f, 0.8f), S(2) * velocity, DT(8), D(0)); break;
           case $(137) ImSpinner::Spinner<e_st_vdots>    ("SpinnerVDots2",
-                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.1f) * velocity}, Dots{DT(2)}, MiddleDots{6}); break;
+                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(white)}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.1f) * velocity}, Dots{DT(2)}, MiddleDots{6}); break;
           case $(138) ImSpinner::Spinner<e_st_vdots>    ("SpinnerVDots3",
-                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(ImColor(255, 255, 255))}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.9f) * velocity}, Dots{DT(3)}, MiddleDots{6}); break;
+                                                          Radius{R(16)}, Thickness{T(4)}, Color{C(white)}, BgColor{CB(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f))}, Speed{S(2.9f) * velocity}, Dots{DT(3)}, MiddleDots{6}); break;
           case $(139) ImSpinner::SpinnerSquareRandomDots("SpinnerSquareRandomDots",
                                                           R(16), T(2.8f), C(ImColor(255, 255, 255, 30)), CB(ImColor::HSV(hue * 0.005f, 0.8f, 0.8f)), S(5) * velocity); break;
           case $(140) ImSpinner::SpinnerFluidPoints     ("SpinnerFluidPoints",
                                                           R(16), T(2.8f), C(ImColor(0, 0, 255)), S(3.8f) * velocity, Dots{DT(4)}, D(0.45f)); break;
           case $(141) ImSpinner::SpinnerDotsLoading     ("SpinnerDotsLoading",
-                                                          R(16), T(4.f), C(ImColor(255, 255, 255)), CB(ImColor(255, 255, 255, 124)), S(2.f) * velocity); break;
+                                                          R(16), T(4.f), C(white), CB(white), S(2.f) * velocity); break;
           case $(142) ImSpinner::SpinnerDotsToPoints    ("SpinnerDotsToPoints", R(16),
                                                           T(3), D(0.5f), C(ImColor::HSV(0.31f, 0.8f, 0.8f)), S(1.8) * velocity, DT(5)); break;
           case $(143) ImSpinner::SpinnerThreeDots       ("SpinnerThreeDots", R(16),
-                                                          T(6), C(ImColor(255, 255, 255)), S(4) * velocity, DT(8)); break;
+                                                          T(6), C(white), S(4) * velocity, DT(8)); break;
           case $(144) ImSpinner::Spinner4Caleidospcope  ("Spinner4Caleidospcope", R(16),
                                                           T(6), ImColor::HSV(hue * 0.0031f, 0.8f, 0.8f), S(4) * velocity, DT(8)); break;
           case $(145) ImSpinner::SpinnerFiveDots        ("SpinnerSixDots", R(16),
-                                                          T(6), C(ImColor(255, 255, 255)), S(4) * velocity, DT(8)); break;
+                                                          T(6), C(white), S(4) * velocity, DT(8)); break;
           case $(146) ImSpinner::SpinnerFillingMem      ("SpinnerFillingMem",
                                                           R(16), T(6), ImColor::HSV(hue * 0.001f, 0.8f, 0.8f), spinner_filling_meb_bg, S(4) * velocity); break;
           }
