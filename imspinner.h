@@ -1955,6 +1955,66 @@ namespace ImSpinner
       }
     }
 
+    inline void SpinnerHerbertBalls(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime(), IM_PI);
+        const float rstart = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+        const float radius1 = 0.3f * radius;
+        const float radius2 = 0.8f * radius;
+        const float angle_offset = PI_2 / balls;
+
+        for (int i = 0; i < balls; i++)
+        {
+            const float a = rstart + (i * angle_offset);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, color_alpha(color, 1.f), num_segments);
+        }
+
+        for (int i = 0; i < balls * 2; i++)
+        {
+            const float a = -rstart + (i * angle_offset / 2.f);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2), thickness, color_alpha(color, 1.f), num_segments);
+        }
+    }
+
+    inline void SpinnerHerbertBalls3D(const char *label, float radius, float thickness, const ImColor &color, float speed)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime(), IM_PI);
+        const float rstart = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+        const float radius1 = 0.3f * radius;
+        const float radius2 = 0.8f * radius;
+        const int balls = 2;
+        const float angle_offset = PI_2 / balls;
+
+        ImVec2 frontpos, backpos;
+        for (int i = 0; i < balls; i++)
+        {
+            const float a = rstart + (i * angle_offset);
+            const float t = (i == 1 ? 0.7f : 1.f) * thickness;
+            const ImVec2 pos = ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1);
+            window->DrawList->AddCircleFilled(pos, t, color_alpha(color, 1.f), num_segments);
+            if (i == 0) frontpos = pos; else backpos = pos;
+        }
+
+        ImVec2 lastpos;
+        for (int i = 0; i <= balls * 2; i++)
+        {
+            const float a = -rstart + (i * angle_offset / 2.f);
+            const ImVec2 pos = ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2);
+            float t = sqrt(pow(pos.x - frontpos.x, 2) + pow(pos.y - frontpos.y, 2)) / (radius * 1.f) * thickness;
+            window->DrawList->AddCircleFilled(pos, t, color_alpha(color, 1.f), num_segments);
+            window->DrawList->AddLine(pos, backpos, color_alpha(color, 0.5f), ImMax(thickness / 2.f, 1.f));
+            if (i > 0) {
+              window->DrawList->AddLine(pos, lastpos, color_alpha(color, 1.f), ImMax(thickness / 2.f, 1.f));
+            }
+            window->DrawList->AddLine(pos, frontpos, color_alpha(color, 1.f), ImMax(thickness / 2.f, 1.f));
+            lastpos = pos;
+        }
+    }
+
     inline void SpinnerRotateTriangles(const char *label, float radius, float thickness, const ImColor &color, float speed, int tris)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3619,6 +3679,10 @@ namespace ImSpinner
                                                           T(6), C(white), S(4) * velocity, DT(8)); break;
           case $(146) ImSpinner::SpinnerFillingMem      ("SpinnerFillingMem",
                                                           R(16), T(6), ImColor::HSV(hue * 0.001f, 0.8f, 0.8f), spinner_filling_meb_bg, S(4) * velocity); break;
+          case $(147) ImSpinner::SpinnerHerbertBalls    ("SpinnerHerbertBalls",
+                                                          R(16), T(2.3f), C(white), S(2.f) * velocity, DT(4)); break;
+          case $(148) ImSpinner::SpinnerHerbertBalls3D  ("SpinnerHerbertBalls3D",
+                                                             R(16), T(3.f), C(white), S(1.4f) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
