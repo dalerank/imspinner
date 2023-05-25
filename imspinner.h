@@ -1498,6 +1498,36 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerSquareLoading(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2 + PI_DIV_2 );
+        const float arc_angle = PI_DIV_2;
+        const float ht = thickness / 2.f;
+
+        const float best_radius = radius * 1.4f;
+        float a = arc_angle * 3 - PI_DIV_4 + (start > PI_2 ? start * 2.f : 0);
+        ImVec2 last_pos(centre.x + ImCos(a) * best_radius, centre.y + ImSin(a) * best_radius);
+        ImVec2 ppMin, ppMax;
+        for (size_t arc_num = 0; arc_num < 4; ++arc_num) {              
+            a = arc_angle * arc_num - PI_DIV_4 + (start > PI_2 ? start * 2.f : 0);
+            ImVec2 pp(centre.x + ImCos(a) * best_radius, centre.y + ImSin(a) * best_radius);
+            window->DrawList->AddLine(last_pos, pp, color_alpha(color, 1.f), thickness);
+            last_pos = pp;
+
+            if (start < PI_2) {
+                if (arc_num == 2) ppMin = ImVec2(centre.x + ImCos(a) * best_radius * 0.8f, centre.y + ImSin(a) * best_radius * 0.8f);
+                else if (arc_num == 0) ppMax = ImVec2(centre.x + ImCos(a) * best_radius * 0.8f, centre.y + ImSin(a) * best_radius * 0.8f);
+            }
+        }
+
+        if (start < PI_2) {
+            ppMax.y = ppMin.y + (start / PI_2) * (ppMax.y - ppMin.y);
+            window->DrawList->AddRectFilled(ppMin, ppMax, color_alpha(color, 1.f), 0.f);
+        }
+    }
+
     inline void SpinnerFilledArcFade(const char *label, float radius, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3682,7 +3712,9 @@ namespace ImSpinner
           case $(147) ImSpinner::SpinnerHerbertBalls    ("SpinnerHerbertBalls",
                                                           R(16), T(2.3f), C(white), S(2.f) * velocity, DT(4)); break;
           case $(148) ImSpinner::SpinnerHerbertBalls3D  ("SpinnerHerbertBalls3D",
-                                                             R(16), T(3.f), C(white), S(1.4f) * velocity); break;
+                                                          R(16), T(3.f), C(white), S(1.4f) * velocity); break;
+          case $(149) ImSpinner::SpinnerSquareLoading   ("SpinnerSquareLoanding",
+                                                          R(16), T(2), C(white), S(3) * velocity); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
