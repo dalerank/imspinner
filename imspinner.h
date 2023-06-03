@@ -2850,6 +2850,29 @@ namespace ImSpinner
       }
     }
 
+    inline void SpinnerBarChartAdvSine(const char *label, float radius, float thickness, const ImColor &color, float speed, int mode = 0)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const ImGuiStyle &style = GImGui->Style;
+        const float nextItemKoeff = 1.5f;
+        const float yOffsetKoeftt = 0.8f;
+        const float heightSpeed = 0.8f;
+
+        const float start = (float)ImGui::GetTime() * speed;
+        const int bars = radius * 2 / thickness;
+        const float offset = IM_PI / bars;
+        for (int i = 0; i < bars; i++)
+        {
+            float a = start + (IM_PI - i * offset);
+            float halfsx = thickness * ImSin(a);
+            float halfsy = (ImMax(0.1f, ImSin(a) + 1.f)) * radius * 0.5f;
+            window->DrawList->AddRectFilled(ImVec2(pos.x + i * (thickness * nextItemKoeff) - thickness / 2 + halfsx, centre.y + halfsy),
+                                            ImVec2(pos.x + i * (thickness * nextItemKoeff) + thickness / 2 + halfsx, centre.y - halfsy),
+                                            color);
+        }
+    }
+
     inline void SpinnerBarChartRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3743,6 +3766,8 @@ namespace ImSpinner
                                                           R(16), T(2), C(white), S(3) * velocity); break;
           case $(150) ImSpinner::SpinnerTextFading      ("SpinnerTextFading", "Loading",
                                                           R(16), T(15), C(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f)), S(4) * velocity); break;
+          case $(151) ImSpinner::SpinnerBarChartAdvSine ("SpinnerBarChartAdvSine",
+                                                          R(16), T(5), C(white), S(4.8f) * velocity, 0); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
