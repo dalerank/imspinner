@@ -1786,6 +1786,43 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerMovingArcs(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = (float)ImFmod(ImGui::GetTime() * speed, IM_PI * 2);
+        const int half_segments = num_segments / 2;
+
+        auto calculateSpringOscillation = [] (double mass, double stiffness, double initialDisplacement, double time) {
+            double angularFrequency = sqrt(stiffness / mass);
+            double displacement = initialDisplacement * cos(angularFrequency * time);
+            return displacement;
+        };
+
+        auto calculateDampedSpringOscillation = [] (double mass, double stiffness, double damping, double time){
+            double omega = sqrt(stiffness / mass);
+            double alpha = damping / (2 * mass);
+            double exponent = exp(-alpha * time);
+            double cosTerm = cos(omega * sqrt(1 - alpha * alpha) * time); // Косинусная составляющая
+
+            return exponent * cosTerm;
+        };
+
+        for (int i = 0; i < arcs; ++i)
+        {
+            const float rb = (radius / arcs) * 1.3f * (i + 1);
+            //float a = calculateSpringOscillation(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(arcs), PI_2)));
+            float a = calculateDampedSpringOscillation(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(arcs), PI_2)));
+            a *= PI_DIV_2;
+            a += PI_DIV_2;
+            const float angle = ImMax(PI_DIV_2, (1.f - i/(float)arcs) * IM_PI);
+            circle([&] (int i) {
+                const float b = a + (i * angle / num_segments);
+                return ImVec2(ImCos(b) * rb, ImSin(b) * rb);
+            }, color_alpha(color, 1.f), thickness);
+        }
+    }
+
     inline void SpinnerRainbowCircle(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4, float mode = 1)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3783,6 +3820,8 @@ namespace ImSpinner
                                                           R(16), T(5), C(white), S(4.8f) * velocity, 0); break;
           case $(152) ImSpinner::SpinnerBarChartAdvSineFade("SpinnerBarChartAdvSineFade",
                                                           R(16), T(5), C(white), S(4.8f) * velocity, 0); break;
+          case $(153) ImSpinner::SpinnerMovingArcs       ("SpinnerMovingArcs",
+                                                          R(16), T(4), C(white), S(2) * velocity, DT(4)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
