@@ -29,6 +29,7 @@
 #include <functional>
 #include <array>
 #include <vector>
+#include <cmath>
 #include <map>
 
 #ifdef __has_include
@@ -1112,6 +1113,70 @@ namespace ImSpinner
         window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) - w / 2, centre.y - h * yOffsetKoeftt),
                                         ImVec2(pos.x + style.FramePadding.x + i * (w * nextItemKoeff) + w / 2, centre.y + h * yOffsetKoeftt), c);
       }
+    }
+
+    inline void SpinnerFadeTris(const char *label, float radius, const ImColor &color = white, float speed = 2.8f, size_t dim = 2, bool scale = false)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        ImGuiContext &g = *GImGui;
+        const ImGuiStyle &style = g.Style;
+        const float nextItemKoeff = 1.5f;
+        const float yOffsetKoeftt = 0.8f;
+        const float heightSpeed = 0.8f;
+        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+
+        std::vector<ImVec2> points;
+        auto pushPoints = [] (auto &pp, const auto &p1, const auto &p2, const auto &p3) { pp.push_back(p1); pp.push_back(p2); pp.push_back(p3); };
+        auto hsumPoints = [] (const auto &p1, const auto &p2) { return ImVec2((p1.x + p2.x) / 2.f, (p1.y + p2.y) / 2.f); };
+
+        auto splitTriangle = [&] (const ImVec2 &p1, const ImVec2 &p2, const ImVec2 &p3, int numDivisions) {
+            pushPoints(points, p1, p2, p3);
+
+            for (int i = 0; i < numDivisions; i++) {
+                std::vector<ImVec2> newPoints;
+                for (int j = 0; j < points.size() - 2; j += 3) {
+                    ImVec2 p1 = points[j];
+                    ImVec2 p2 = points[j + 1];
+                    ImVec2 p3 = points[j + 2];
+
+                    ImVec2 p4((p1.x + p2.x) / 2, (p1.y + p2.y) / 2);
+                    ImVec2 p5((p2.x + p3.x) / 2, (p2.y + p3.y) / 2);
+                    ImVec2 p6((p3.x + p1.x) / 2, (p3.y + p1.y) / 2);
+
+                    pushPoints(newPoints, p1, p4, p6);
+                    pushPoints(newPoints, p4, p5, p6);
+                    pushPoints(newPoints, p4, p2, p5);
+                    pushPoints(newPoints, p6, p5, p3);
+                }
+                points = newPoints;
+            }
+
+            return points;
+        };
+
+        auto calculateAngle = [] (ImVec2 v1, ImVec2 v2, const ImVec2 c) {
+            v1.x -= c.x; v1.y -= c.y; v2.x -= c.x; v2.y -= c.y;
+            float dotProduct = v1.x * v2.x + v1.y * v2.y;
+            float magnitudeV1 = ImSqrt(v1.x * v1.x + v1.y * v1.y);
+            float magnitudeV2 = ImSqrt(v2.x * v2.x + v2.y * v2.y);
+            float angleInRadians = ImAcos(dotProduct / (magnitudeV1 * magnitudeV2));
+            float crossProduct = v1.x * v2.y - v2.x * v1.y;
+            float signedAngle = std::copysign(angleInRadians, crossProduct);
+            return fmod(signedAngle + PI_2, PI_2);
+        };
+
+        const float offset = IM_PI / dim;
+        ImVec2 p1 = ImVec2(centre.x + ImSin(0) * radius, centre.y + ImCos(0) * radius);
+        ImVec2 p2 = ImVec2(centre.x + ImSin(PI_DIV(3) * 2) * radius, centre.y + ImCos(PI_DIV(3) * 2) * radius);
+        ImVec2 p3 = ImVec2(centre.x + ImSin(PI_DIV(3) * 4) * radius, centre.y + ImCos(PI_DIV(3) * 4) * radius);
+        std::vector<ImVec2> subdividedPoints = splitTriangle(p1, p2, p3, dim);
+        for (size_t i = 0; i < subdividedPoints.size(); i+=3) {
+            ImVec2 trisCenter = hsumPoints(hsumPoints(subdividedPoints[i], subdividedPoints[i + 1]), subdividedPoints[i + 2]);
+            const float angle = calculateAngle(p1, trisCenter, centre);
+            ImColor c = color_alpha(color, 1.f - ImMax(0.1f, ImFmod(start + angle, PI_2) / PI_2));
+            window->DrawList->AddTriangleFilled(subdividedPoints[i], subdividedPoints[i+1], subdividedPoints[i+2], c);
+        }
     }
 
     inline void SpinnerBarsRotateFade(const char *label, float rmin, float rmax , float thickness, const ImColor &color = white, float speed = 2.8f, size_t bars = 6)
@@ -3822,6 +3887,8 @@ namespace ImSpinner
                                                           R(16), T(5), C(white), S(4.8f) * velocity, 0); break;
           case $(153) ImSpinner::SpinnerMovingArcs       ("SpinnerMovingArcs",
                                                           R(16), T(4), C(white), S(2) * velocity, DT(4)); break;
+          case $(154) ImSpinner::SpinnerFadeTris         ("SpinnerFadeTris",
+                                                          R(20), C(white), S(5.f) * velocity, DT(2)); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
