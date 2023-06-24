@@ -1220,30 +1220,28 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerAngTwin(const char *label, float radius1, float radius2, float thickness, const ImColor &color = white, const ImColor &bg = half_white, float speed = 2.8f, float angle = IM_PI, size_t arcs = 1)
+    inline void SpinnerAngTwin(const char *label, float radius1, float radius2, float thickness, const ImColor &color = white, const ImColor &bg = half_white, float speed = 2.8f, float angle = IM_PI, size_t arcs = 1, int mode = 0)
     {
       float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      const float start = (float)ImGui::GetTime()* speed;
+      float start = (float)ImGui::GetTime()* speed;
       const float bg_angle_offset = PI_2 / num_segments;
 
       window->DrawList->PathClear();
-      for (size_t i = 0; i <= num_segments; i++)
-      {
+      for (size_t i = 0; i <= num_segments; i++) {
         const float a = start + (i * bg_angle_offset);
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1));
       }
       window->DrawList->PathStroke(color_alpha(bg, 1.f), false, thickness);
 
       const float angle_offset = angle / num_segments;
-      for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
-      {
+      for (size_t arc_num = 0; arc_num < arcs; ++arc_num) {
           window->DrawList->PathClear();
           float arc_start = 2 * IM_PI / arcs;
-          for (size_t i = 0; i < num_segments; i++)
-          {
-            const float a = arc_start * arc_num + start + (i * angle_offset);
+          float b = mode ? start + damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0) : start;
+          for (size_t i = 0; i < num_segments; i++) {
+            const float a = b + arc_start * arc_num + (i * angle_offset);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2));
           }
           window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
@@ -3873,6 +3871,8 @@ namespace ImSpinner
                                                           R(16), T(2), C(white), S(4) * velocity, DT(16), 1); break;
           case $(157) ImSpinner::SpinnerTwinAng360       ("SpinnerTwinAng360",
                                                           R(16), 11, T(2), C(white), CB(ImColor(255, 0, 0)), 2.4f, 2.1f, 1); break;
+          case $(158) ImSpinner::SpinnerAngTwin          ("SpinnerAngTwin1",
+                                                          R(18), 13, T(2), C(ImColor(255, 0, 0)), CB(white), S(3) * velocity, A(1.3), DT(3), 1); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
