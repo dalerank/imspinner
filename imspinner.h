@@ -1248,7 +1248,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerArcRotation(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerArcRotation(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1256,13 +1256,12 @@ namespace ImSpinner
       const float arc_angle = PI_2 / (float)arcs;
       const float angle_offset = arc_angle / num_segments;
       
-      for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
-      {
+      for (size_t arc_num = 0; arc_num < arcs; ++arc_num) {
         window->DrawList->PathClear();
         ImColor c = color_alpha(color, ImMax(0.1f, arc_num / (float)arcs));
-        for (size_t i = 0; i <= num_segments; i++)
-        {
-          const float a = start + arc_angle * arc_num + (i * angle_offset);
+        float b = mode ? start + damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0) : start;
+        for (size_t i = 0; i <= num_segments; i++) {
+          const float a = b + arc_angle * arc_num + (i * angle_offset);
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
         }
         window->DrawList->PathStroke(c, false, thickness);
@@ -2041,12 +2040,13 @@ namespace ImSpinner
     }
 
 
-    inline void SpinnerGooeyBalls(const char *label, float radius, const ImColor &color, float speed)
+    inline void SpinnerGooeyBalls(const char *label, float radius, const ImColor &color, float speed, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
-      const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
-      const float radius1 = (0.3f + 0.3f * ImSin(start)) * radius;
+      float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
+      start = mode ? damped_pring(1, 10.f, 1.0f, ImSin(start), 1, 0) : start;
+      const float radius1 = (0.4f + 0.3f * ImSin(start)) * radius;
       const float radius2 = radius - radius1;
 
       window->DrawList->AddCircleFilled(ImVec2(centre.x - radius + radius1, centre.y), radius1, color_alpha(color, 1.f), num_segments);
@@ -3656,7 +3656,7 @@ namespace ImSpinner
           case $(49) ImSpinner::SpinnerMoonLine         ("SpinnerMoonLine",
                                                           R(16), T(3), C(ImColor(200, 80, 0)), ImColor(80, 80, 80), S(5) * velocity); break;
           case $(50) ImSpinner::SpinnerArcRotation      ("SpinnerArcRotation",
-                                                          R(13), T(5), C(white), S(3) * velocity, 4); break;
+                                                          R(13), T(5), C(white), S(3) * velocity, DT(4)); break;
           case $(51) ImSpinner::SpinnerFluid            ("SpinnerFluid",
                                                           R(16), C(ImColor(0, 0, 255)), S(3.8f) * velocity, 4); break;
           case $(52) ImSpinner::SpinnerArcFade          ("SpinnerArcFade",
@@ -3873,6 +3873,10 @@ namespace ImSpinner
                                                           R(16), 11, T(2), C(white), CB(ImColor(255, 0, 0)), 2.4f, 2.1f, 1); break;
           case $(158) ImSpinner::SpinnerAngTwin          ("SpinnerAngTwin1",
                                                           R(18), 13, T(2), C(ImColor(255, 0, 0)), CB(white), S(3) * velocity, A(1.3), DT(3), 1); break;
+          case $(159) ImSpinner::SpinnerGooeyBalls       ("SpinnerGooeyBalls",
+                                                          R(16), C(white), S(2.f) * velocity, 1); break;
+          case $(160) ImSpinner::SpinnerArcRotation      ("SpinnerArcRotation",
+                                                          R(13), T(2.5), C(white), S(3) * velocity, DT(15), 1); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
