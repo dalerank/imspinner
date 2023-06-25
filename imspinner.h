@@ -152,7 +152,7 @@ namespace ImSpinner
     
     inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w *= alpha * ImGui::GetStyle().Alpha; return c; }
 
-    float damped_pring (double mass, double stiffness, double damping, double time, float a = PI_DIV_2, float b = PI_DIV_2) {
+    inline float damped_pring (double mass, double stiffness, double damping, double time, float a = PI_DIV_2, float b = PI_DIV_2) {
         double omega = sqrt(stiffness / mass);
         double alpha = damping / (2 * mass);
         double exponent = exp(-alpha * time);
