@@ -152,7 +152,7 @@ namespace ImSpinner
     
     inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w *= alpha * ImGui::GetStyle().Alpha; return c; }
 
-    inline float damped_pring (double mass, double stiffness, double damping, double time, float a = PI_DIV_2, float b = PI_DIV_2) {
+    inline float damped_spring (double mass, double stiffness, double damping, double time, float a = PI_DIV_2, float b = PI_DIV_2) {
         double omega = sqrt(stiffness / mass);
         double alpha = damping / (2 * mass);
         double exponent = exp(-alpha * time);
@@ -160,6 +160,17 @@ namespace ImSpinner
         float result = exponent * cosTerm;
         return ((result *= a) + b);
     };
+
+    float damped_gravity(float limtime) {
+        float time = 0.0f, initialHeight = 10.f, height = initialHeight, velocity = 0.f, prtime = 0.0f;
+
+        while (height >= 0.0) {
+            if (prtime >= limtime) { return height / 10.f; }
+            time += 0.01f; prtime += 0.01f;
+            height = initialHeight - 0.5 * 9.81f * time * time;
+            if (height < 0.0) { initialHeight = 0.0; time = 0.0; }
+        }
+    }
     
     /*
         const char *label: A string label for the spinner, used to identify it in ImGui.
@@ -223,24 +234,19 @@ namespace ImSpinner
     }
 
     // SpinnerAng is a function that draws a spinner widget with a given angle.
-    inline void SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = white, const ImColor &bg = white, float speed = 2.8f, float angle = IM_PI)
+    inline void SpinnerAng(const char *label, float radius, float thickness, const ImColor &color = white, const ImColor &bg = white, float speed = 2.8f, float angle = IM_PI, int mode = 0)
     {
-        // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
-        SPINNER_HEADER(pos, size, centre, num_segments);
-
-        // The start angle of the spinner is calculated based on the current time and the specified speed.
-        const float start = (float)ImGui::GetTime() * speed;
-
-        // Draw the background of the spinner using the `circle` function, with the specified background color and thickness.
-        circle([&] (int i) {
-            // Calculate the angle for each segment based on the start angle and the number of segments.
-            const float a = start + (i * (PI_2 / (num_segments - 1)));
+        SPINNER_HEADER(pos, size, centre, num_segments);                            // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
+        float start = (float)ImGui::GetTime() * speed;                        // The start angle of the spinner is calculated based on the current time and the specified speed.
+       
+        circle([&] (int i) {                                                         // Draw the background of the spinner using the `circle` function, with the specified background color and thickness.
+            const float a = start + (i * (PI_2 / (num_segments - 1)));               // Calculate the angle for each segment based on the start angle and the number of segments.
             return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
         }, color_alpha(bg, 1.f), thickness);
 
-        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
-        circle([&] (int i) {
-            const float a = start + (i * angle / num_segments);
+        const float b = mode ? damped_gravity(ImSin(start * 1.1f)) * angle : 0.f;
+        circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
+            const float a = start - b + (i * angle / num_segments);
             return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
         }, color_alpha(color, 1.f), thickness);
     }
@@ -249,21 +255,21 @@ namespace ImSpinner
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
-        const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
+        const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);                         // Calculate the starting angle based on the current time and speed
         const float bg_angle_offset = PI_2 / num_segments - 1;
 
-        num_segments *= 2;
+        num_segments *= 2;                                                                          // Double the number of segments for the background ringxxxxxxx
         circle([&] (int i) { 
-            return ImVec2(ImCos(i * bg_angle_offset) * radius, ImSin(i * bg_angle_offset) * radius);
+            return ImVec2(ImCos(i * bg_angle_offset) * radius, ImSin(i * bg_angle_offset) * radius); // Draw the background ring
         }, color_alpha(bg, 1.f), thickness);
 
         float out_h, out_s, out_v;
-        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
+        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v); // Convert the color to HSV for variation in segment colors
     
-        const float start_ang = (start < PI_DIV_2) ? 0.f : (start - PI_DIV_2) * 4.f;
+        const float start_ang = (start < PI_DIV_2) ? 0.f : (start - PI_DIV_2) * 4.f;                // Calculate the angles and delta angle for each segment
         const float angle_offset = ((start < PI_DIV_2) ? PI_2 : (PI_2 - start_ang)) / segments;
         const float delta_angle = (start < PI_DIV_2) ? ImSin(start) * angle_offset : angle_offset;
-        for (int i = 0; i < segments; ++i)
+        for (int i = 0; i < segments; ++i)                                                          // Draw each segment of the loading ring
         {
             window->DrawList->PathClear();
             const float begin_ang = start_ang - PI_DIV_2 + delta_angle * i;
@@ -469,7 +475,7 @@ namespace ImSpinner
 
       const float offset = PI_DIV(dots);
       for (size_t i = 0; i < dots; i++) {
-        float a = mode ? damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(dots*2), PI_2))) : start + (IM_PI - i * offset);
+        float a = mode ? damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(dots*2), PI_2))) : start + (IM_PI - i * offset);
         float y =  centre.y + ImSin(a * heightSpeed) * thickness * heightKoeff;
         window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), ImMin(y, centre.y)), thickness, color_alpha(color, 1.f), 8);
       }
@@ -787,7 +793,7 @@ namespace ImSpinner
 
       for (int i = 0; i < dots; i++)
       {
-        float a = mode ? start + i * PI_2_DIV(dots) + damped_pring(1, 10.f, 1.0f, ImSin(start + i * PI_2_DIV(dots)), PI_2_DIV(dots), 0)
+        float a = mode ? start + i * PI_2_DIV(dots) + damped_spring(1, 10.f, 1.0f, ImSin(start + i * PI_2_DIV(dots)), PI_2_DIV(dots), 0)
                        : start + (i * PI_2_DIV(dots));
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, color_alpha(color, 1.f), 8);
       }
@@ -1028,7 +1034,7 @@ namespace ImSpinner
 
       window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments + 1; i++) {
-        ared = ( mode ? damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start1 + 0 * PI_DIV(2), PI_2))) : start1) + (i * angle_offset);
+        ared = ( mode ? damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start1 + 0 * PI_DIV(2), PI_2))) : start1) + (i * angle_offset);
         if (i * angle_offset < ared_min * 2) continue;
         if (i * angle_offset > bofsset * 2.f) break;
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ared) * radius2, centre.y + ImSin(ared) * radius2));
@@ -1037,7 +1043,7 @@ namespace ImSpinner
 
       window->DrawList->PathClear();
       for (size_t i = 0; i <= num_segments + 1; i++) {
-        ared = (mode ? damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start2 + 1 * PI_DIV(2), PI_2))) : start2) + (i * angle_offset);
+        ared = (mode ? damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start2 + 1 * PI_DIV(2), PI_2))) : start2) + (i * angle_offset);
         if (i * angle_offset < ared_min * 2) continue;
         if (i * angle_offset > bofsset * 2.f) break;
         window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(-ared) * radius1, centre.y + ImSin(-ared) * radius1));
@@ -1239,7 +1245,7 @@ namespace ImSpinner
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num) {
           window->DrawList->PathClear();
           float arc_start = 2 * IM_PI / arcs;
-          float b = mode ? start + damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0) : start;
+          float b = mode ? start + damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0) : start;
           for (size_t i = 0; i < num_segments; i++) {
             const float a = b + arc_start * arc_num + (i * angle_offset);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2));
@@ -1259,7 +1265,7 @@ namespace ImSpinner
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num) {
         window->DrawList->PathClear();
         ImColor c = color_alpha(color, ImMax(0.1f, arc_num / (float)arcs));
-        float b = mode ? start + damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0) : start;
+        float b = mode ? start + damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0) : start;
         for (size_t i = 0; i <= num_segments; i++) {
           const float a = b + arc_angle * arc_num + (i * angle_offset);
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
@@ -1850,10 +1856,9 @@ namespace ImSpinner
         const float start = (float)ImFmod(ImGui::GetTime() * speed, IM_PI * 2);
         const int half_segments = num_segments / 2;
 
-        for (int i = 0; i < arcs; ++i)
-        {
+        for (int i = 0; i < arcs; ++i) {
             const float rb = (radius / arcs) * 1.3f * (i + 1);
-            float a = damped_pring(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(arcs), PI_2)));
+            float a = damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(arcs), PI_2)));
             const float angle = ImMax(PI_DIV_2, (1.f - i/(float)arcs) * IM_PI);
             circle([&] (int i) {
                 const float b = a + (i * angle / num_segments);
@@ -1923,7 +1928,7 @@ namespace ImSpinner
               float start = ImFmod((float)ImGui::GetTime() * speed * (1 + rkoeff[i % 9]) - (IM_PI / 12.f) * j, IM_PI);
               float sign = ((i % 2 == 0) ? 1.f : -1.f);
               float offset = (i == 0) ? 0.f : (floorf((i+1) / 2.f + 0.1f) * sign * 2.f * thickness);
-              float maxht = ImMax(ImSin(ImFmod(hmax, IM_PI)), (0.7f + rkoeff[i % 9])) * radius;
+              float maxht = damped_gravity(ImSin(ImFmod(hmax, IM_PI))) * radius;
               window->DrawList->AddCircleFilled(ImVec2(centre.x + offset, centre.y + radius - ImSin(start) * 2.f * maxht), thickness, c, 8);
           }
       }
@@ -2045,7 +2050,7 @@ namespace ImSpinner
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
-      start = mode ? damped_pring(1, 10.f, 1.0f, ImSin(start), 1, 0) : start;
+      start = mode ? damped_spring(1, 10.f, 1.0f, ImSin(start), 1, 0) : start;
       const float radius1 = (0.4f + 0.3f * ImSin(start)) * radius;
       const float radius2 = radius - radius1;
 
@@ -3877,6 +3882,8 @@ namespace ImSpinner
                                                           R(16), C(white), S(2.f) * velocity, 1); break;
           case $(160) ImSpinner::SpinnerArcRotation      ("SpinnerArcRotation",
                                                           R(13), T(2.5), C(white), S(3) * velocity, DT(15), 1); break;
+          case $(161) ImSpinner::SpinnerAng              ("SpinnerAng90",
+                                                          R(16), T(1), C(white), CB(ImColor(255, 255, 255, 128)), S(8.f) * velocity, A(PI_DIV_2), 1); break;
           }
           ImGui::PopID();
           ImGui::EndChild();
