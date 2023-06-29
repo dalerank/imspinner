@@ -161,7 +161,7 @@ namespace ImSpinner
         return ((result *= a) + b);
     };
 
-    float damped_gravity(float limtime) {
+    inline float damped_gravity(float limtime) {
         float time = 0.0f, initialHeight = 10.f, height = initialHeight, velocity = 0.f, prtime = 0.0f;
 
         while (height >= 0.0) {
