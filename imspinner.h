@@ -31,6 +31,7 @@
 #include <vector>
 #include <cmath>
 #include <map>
+#include <cctype>
 
 #ifdef __has_include
     #if !__has_include(<imgui.h>)
