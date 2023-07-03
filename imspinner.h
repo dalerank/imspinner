@@ -47,7 +47,14 @@ namespace ImSpinner
     static const ImColor white{1.f, 1.f, 1.f, 1.f};
     static const ImColor half_white{1.f, 1.f, 1.f, 0.5f};
     static const ImColor red{1.f,0.f,0.f,1.f};
-#define DECLPROP(name,type,def) struct name { type value = def; operator type() { return value; } };
+
+#define DECLPROP(name, type, def) \
+    struct name { \
+      type value = def; \
+      operator type() { return value; } \
+      name(const type& v) : value(v) {} \
+    };
+
     enum SpinnerTypeT {
       e_st_rainbow = 0,
       e_st_angle,
@@ -147,8 +154,18 @@ namespace ImSpinner
 #undef IMPLRPOP
     }
 
-#define SPINNER_HEADER(pos, size, centre, num_segments) ImVec2 pos, size, centre; int num_segments; if (!detail::SpinnerBegin(label, radius, pos, size, centre, num_segments)) { return; }; ImGuiWindow *window = ImGui::GetCurrentWindow(); \
-    auto circle = [&] (auto point_func, auto dbc, auto dth) { window->DrawList->PathClear(); for (int i = 0; i < num_segments; i++) { ImVec2 p = point_func(i); window->DrawList->PathLineTo(ImVec2(centre.x + p.x, centre.y + p.y)); } window->DrawList->PathStroke(dbc, false, dth); }
+#define SPINNER_HEADER(pos, size, centre, num_segments) \
+  ImVec2 pos, size, centre; int num_segments; \
+  if (!detail::SpinnerBegin(label, radius, pos, size, centre, num_segments)) { return; }; \
+  ImGuiWindow *window = ImGui::GetCurrentWindow(); \
+  auto circle = [&] (const std::function<ImVec2 (int)>& point_func, ImU32 dbc, float dth) { \
+    window->DrawList->PathClear(); \
+    for (int i = 0; i < num_segments; i++) { \
+      ImVec2 p = point_func(i); \
+      window->DrawList->PathLineTo(ImVec2(centre.x + p.x, centre.y + p.y)); \
+    } \
+    window->DrawList->PathStroke(dbc, 0, dth); \
+  }
     
     inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w *= alpha * ImGui::GetStyle().Alpha; return c; }
 
@@ -222,7 +239,7 @@ namespace ImSpinner
 
         // Calculate the radius of the bottom of the heart.
         const float rb = radius * ImMax(0.8f, ImSin(start * 2));
-        auto scale = [rb] (auto v) { return v / 16.f * rb; };
+        auto scale = [rb] (float v) { return v / 16.f * rb; };
 
         // Draw the heart spinner by calling the circle function, passing in a lambda function that defines the shape of the heart.
         circle([&] (int i) {
@@ -380,7 +397,7 @@ namespace ImSpinner
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
-        auto ghalf_pi = [] (auto f) -> float { return ImMin(f, PI_DIV_2); };
+        auto ghalf_pi = [] (float f) -> float { return ImMin(f, PI_DIV_2); };
         const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI);
         const float bg_angle_offset = PI_2_DIV(lines);
         for (size_t j = 0; j < 3; ++j)
@@ -905,7 +922,7 @@ namespace ImSpinner
       const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
       const float angle_offset = PI_2_DIV(num_segments - 1);
 
-      circle([&] (auto i) {
+      circle([&] (int i) {
           const float a = (i * angle_offset);
           return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
       }, color_alpha(color1, 1.f), thickness);
@@ -929,7 +946,7 @@ namespace ImSpinner
         const float angle_offset = PI_2_DIV(num_segments - 1);
         num_segments *= 4;
 
-        circle([&] (auto i) {
+        circle([&] (int i) {
             const float a = (i * angle_offset);
             return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
         }, color_alpha(colorbg, 1.f), thickness);
@@ -1128,8 +1145,8 @@ namespace ImSpinner
         const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
 
         std::vector<ImVec2> points;
-        auto pushPoints = [] (auto &pp, const auto &p1, const auto &p2, const auto &p3) { pp.push_back(p1); pp.push_back(p2); pp.push_back(p3); };
-        auto hsumPoints = [] (const auto &p1, const auto &p2) { return ImVec2((p1.x + p2.x) / 2.f, (p1.y + p2.y) / 2.f); };
+        auto pushPoints = [] (std::vector<ImVec2> &pp, const ImVec2 &p1, const ImVec2 &p2, const ImVec2 &p3) { pp.push_back(p1); pp.push_back(p2); pp.push_back(p3); };
+        auto hsumPoints = [] (const ImVec2 &p1, const ImVec2 &p2) { return ImVec2((p1.x + p2.x) / 2.f, (p1.y + p2.y) / 2.f); };
 
         auto splitTriangle = [&] (const ImVec2 &p1, const ImVec2 &p2, const ImVec2 &p3, int numDivisions) {
             pushPoints(points, p1, p2, p3);
@@ -2229,7 +2246,7 @@ namespace ImSpinner
 
       window->DrawList->AddCircleFilled(centre, radius, bg, num_segments);
 
-      auto draw_gradient = [&] (auto b, auto e, auto th) {
+      auto draw_gradient = [&] (const std::function<float (int)>& b, const std::function<float (int)>& e, const std::function<float (int)>& th) {
         for (int i = 0; i < num_segments; i++)
         {
           window->DrawList->AddLine(ImVec2(centre.x + ImCos(start + b(i)) * radius, centre.y + ImSin(start + b(i)) * radius),
@@ -2240,22 +2257,22 @@ namespace ImSpinner
 
       };
 
-      draw_gradient([&] (auto i) { return (num_segments + i) * angle_offset; },
-                    [&] (auto i) { return (num_segments + i + 1) * angle_offset; },
-                    [&] (auto i) { return thickness - th * i; });
+      draw_gradient([&] (int i) { return (num_segments + i) * angle_offset; },
+                    [&] (int i) { return (num_segments + i + 1) * angle_offset; },
+                    [&] (int i) { return thickness - th * i; });
 
-      draw_gradient([&] (auto i) { return (i) * angle_offset; },
-                    [&] (auto i) { return (i + 1) * angle_offset; },
-                    [&] (auto i) { return th * i; });
+      draw_gradient([&] (int i) { return (i) * angle_offset; },
+                    [&] (int i) { return (i + 1) * angle_offset; },
+                    [&] (int i) { return th * i; });
 
-      draw_gradient([&] (auto i) { return (num_segments + i) * angle_offset; },
-                    [&] (auto i) { return (num_segments + i + 1) * angle_offset; },
-                    [&] (auto i) { return thickness - th * i; });
+      draw_gradient([&] (int i) { return (num_segments + i) * angle_offset; },
+                    [&] (int i) { return (num_segments + i + 1) * angle_offset; },
+                    [&] (int i) { return thickness - th * i; });
 
       const float b_angle_offset = (PI_2 - angle) / num_segments; 
-      draw_gradient([&] (auto i) { return num_segments * angle_offset * 2.f + (i * b_angle_offset); },
-                    [&] (auto i) { return num_segments * angle_offset * 2.f + ((i + 1) * b_angle_offset); },
-                    [] (auto) { return 1.f; });
+      draw_gradient([&] (int i) { return num_segments * angle_offset * 2.f + (i * b_angle_offset); },
+                    [&] (int i) { return num_segments * angle_offset * 2.f + ((i + 1) * b_angle_offset); },
+                    [] (int) { return 1.f; });
     }
 
     inline void SpinnerCircleDrop(const char *label, float radius, float thickness, float thickness_drop, const ImColor &color = white, const ImColor &bg = half_white, float speed = 2.8f, float angle = IM_PI)
@@ -2300,7 +2317,7 @@ namespace ImSpinner
       window->DrawList->AddCircleFilled(centre, thickness, color_alpha(bg, 1.f), num_segments);
       window->DrawList->AddCircleFilled(centre, thickness, color_alpha(color, ImMax(0.1f, ImMin(lerp_koeff, 1.f))), num_segments);
 
-      auto PathArc = [&] (auto c, auto th) {
+      auto PathArc = [&] (const ImColor& c, float th) {
         window->DrawList->PathClear();
         const float bg_angle_offset = PI_2 / num_segments;
         for (int i = 0; i <= num_segments; i++)
@@ -2323,7 +2340,7 @@ namespace ImSpinner
         window->DrawList->AddCircleFilled(pc, thickness, bg, num_segments);
         window->DrawList->AddCircleFilled(pc, thickness, color_alpha(color, ImMax(0.1f, ImMin(lerp_koeff, 1.f))), num_segments);
 
-        auto PathArc = [&] (auto as, auto c, auto th, auto r) {
+        auto PathArc = [&] (float as, const ImColor& c, float th, float r) {
             window->DrawList->PathClear();
             const float bg_angle_offset = PI_DIV(2) / num_segments;
             for (int i = 0; i <= num_segments; i++)
@@ -2359,7 +2376,7 @@ namespace ImSpinner
       bars = ImMin<size_t>(bars, 32);
 
       const float rmin = radius - thickness;
-      auto get_points = [&] (auto left, auto right) -> std::array<ImVec2, 4> {
+      auto get_points = [&] (float left, float right) -> std::array<ImVec2, 4> {
         return {
           ImVec2(centre.x + ImCos(left) * rmin, centre.y + ImSin(left) * rmin),
           ImVec2(centre.x + ImCos(left) * radius, centre.y + ImSin(left) * radius),
@@ -2368,7 +2385,7 @@ namespace ImSpinner
         };
       };
 
-      auto draw_sectors = [&] (auto s, auto color_func) {
+      auto draw_sectors = [&] (float s, const std::function<ImU32 (size_t)>& color_func) {
         for (size_t i = 0; i <= bars; i++) {
           float left = s + (i * angle_offset) - angle_offset_t;
           float right = s + (i * angle_offset) + angle_offset_t;
@@ -2377,8 +2394,8 @@ namespace ImSpinner
         }
       };
 
-      draw_sectors(0, [&] (auto) { return color_alpha(bg, 0.1f); });
-      draw_sectors(start, [&] (auto i) { return color_alpha(bg, (i / (float)bars) - 0.5f); });
+      draw_sectors(0, [&] (size_t) { return color_alpha(bg, 0.1f); });
+      draw_sectors(start, [&] (size_t i) { return color_alpha(bg, (i / (float)bars) - 0.5f); });
     }
 
     using LeafColor = ImColor (int);
@@ -2392,7 +2409,7 @@ namespace ImSpinner
       bars = ImMin<size_t>(bars, 32);
 
       const float rmin = radius - thickness - 1;
-      auto get_points = [&] (auto left, auto right) -> std::array<ImVec2, 4> {
+      auto get_points = [&] (float left, float right) -> std::array<ImVec2, 4> {
         return {
           ImVec2(centre.x + ImCos(left - 0.1f) * radius, centre.y + ImSin(left - 0.1f) * radius),
           ImVec2(centre.x + ImCos(right + 0.15f) * radius, centre.y + ImSin(right + 0.15f) * radius),
@@ -2400,7 +2417,7 @@ namespace ImSpinner
         };
       };
 
-      auto draw_sectors = [&] (auto s, auto color_func) {
+      auto draw_sectors = [&] (float s, const std::function<ImU32 (int)>& color_func) {
         for (size_t i = 0; i <= bars; i++) {
           float left = s + (i * angle_offset) - angle_offset_t;
           float right = s + (i * angle_offset) + angle_offset_t;
@@ -2428,7 +2445,7 @@ namespace ImSpinner
       }
       window->DrawList->PathStroke(bg, false, thickness);
 
-      auto draw_gradient = [&] (auto b, auto e, auto c) {
+      auto draw_gradient = [&] (const std::function<float (size_t)>& b, const std::function<float (size_t)>& e, const std::function<ImU32 (size_t)>& c) {
         for (size_t i = 0; i < num_segments; i++)
         {
           window->DrawList->AddLine(ImVec2(centre.x + ImCos(start + b(i)) * radius, centre.y + ImSin(start + b(i)) * radius),
@@ -2438,13 +2455,13 @@ namespace ImSpinner
         }
       };
 
-      draw_gradient([&] (auto i) { return (i) * angle_offset; },
-                    [&] (auto i) { return (i + 1) * angle_offset; },
-                    [&] (auto i) { return color_alpha(color, (i / (float)num_segments)); });
+      draw_gradient([&] (size_t i) { return (i) * angle_offset; },
+                    [&] (size_t i) { return (i + 1) * angle_offset; },
+                    [&] (size_t i) { return color_alpha(color, (i / (float)num_segments)); });
 
-      draw_gradient([&] (auto i) { return (num_segments + i) * angle_offset; },
-                    [&] (auto i) { return (num_segments + i + 1) * angle_offset; },
-                    [&] (auto i) { return color_alpha(color, 1.f - (i / (float)num_segments)); });
+      draw_gradient([&] (size_t i) { return (num_segments + i) * angle_offset; },
+                    [&] (size_t i) { return (num_segments + i + 1) * angle_offset; },
+                    [&] (size_t i) { return color_alpha(color, 1.f - (i / (float)num_segments)); });
     }
 
     inline void SpinnerRotateSegments(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4, size_t layers = 1)
@@ -2484,7 +2501,7 @@ namespace ImSpinner
       const float step = angle / num_segments;
       const float th = thickness / num_segments;
 
-      auto get_coord = [&](float const& a, float const& t) -> auto {
+      auto get_coord = [&](float const& a, float const& t) -> std::pair<float, float> {
           return std::make_pair((a * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))), (a * ImSin(t) * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))));
       };
 
@@ -3201,7 +3218,7 @@ namespace ImSpinner
       const float angle_offset_t = angle_offset * 0.3f;
       arcs = ImMin<size_t>(arcs, 32);
 
-      auto get_points = [&] (auto left, auto right, auto r) -> std::array<ImVec2, 4> {
+      auto get_points = [&] (float left, float right, float r) -> std::array<ImVec2, 4> {
         const float rmin = r - thickness;
         return {
           ImVec2(centre.x + ImCos(left) * rmin, centre.y + ImSin(left) * rmin),
@@ -3211,7 +3228,7 @@ namespace ImSpinner
         };
       };
 
-      auto draw_sectors = [&] (auto s, auto color_func, auto r) {
+      auto draw_sectors = [&] (float s, const std::function<ImColor (size_t)>& color_func, float r) {
         for (size_t i = 0; i <= arcs; i++) {
           float left = s + (i * angle_offset) - angle_offset_t;
           float right = s + (i * angle_offset) + angle_offset_t;
@@ -3222,9 +3239,9 @@ namespace ImSpinner
 
       float out_h, out_s, out_v;
       ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
-      draw_sectors(start, [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius);
+      draw_sectors(start, [&] (size_t i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius);
       switch (mode) {
-      case 0: draw_sectors(-start * 0.78f, [&] (auto i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius - thickness - 2); break;
+      case 0: draw_sectors(-start * 0.78f, [&] (size_t i) { return ImColor::HSV(out_h + i * 0.31f, out_s, out_v); }, radius - thickness - 2); break;
       case 1:
         {
           ImColor c = color;
@@ -3298,7 +3315,7 @@ namespace ImSpinner
         bars = ImMin<size_t>(bars, 32);
 
         const float rmin = radius - thickness;
-        auto get_points = [&] (auto left, auto right, auto r1, auto r2) -> std::array<ImVec2, 4> {
+        auto get_points = [&] (float left, float right, float r1, float r2) -> std::array<ImVec2, 4> {
             return {
                 ImVec2(centre.x + ImCos(left) * r1, centre.y + ImSin(left) * r1),
                 ImVec2(centre.x + ImCos(left) * r2, centre.y + ImSin(left) * r2),
