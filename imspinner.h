@@ -3949,7 +3949,8 @@ namespace ImSpinner
               // Show tooltip over spinner
               if( ImGui::IsItemHovered() )
               {
-                if( ImGui::BeginTooltip() )
+                //if( )
+                ImGui::BeginTooltip();
                 {
                   // Number
                   ImGui::TextDisabled("%04u", current_spi);
@@ -3999,7 +4000,7 @@ namespace ImSpinner
             ImGuiColorEditFlags_NoInputs       |
             ImGuiColorEditFlags_NoAlpha;
 
-          if(__nn.count(last_cci)) ImGui::SeparatorText(__nn[last_cci]);
+          if(__nn.count(last_cci)) ImGui::Separator();
 
           if (__rr.count(last_cci)) ImGui::SliderFloat("Radius", &__rr[last_cci], 0.0f, 100.0f, "radius = %.2f");
           if (__tt.count(last_cci)) ImGui::SliderFloat("Thickness", &__tt[last_cci], 0.0f, 100.0f, "thickness = %.2f");
