@@ -171,6 +171,7 @@ namespace ImSpinner
             height = initialHeight - 0.5 * 9.81f * time * time;
             if (height < 0.0) { initialHeight = 0.0; time = 0.0; }
         }
+        return 0.f;
     }
     
     /*
