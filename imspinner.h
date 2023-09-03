@@ -3114,6 +3114,28 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerSquishSquare(const char *label, float radius, const ImColor &color, float speed)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+        
+        float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+        const float side = ImSin((float)-start) * radius;
+        bool type = (start > IM_PI) ? 1 : 0;
+        if (type) {
+            if (start > IM_PI && start < IM_PI + PI_DIV_2) {
+                window->DrawList->AddRectFilled(ImVec2(centre.x - side, centre.y - radius), ImVec2(centre.x + side, centre.y + radius), color_alpha(color, 1.f));
+            } else {
+                window->DrawList->AddRectFilled(ImVec2(centre.x - radius, centre.y - side), ImVec2(centre.x + radius, centre.y + side), color_alpha(color, 1.f));
+            }
+        } else {
+            if (start < PI_DIV_2) {
+                window->DrawList->AddRectFilled(ImVec2(centre.x - radius, centre.y - side), ImVec2(centre.x + radius, centre.y + side), color_alpha(color, 1.f));
+            } else {
+                window->DrawList->AddRectFilled(ImVec2(centre.x - side, centre.y - radius), ImVec2(centre.x + side, centre.y + radius), color_alpha(color, 1.f));
+            }
+        }
+    }
+
     inline void SpinnerFluid(const char *label, float radius, const ImColor &color, float speed, int bars = 3)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3910,6 +3932,10 @@ namespace ImSpinner
                                                           R(16), T(1), C(white), CB(ImColor(255, 255, 255, 128)), S(8.f) * velocity, A(PI_DIV_2), 1); break;
           case $(162) ImSpinner::SpinnerAng              (Name("SpinnerAng90SinRad"),
                                                           R(16), T(1), C(white), CB(ImColor(255, 255, 255, 0)), S(8.f) * velocity, A(0.75f * PI_2), 2); break;
+          case $(163) ImSpinner::SpinnerSquishSquare     (Name("SpinnerSquishSquare"),
+                                                          R(16), C(white), S(8.f) * velocity); break;
+
+              
           }
 #undef $
         }
