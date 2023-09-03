@@ -257,13 +257,14 @@ namespace ImSpinner
     {
         SPINNER_HEADER(pos, size, centre, num_segments);                            // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
         float start = (float)ImGui::GetTime() * speed;                        // The start angle of the spinner is calculated based on the current time and the specified speed.
-       
+        radius = (mode == 2) ? (0.8f + ImCos(start) * 0.2f) * radius : radius;
+
         circle([&] (int i) {                                                         // Draw the background of the spinner using the `circle` function, with the specified background color and thickness.
             const float a = start + (i * (PI_2 / (num_segments - 1)));               // Calculate the angle for each segment based on the start angle and the number of segments.
             return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
         }, color_alpha(bg, 1.f), thickness);
 
-        const float b = mode ? damped_gravity(ImSin(start * 1.1f)) * angle : 0.f;
+        const float b = (mode == 1) ? damped_gravity(ImSin(start * 1.1f)) * angle : 0.f;
         circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
             const float a = start - b + (i * angle / num_segments);
             return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
@@ -3536,7 +3537,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 160;
+      constexpr int num_spinners = 170;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -3905,8 +3906,10 @@ namespace ImSpinner
                                                           R(16), C(white), S(2.f) * velocity, 1); break;
           case $(160) ImSpinner::SpinnerArcRotation      (Name("SpinnerArcRotation"),
                                                           R(13), T(2.5), C(white), S(3) * velocity, DT(15), 1); break;
-          case $(161) ImSpinner::SpinnerAng              (Name("SpinnerAng90"),
+          case $(161) ImSpinner::SpinnerAng              (Name("SpinnerAng90Gravity"),
                                                           R(16), T(1), C(white), CB(ImColor(255, 255, 255, 128)), S(8.f) * velocity, A(PI_DIV_2), 1); break;
+          case $(162) ImSpinner::SpinnerAng              (Name("SpinnerAng90SinRad"),
+                                                          R(16), T(1), C(white), CB(ImColor(255, 255, 255, 0)), S(8.f) * velocity, A(0.75f * PI_2), 2); break;
           }
 #undef $
         }
