@@ -1954,6 +1954,36 @@ namespace ImSpinner
       }
     }
 
+    inline void SpinnerPulsarBall(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, bool shadow = false, int mode = 0)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        ImGuiStorage* storage = window->DC.StateStorage;
+
+        const int iterations = shadow ? 4 : 1;
+        for (int j = 0; j < iterations; j++) {
+            ImColor c = color_alpha(color, 1.f - 0.15f * j);
+            float start = ImFmod((float)ImGui::GetTime() * speed - (IM_PI / 12.f) * j, IM_PI);
+            float maxht = damped_gravity(ImSin(ImFmod(start, IM_PI))) * (radius * 0.6f);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x, centre.y), maxht, c, num_segments);
+        }
+
+        const float angle_offset = PI_DIV_2 / num_segments;
+        const int arcs = 2;
+        for (size_t arc_num = 0; arc_num < arcs; ++arc_num) {
+            window->DrawList->PathClear();
+            float arc_start = 2 * IM_PI / arcs;
+            float start = ImFmod((float)ImGui::GetTime() * speed - (IM_PI * arc_num), IM_PI);
+            float b = mode ? start + damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0) : start;
+            float maxht = (damped_gravity(ImSin(ImFmod(start, IM_PI))) * 0.3f + 0.7f) * radius;
+            for (size_t i = 0; i < num_segments; i++) {
+                const float a = b + arc_start * arc_num + (i * angle_offset);
+                window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * maxht, centre.y + ImSin(a) * maxht));
+            }
+            window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
+        }
+    }
+
     inline void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t dots = 6)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3934,8 +3964,8 @@ namespace ImSpinner
                                                           R(16), T(1), C(white), CB(ImColor(255, 255, 255, 0)), S(8.f) * velocity, A(0.75f * PI_2), 2); break;
           case $(163) ImSpinner::SpinnerSquishSquare     (Name("SpinnerSquishSquare"),
                                                           R(16), C(white), S(8.f) * velocity); break;
-
-              
+          case $(164) ImSpinner::SpinnerPulsarBall       (Name("SpinnerBounceBall"),
+                                                          R(16), T(2), C(white), S(4) * velocity, DT(1)); break;
           }
 #undef $
         }
