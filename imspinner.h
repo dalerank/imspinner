@@ -3601,6 +3601,34 @@ namespace ImSpinner
         }
     }
 
+    inline void Spinner3SmuggleDots(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 4.8f, int lt = 8, float delta = 0.5f, bool mode = 0)     {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float nextItemKoeff = 2.5f;
+        const float dots = 2;// (size.x / (thickness * nextItemKoeff));
+        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+
+        auto draw_point = [&] (float angle, int i, float k) {
+            float a = angle + k * start + k * (IM_PI - i * PI_DIV(dots));
+            float th_koeff = 1.f + ImSin(a + PI_DIV_2) * 0.3f;
+
+            float pp = mode ? centre.x + ImSin(a) * size.x * delta
+                            : centre.y + ImSin(a) * size.y * delta;
+            ImVec2 p = mode ? ImVec2(pp, centre.y - (size.y * 0.5f) + i * thickness * nextItemKoeff)
+                            : ImVec2(centre.x - (size.x * 0.5f) + i * thickness * nextItemKoeff, pp);
+            window->DrawList->AddCircleFilled(p, thickness * th_koeff, color_alpha(color, 1.f), lt);
+            return p;
+        };
+
+        {
+            ImVec2 p1 = draw_point(0, 1, -1);
+            ImVec2 p2 = draw_point(IM_PI, 2, 1);
+            //window->DrawList->AddLine(p1, p2, color_alpha(color, 1.f), thickness * 0.5f);
+            ImVec2 p3 = draw_point(PI_DIV_2, 3, -1);
+            //window->DrawList->AddLine(p2, p3, color_alpha(color, 1.f), thickness * 0.5f);
+        }
+    }
+
     namespace detail {
       static struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); } spinner_draw_funcs[e_st_count] = {
         { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_AngleMin, c.m_AngleMax); } },
@@ -4034,6 +4062,8 @@ namespace ImSpinner
                                                           T(2), C(white), S(5) * velocity, DT(8)); break;
           case $(172) ImSpinner::SpinnerScaleDots        (Name("SpinnerScaleDots2"), R(16),
                                                           T(2), C(white), S(4) * velocity, DT(8)); break;
+          case $(173) ImSpinner::Spinner3SmuggleDots     (Name("Spinner3SmuggleDots"), R(16),
+                                                          T(3), C(white), S(4) * velocity, DT(8), D(0.25f), true); break;
           }
 #undef $
         }
