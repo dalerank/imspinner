@@ -1358,31 +1358,56 @@ namespace ImSpinner
         ImColor c = color;
         if (start < PI_2) {
           c.Value.w = 0.f;
-          if (start > a && start < (a + arc_angle))
-          {
-            c.Value.w = 1.f - (start - a) / (float)arc_angle;
-          }
-          else if (start < a)
-          {
-            c.Value.w = 1.f;
-          }
+          if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
+          else if (start < a) { c.Value.w = 1.f; }
           c.Value.w = ImMax(0.05f, 1.f - c.Value.w);
         } else {
           const float startk = start - PI_2;
           c.Value.w = 0.f;
-          if (startk > a && startk < (a + arc_angle))
-          {
-            c.Value.w = 1.f - (startk - a) / (float)arc_angle;
-          }
-          else if (startk < a)
-          {
-            c.Value.w = 1.f;
-          }
+          if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
+          else if (startk < a) { c.Value.w = 1.f; }
           c.Value.w = ImMax(0.05f, c.Value.w);
         }
        
         window->DrawList->PathStroke(color_alpha(c, 1.f), false, thickness);
       }
+    }
+
+    inline void SpinnerSimpleArcFade(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f)     {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI * 4.f);
+        const float arc_angle = PI_2 / (float)4;
+        const float angle_offset = arc_angle / num_segments;
+
+        auto draw_segment = [&] (int arc_num, float delta, auto c, float k, float t) {
+            window->DrawList->PathClear();
+            for (size_t i = 0; i <= num_segments + 1; i++) {
+                const float a = t * start + arc_angle * arc_num + (i * angle_offset) - PI_DIV_2 - PI_DIV_4 + delta;
+                window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius * k, centre.y + ImSin(a) * radius * k));
+            }
+            window->DrawList->PathStroke(color_alpha(c, 1.f), false, thickness);
+        };
+
+        for (size_t arc_num = 0; arc_num < 2; ++arc_num) {
+            const float a = arc_angle * arc_num;
+            ImColor c = color;
+            if (start < PI_2) {
+                c.Value.w = 0.f;
+                if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
+                else if (start < a) { c.Value.w = 1.f; }
+                c.Value.w = ImMax(0.05f, 1.f - c.Value.w);
+            } else {
+                const float startk = start - PI_2;
+                c.Value.w = 0.f;
+                if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
+                else if (startk < a) { c.Value.w = 1.f; }
+                c.Value.w = ImMax(0.05f, c.Value.w);
+            }
+
+            draw_segment(arc_num, 0.f, c, 1.f + arc_num * 0.3f, arc_num > 0 ? -1 : 1);
+            draw_segment(arc_num, IM_PI, c, 1.f + arc_num * 0.3f, arc_num > 0 ? -1 : 1);
+        }
     }
 
     inline void SpinnerSquareStrokeFade(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f)
@@ -4064,6 +4089,8 @@ namespace ImSpinner
                                                           T(2), C(white), S(4) * velocity, DT(8)); break;
           case $(173) ImSpinner::Spinner3SmuggleDots     (Name("Spinner3SmuggleDots"), R(16),
                                                           T(3), C(white), S(4) * velocity, DT(8), D(0.25f), true); break;
+          case $(174) ImSpinner::SpinnerSimpleArcFade    (Name("SpinnerSimpleArcFade"),
+                                                          R(13), T(2), C(white), S(4) * velocity); break;
           }
 #undef $
         }
