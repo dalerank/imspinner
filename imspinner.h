@@ -810,6 +810,28 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerSquareSpins(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float nextItemKoeff = 2.5f;
+        const float heightSpeed = 0.8f;
+        const float dots = (size.x / (thickness * nextItemKoeff));
+        const float start = (float)ImGui::GetTime() * speed;
+
+        for (size_t i = 0; i < dots; i++)
+        {
+            const float a = ImFmod(start + i * (PI_DIV_2 / dots), PI_DIV_2);
+            const float th = thickness * (ImCos(a * heightSpeed) * 2.f);
+            ImVec2 pmin = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff - thickness, centre.y - thickness);
+            ImVec2 pmax = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff + thickness, centre.y + thickness);
+            window->DrawList->AddRect(pmin, pmax, color_alpha(color, 1.f), 0.f);
+            ImVec2 lmin = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff - thickness, centre.y - th + thickness);
+            ImVec2 lmax = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff + thickness - 1, centre.y - th + thickness);
+            window->DrawList->AddLine(lmin, lmax, color_alpha(color, 1.f), 1.f);
+        }
+    }
+
     inline void SpinnerMovingDots(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t dots = 3)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -4131,7 +4153,8 @@ namespace ImSpinner
                                                           T(4), C(white), 0.1f, 0.5f, S(3.1f) * velocity, DT(3), D(-0.5f)); break;
           case $(177) ImSpinner::SpinnerThreeDotsStar    (Name("SpinnerThreeDotsStar"), R(16),
                                                           T(4), C(white), 0.1f, 0.5f, S(5.1f) * velocity, D(-0.2f)); break;
-
+          case $(178) ImSpinner::SpinnerSquareSpins      (Name("SpinnerSquareSpins"), R(16),
+                                                          T(6), C(white), S(2) * velocity); break;
           }
 #undef $
         }
