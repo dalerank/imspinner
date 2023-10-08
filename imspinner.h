@@ -3424,6 +3424,29 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerMoonDots(const char *label, float radius, float thickness, const ImColor &first, const ImColor &second, float speed = 1.1f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = (float)ImGui::GetTime() * speed;
+
+        const float astart = ImFmod(start, IM_PI * 2.f);
+        const float bstart = astart + IM_PI;
+
+        const float sina = ImSin(astart);
+        const float sinb = ImSin(bstart);
+
+        if (astart < PI_DIV_2 || astart > IM_PI + PI_DIV_2) {
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + sina * thickness, centre.y), thickness, color_alpha(first, 1.f), 16);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + sinb * thickness, centre.y), thickness, color_alpha(second, 1.f), 16);
+            window->DrawList->AddCircle(ImVec2(centre.x + sinb * thickness, centre.y), thickness, color_alpha(first, 1.f), 16);
+        } else {
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + sinb * thickness, centre.y), thickness, color_alpha(second, 1.f), 16);
+            window->DrawList->AddCircle(ImVec2(centre.x + sinb * thickness, centre.y), thickness, color_alpha(first, 1.f), 16);
+            window->DrawList->AddCircleFilled(ImVec2(centre.x + sina * thickness, centre.y), thickness, color_alpha(first, 1.f), 16);
+        }
+    }
+
     inline void SpinnerTwinHboDots(const char *label, float radius, float thickness, const ImColor &color = white, float minfade = 0.0f, float ryk = 0.f, float speed = 1.1f, size_t dots = 6, float delta = 0.f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -4155,6 +4178,8 @@ namespace ImSpinner
                                                           T(4), C(white), 0.1f, 0.5f, S(5.1f) * velocity, D(-0.2f)); break;
           case $(178) ImSpinner::SpinnerSquareSpins      (Name("SpinnerSquareSpins"), R(16),
                                                           T(6), C(white), S(2) * velocity); break;
+          case $(179) ImSpinner::SpinnerMoonDots         (Name("SpinnerMoonDots"), R(16),
+                                                          T(8), C(white), CB(ImColor(0, 0, 0)), S(1.1f) * velocity); break;
           }
 #undef $
         }
