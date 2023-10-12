@@ -1767,12 +1767,7 @@ namespace ImSpinner
           const float ar = arc_angle * arc_num + (i * angle_offset) - PI_DIV_2 - PI_DIV_4;
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * vradius, centre.y + ImSin(ar) * vradius));
         }
-
-        //ImDrawListFlags save = window->DrawList->Flags;
-        //window->DrawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
         window->DrawList->PathFillConvex(color_alpha(c, 1.f));
-
-        //window->DrawList->Flags = save;
       }
     }
 
@@ -3738,6 +3733,36 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerRotateSegmentsPulsar(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4, size_t layers = 1)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float arc_angle = PI_2 / (float)arcs;
+        const float angle_offset = arc_angle / num_segments;
+        float r = radius;
+        float reverse = 1.f;
+
+        const float bg_angle_offset = PI_2_DIV(num_segments);
+        const float koeff = PI_DIV(2 * layers);
+        float start = (float)ImGui::GetTime() * speed;
+
+        for (int num_ring = 0; num_ring < layers; ++num_ring) {
+            float radius_k = ImSin(ImFmod(start + (num_ring * koeff), PI_DIV_2));
+            ImColor c = color_alpha(color, (radius_k > 0.5f) ? (2.f - (radius_k * 2.f)) : color.Value.w);
+
+            for (size_t arc_num = 0; arc_num < arcs; ++arc_num)
+            {
+                window->DrawList->PathClear();
+                for (size_t i = 2; i <= num_segments - 2; i++)
+                {
+                    const float a = start * (1.f + 0.1f * num_ring) + arc_angle * arc_num + (i * angle_offset);
+                    window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a * reverse) * (r * radius_k), centre.y + ImSin(a * reverse) * (r * radius_k)));
+                }
+                window->DrawList->PathStroke(c, false, thickness);
+            }
+        }
+    }
+
     namespace detail {
       static struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); } spinner_draw_funcs[e_st_count] = {
         { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_AngleMin, c.m_AngleMax); } },
@@ -4159,7 +4184,7 @@ namespace ImSpinner
                                                           R(16), T(2), ImColor::HSV(0.005f, 0.8f, 0.8f), S(8) * velocity, AMN(0.f), AMX(PI_2), DT(5), 1); break;
           case $(166) ImSpinner::SpinnerAngMix           (Name("SpinnerAngMix"),
                                                           R(16), T(1), C(white), S(8.f) * velocity, A(IM_PI), DT(4), 0); break;
-          case $(167) ImSpinner::SpinnerAngMix          (Name("SpinnerAngMixGravity"),
+          case $(167) ImSpinner::SpinnerAngMix           (Name("SpinnerAngMixGravity"),
                                                           R(16), T(1), C(white), S(8.f) * velocity, A(PI_DIV_2), DT(6), 1); break;
           case $(168) ImSpinner::SpinnerScaleBlocks      (Name("SpinnerScaleBlocks"),
                                                           R(16), T(8), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(5) * velocity, 1); break;
@@ -4187,6 +4212,12 @@ namespace ImSpinner
                                                           T(8), C(white), CB(ImColor(0, 0, 0)), S(1.1f) * velocity); break;
           case $(180) ImSpinner::SpinnerFilledArcFade    (Name("SpinnerFilledArcFade7"),
                                                           R(16), C(white), S(6) * velocity, DT(6), 1); break;
+          case $(181) ImSpinner::SpinnerRotateSegmentsPulsar(Name("SpinnerRotateSegmentsPulsar"),
+                                                          R(16), T(2), C(white), S(1.1f) * velocity, DT(4), MDT(2)); break;
+          case $(182) ImSpinner::SpinnerRotateSegmentsPulsar(Name("SpinnerRotateSegmentsPulsar2"),
+                                                          R(16), T(2), C(white), S(1.1f) * velocity, DT(1), MDT(3)); break;
+          case $(183) ImSpinner::SpinnerRotateSegmentsPulsar(Name("SpinnerRotateSegmentsPulsar3"),
+                                                          R(16), T(2), C(white), S(1.1f) * velocity, DT(3), MDT(3)); break;
           }
 #undef $
         }
