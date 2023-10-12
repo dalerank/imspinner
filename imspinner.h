@@ -821,7 +821,7 @@ namespace ImSpinner
 
         for (size_t i = 0; i < dots; i++)
         {
-            const float a = ImFmod(start + i * (PI_DIV_2 / dots), PI_DIV_2);
+            const float a = ImFmod(start + i * ((PI_DIV_2 * 0.7f) / dots), PI_DIV_2);
             const float th = thickness * (ImCos(a * heightSpeed) * 2.f);
             ImVec2 pmin = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff - thickness, centre.y - thickness);
             ImVec2 pmax = ImVec2(centre.x - (size.x / 2.f) + i * thickness * nextItemKoeff + thickness, centre.y + thickness);
@@ -1728,7 +1728,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerFilledArcFade(const char *label, float radius, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerFilledArcFade(const char *label, float radius, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1741,11 +1741,14 @@ namespace ImSpinner
         const float e = arc_angle * arc_num + arc_angle - PI_DIV_2 - PI_DIV_4;
         const float a = arc_angle * arc_num;
         ImColor c = color;
+        float vradius = radius;
         if (start < PI_2) {
           c.Value.w = 0.f;
           if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
           else if (start < a) { c.Value.w = 1.f; }
           c.Value.w = ImMax(0.f, 1.f - c.Value.w);
+          if (mode == 1)
+            vradius = radius * c.Value.w;
         }
         else
         {
@@ -1753,6 +1756,8 @@ namespace ImSpinner
           c.Value.w = 0.f;
           if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
           else if (startk < a) { c.Value.w = 1.f; }
+          if (mode == 1)
+            vradius = radius * c.Value.w;
         }
 
         window->DrawList->PathClear();
@@ -1760,7 +1765,7 @@ namespace ImSpinner
         for (size_t i = 0; i <= num_segments + 1; i++)
         {
           const float ar = arc_angle * arc_num + (i * angle_offset) - PI_DIV_2 - PI_DIV_4;
-          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * radius, centre.y + ImSin(ar) * radius));
+          window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(ar) * vradius, centre.y + ImSin(ar) * vradius));
         }
 
         //ImDrawListFlags save = window->DrawList->Flags;
@@ -3773,7 +3778,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 180;
+      constexpr int num_spinners = 190;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -4180,6 +4185,8 @@ namespace ImSpinner
                                                           T(6), C(white), S(2) * velocity); break;
           case $(179) ImSpinner::SpinnerMoonDots         (Name("SpinnerMoonDots"), R(16),
                                                           T(8), C(white), CB(ImColor(0, 0, 0)), S(1.1f) * velocity); break;
+          case $(180) ImSpinner::SpinnerFilledArcFade    (Name("SpinnerFilledArcFade7"),
+                                                          R(16), C(white), S(6) * velocity, DT(6), 1); break;
           }
 #undef $
         }
