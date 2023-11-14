@@ -3220,6 +3220,39 @@ namespace ImSpinner
       }
     }
 
+    inline void SpinnerTwinBlocks(const char *label, float radius, float thickness, const ImColor &bg, const ImColor &color, float speed)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float offset_block = radius * 2.f / 3.f;
+        ImVec2 lt{centre.x - radius - offset_block / 2.f, centre.y - radius - offset_block / 2.f};
+
+        int start = (int)ImFmod((float)ImGui::GetTime() * speed, 8.f);
+        const ImVec2ih poses[] = {{0, 0}, {1, 0}, {2, 0}, {2, 1}, {2, 2}, {1, 2}, {0, 2}, {0, 1}};
+
+        int ti = 0;
+        for (const auto &rpos: poses)
+        {
+            const ImColor &c = (ti == start) ? color : bg;
+            window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
+                                            ImVec2(lt.x + rpos.x * (offset_block) + thickness, lt.y + rpos.y * offset_block + thickness),
+                                            color_alpha(c, 1.f));
+            ti++;
+        }
+
+        lt = ImVec2{centre.x - radius + offset_block / 2.f, centre.y - radius + offset_block / 2.f};
+        ti = std::size(poses) - 1;
+        start = (int)ImFmod((float)ImGui::GetTime() * speed * 1.1f, 8.f);
+        for (const auto &rpos: poses)
+        {
+            const ImColor &c = (ti == start) ? color : bg;
+            window->DrawList->AddRectFilled(ImVec2(lt.x + rpos.x * (offset_block), lt.y + rpos.y * offset_block),
+                                            ImVec2(lt.x + rpos.x * (offset_block) + thickness, lt.y + rpos.y * offset_block + thickness),
+                                            color_alpha(c, 1.f));
+            ti--;
+        }
+    }
+
     inline void SpinnerSquareRandomDots(const char *label, float radius, float thickness, const ImColor &bg, const ImColor &color, float speed)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -3868,7 +3901,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 190;
+      constexpr int num_spinners = 200;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -4295,6 +4328,8 @@ namespace ImSpinner
                                                           R(16), T(2), C(white), S(3) * velocity, DT(12), 2, 0.3f); break;
           case $(189) ImSpinner::SpinnerPointsArcBounce  (Name("SpinnerPointsArcBounce4"),
                                                           R(16), T(2), C(white), S(3) * velocity, DT(12), 3, 0.3f); break;
+          case $(190) ImSpinner::SpinnerTwinBlocks       (Name("SpinnerTwinBlocks"),
+                                                          R(16), T(7), C(ImColor(255, 255, 255, 30)), CB(ImColor::HSV(hue * 0.005f, 0.8f, 0.8f)), S(5) * velocity); break;
 
           }
 #undef $
