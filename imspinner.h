@@ -2128,6 +2128,29 @@ namespace ImSpinner
       }
     }
 
+    inline void SpinnerSomeScaleDots(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t dots = 6, int mode = 0)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        float start = (float)ImGui::GetTime() * speed;
+        float astart = ImFmod(start, IM_PI / dots);
+        start -= astart;
+        const float bg_angle_offset = IM_PI / dots;
+        dots = ImMin(dots, (size_t)32);
+
+        for (size_t j = 0; j < 4; j++)
+        {
+            float r = radius * (1.f - (0.15f * j));
+            for (size_t i = 0; i <= dots; i++)
+            {
+                float a = start * (mode ? (1.f + j * 0.05f) : 1.f) + (i * bg_angle_offset);
+                float th = thickness * ImMax(0.1f, i / (float)dots);
+                float thh = th * (1.f - (0.2f * j));
+                window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * r, centre.y + ImSin(a) * r), thh, color_alpha(color, 1.f), 8);
+            }
+        }
+    }
+
     inline void SpinnerAngTriple(const char *label, float radius1, float radius2, float radius3, float thickness, const ImColor &c1 = white, const ImColor &c2 = half_white, const ImColor &c3 = white, float speed = 2.8f, float angle = IM_PI)
     {
       float radius = ImMax(ImMax(radius1, radius2), radius3);
@@ -4255,6 +4278,10 @@ namespace ImSpinner
                                                           R(16), T(2), C(white), S(1.1f) * velocity, DT(3), MDT(3)); break;
           case $(184) ImSpinner::SpinnerPointsArcFade    (Name("SpinnerPointsArcFade"),
                                                           R(16), T(2), C(white), S(3) * velocity, DT(12)); break;
+          case $(185) ImSpinner::SpinnerSomeScaleDots    (Name("SpinnerSomeScaleDots0"),
+                                                          R(16), T(4), C(white), S(5.6f) * velocity, 6, 0); break;
+          case $(186) ImSpinner::SpinnerSomeScaleDots    (Name("SpinnerSomeScaleDots1"),
+                                                          R(16), T(4), C(white), S(6.6f) * velocity, 6, 1); break;
           }
 #undef $
         }
