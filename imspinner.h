@@ -1771,38 +1771,45 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerPointsArcFade(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t points = 4)
+    inline void SpinnerPointsArcBounce(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t points = 4, int circles = 2, float rspeed = 0.f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
         const float start = ImFmod((float)ImGui::GetTime()* speed, IM_PI * 4.f);
         const float arc_angle = PI_2 / (float)points;
         const float angle_offset = arc_angle / num_segments;
-        for (size_t arc_num = 0; arc_num < points; ++arc_num)
+        float dspeed = rspeed;
+        for (int c_num = 0; c_num < circles; c_num++)
         {
-            const float b = arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
-            const float e = arc_angle * arc_num + arc_angle - PI_DIV_2 - PI_DIV_4;
-            const float a = arc_angle * arc_num;
-            ImColor c = color;
-            float vradius = radius;
-            if (start < PI_2) {
-                c.Value.w = 0.f;
-                if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
-                else if (start < a) { c.Value.w = 1.f; }
-                c.Value.w = ImMax(0.f, 1.f - c.Value.w);
-                 vradius = radius * c.Value.w;
-            }
-            else
+            float mr = radius * (1.f - (1.f / (circles + 2.f) * c_num));
+            float adv_angle = IM_PI * c_num;// *(1.f + (0.1f * circles) * c_num);
+            for (size_t arc_num = 0; arc_num < points; ++arc_num)
             {
-                const float startk = start - PI_2;
-                c.Value.w = 0.f;
-                if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
-                else if (startk < a) { c.Value.w = 1.f; }
-                vradius = radius * c.Value.w;
-            }
+                const float b = arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
+                const float e = arc_angle * arc_num + arc_angle - PI_DIV_2 - PI_DIV_4;
+                const float a = arc_angle * arc_num;
+                ImColor c = color;
+                float vradius = mr;
+                if (start < PI_2) {
+                    c.Value.w = 0.f;
+                    if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
+                    else if (start < a) { c.Value.w = 1.f; }
+                    c.Value.w = ImMax(0.f, 1.f - c.Value.w);
+                     vradius = mr * c.Value.w;
+                }
+                else
+                {
+                    const float startk = start - PI_2;
+                    c.Value.w = 0.f;
+                    if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
+                    else if (startk < a) { c.Value.w = 1.f; }
+                    vradius = mr * c.Value.w;
+                }
 
-            const float ar = start + arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
-            window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(ar) * vradius, centre.y + ImSin(ar) * vradius), thickness, color_alpha(c, 1.f), 8);
+                const float ar = start * dspeed + adv_angle + arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
+                window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(ar) * vradius, centre.y + ImSin(ar) * vradius), thickness, color_alpha(c, 1.f), 8);
+            }
+            dspeed += rspeed;
         }
     }
 
@@ -4276,12 +4283,19 @@ namespace ImSpinner
                                                           R(16), T(2), C(white), S(1.1f) * velocity, DT(1), MDT(3)); break;
           case $(183) ImSpinner::SpinnerRotateSegmentsPulsar(Name("SpinnerRotateSegmentsPulsar3"),
                                                           R(16), T(2), C(white), S(1.1f) * velocity, DT(3), MDT(3)); break;
-          case $(184) ImSpinner::SpinnerPointsArcFade    (Name("SpinnerPointsArcFade"),
-                                                          R(16), T(2), C(white), S(3) * velocity, DT(12)); break;
+          case $(184) ImSpinner::SpinnerPointsArcBounce  (Name("SpinnerPointsArcBounce"),
+                                                          R(16), T(2), C(white), S(3) * velocity, DT(12), 1, 0.f); break;
           case $(185) ImSpinner::SpinnerSomeScaleDots    (Name("SpinnerSomeScaleDots0"),
                                                           R(16), T(4), C(white), S(5.6f) * velocity, 6, 0); break;
           case $(186) ImSpinner::SpinnerSomeScaleDots    (Name("SpinnerSomeScaleDots1"),
                                                           R(16), T(4), C(white), S(6.6f) * velocity, 6, 1); break;
+          case $(187) ImSpinner::SpinnerPointsArcBounce  (Name("SpinnerPointsArcBounce2"),
+                                                          R(16), T(2), C(white), S(3) * velocity, DT(12), 1, 0.5f); break;
+          case $(188) ImSpinner::SpinnerPointsArcBounce  (Name("SpinnerPointsArcBounce3"),
+                                                          R(16), T(2), C(white), S(3) * velocity, DT(12), 2, 0.3f); break;
+          case $(189) ImSpinner::SpinnerPointsArcBounce  (Name("SpinnerPointsArcBounce4"),
+                                                          R(16), T(2), C(white), S(3) * velocity, DT(12), 3, 0.3f); break;
+
           }
 #undef $
         }
