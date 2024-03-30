@@ -170,11 +170,11 @@ namespace ImSpinner
     
     inline ImColor color_alpha(ImColor c, float alpha) { c.Value.w *= alpha * ImGui::GetStyle().Alpha; return c; }
 
-    inline float damped_spring (double mass, double stiffness, double damping, double time, float a = PI_DIV_2, float b = PI_DIV_2) {
-        double omega = sqrt(stiffness / mass);
-        double alpha = damping / (2 * mass);
-        double exponent = exp(-alpha * time);
-        double cosTerm = cos(omega * sqrt(1 - alpha * alpha) * time); // Косинусная составляющая
+    inline float damped_spring(float mass, float stiffness, float damping, float time, float a = PI_DIV_2, float b = PI_DIV_2) {
+        float omega = ImSqrt(stiffness / mass);
+        float alpha = damping / (2 * mass);
+        float exponent = std::exp(-alpha * time);
+        float cosTerm = ImCos(omega * ImSqrt(1 - alpha * alpha) * time); // Косинусная составляющая
         float result = exponent * cosTerm;
         return ((result *= a) + b);
     };
@@ -190,6 +190,11 @@ namespace ImSpinner
         }
         return 0.f;
     }
+
+    inline std::pair<float, float> damped_infinity(float const& a, float const& t) {
+        return std::make_pair((a * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))),
+                              (a * ImSin(t) * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))));
+    };
     
     /*
         const char *label: A string label for the spinner, used to identify it in ImGui.
@@ -288,7 +293,12 @@ namespace ImSpinner
             return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
         }, color_alpha(bg, 1.f), thickness);
 
-        const float b = (mode == 1) ? damped_gravity(ImSin(start * 1.1f)) * angle : 0.f;
+        float b = 0.f;
+        switch (mode) {
+        case 1: b = damped_gravity(ImSin(start * 1.1f)) * angle; break;
+        case 3: b = damped_infinity(1.f, (float)start * 1.1f).second; break;
+        }
+
         circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
             const float a = start - b + (i * angle / num_segments);
             return ImVec2(ImCos(a) * radius, ImSin(a) * radius);
@@ -2690,14 +2700,10 @@ namespace ImSpinner
       const float step = angle / num_segments;
       const float th = thickness / num_segments;
 
-      auto get_coord = [&](float const& a, float const& t) -> std::pair<float, float> {
-          return std::make_pair((a * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))), (a * ImSin(t) * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))));
-      };
-
       for (size_t i = 0; i < num_segments; i++)
       {
-          const auto xy0 = get_coord(a, start + (i * step));
-          const auto xy1 = get_coord(a, start + ((i + 1) * step));
+          const auto xy0 = damped_infinity(a, start + (i * step));
+          const auto xy1 = damped_infinity(a, start + ((i + 1) * step));
       
           window->DrawList->AddLine(ImVec2(centre.x + xy0.first, centre.y + xy0.second),
               ImVec2(centre.x + xy1.first, centre.y + xy1.second),
@@ -4330,6 +4336,9 @@ namespace ImSpinner
                                                           R(16), T(2), C(white), S(3) * velocity, DT(12), 3, 0.3f); break;
           case $(190) ImSpinner::SpinnerTwinBlocks       (Name("SpinnerTwinBlocks"),
                                                           R(16), T(7), C(ImColor(255, 255, 255, 30)), CB(ImColor::HSV(hue * 0.005f, 0.8f, 0.8f)), S(5) * velocity); break;
+          case $(191) ImSpinner::SpinnerAng              (Name("SpinnerAng90"),
+                                                          R(16), T(4), C(white), CB(ImColor(255, 255, 255, 128)), S(8.f) * velocity, A(PI_DIV_2), 3); break;
+
 
           }
 #undef $
