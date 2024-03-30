@@ -65,6 +65,7 @@ namespace ImSpinner
       e_st_bounce_ball,
       e_st_eclipse,
       e_st_ingyang,
+      e_st_barchartsine,
 
       e_st_count
     };
@@ -3899,7 +3900,8 @@ namespace ImSpinner
         { e_st_vdots,   [] (const char *label, const detail::SpinnerConfig &c) { SpinnerVDots(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_BgColor, c.m_Speed, c.m_Dots); } },
         { e_st_bounce_ball, [] (const char *label,const detail::SpinnerConfig &c) { SpinnerBounceBall(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_Dots); } },
         { e_st_eclipse, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerAngEclipse(label , c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed); } },
-        { e_st_ingyang, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerIngYang(label, c.m_Radius, c.m_Thickness, c.m_Reverse, c.m_Delta, c.m_AltColor, c.m_Color, c.m_Speed, c.m_Angle); } }
+        { e_st_ingyang, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerIngYang(label, c.m_Radius, c.m_Thickness, c.m_Reverse, c.m_Delta, c.m_AltColor, c.m_Color, c.m_Speed, c.m_Angle); } },
+        { e_st_barchartsine, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerBarChartSine(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_Dots, c.m_Mode); } }
       };
     }
 
@@ -3996,8 +3998,8 @@ namespace ImSpinner
                                                           Radius{R(16)}, Thickness{T(5)}, Color{C(white)}, Speed{S(6) * velocity}); break;
           case $( 9) ImSpinner::Spinner<e_st_ingyang>   (Name("SpinnerIngYang"),
                                                           Radius{R(16)}, Thickness{T(5)}, Reverse{false}, Delta{D(0.f)}, Color{C(white)}, AltColor{ImColor(255, 0, 0)}, Speed{S(4) * velocity}, Angle{A(IM_PI * 0.8f)}); break;
-          case $(10) ImSpinner::SpinnerBarChartSine     (Name("SpinnerBarChartSine"),
-                                                          R(16), 4, C(white), S(6.8f) * velocity, 4, 0); break;
+          case $(10) ImSpinner::Spinner<e_st_barchartsine>(Name("SpinnerBarChartSine"),
+                                                           Radius{R(16)}, Thickness{T(4)}, Color{C(white)}, Speed{S(6.8f) * velocity}, Dots{DT(4)}, Mode{M(0)}); break;
           case $(11) ImSpinner::SpinnerBounceDots       (Name("SpinnerBounceDots"), R(16),
                                                           T(6), C(white), S(6) * velocity, DT(3)); break;
           case $(12) ImSpinner::SpinnerFadeDots         (Name("SpinnerFadeDots"), R(16),
