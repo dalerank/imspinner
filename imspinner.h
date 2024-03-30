@@ -1083,7 +1083,7 @@ namespace ImSpinner
       window->DrawList->Flags = save;
     }
 
-    inline void SpinnerTwinAng180(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = white, const ImColor &color2 = red, float speed = 2.8f)
+    inline void SpinnerTwinAng180(const char *label, float radius1, float radius2, float thickness, const ImColor &color1 = white, const ImColor &color2 = red, float speed = 2.8f, float angle = PI_DIV_4, int mode = 0)
     {
       const float radius = ImMax(radius1, radius2);
       SPINNER_HEADER(pos, size, centre, num_segments);
@@ -1101,6 +1101,9 @@ namespace ImSpinner
       for (size_t i = 0; i <= num_segments / 2 + 1; i++)
       {
         ared = start + (i * angle_offset);
+        switch (mode) {
+        case 1: ared += damped_infinity(angle, start).second; break;
+        }
 
         if (i * angle_offset < ared_min)
           continue;
@@ -4027,9 +4030,9 @@ namespace ImSpinner
           case $(19) ImSpinner::SpinnerBarChartSine     (Name("SpinnerBarChartSine2"),
                                                           R(16), T(4), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(4.8f) * velocity, 4, 1); break;
           case $(20) ImSpinner::SpinnerTwinAng180       (Name("SpinnerTwinAng"),
-                                                          R(16), 12, T(4), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity); break;
-          case $(21) ImSpinner::SpinnerTwinAng360       (Name("SpinnerTwinAng360"),
-                                                          R(16), 11, T(4), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity); break;
+                                                          R(16), 12, T(4), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity, A(PI_DIV_4), M(0)); break;
+          case $(21) ImSpinner::SpinnerTwinAng180       (Name("SpinnerTwinAng2"),
+                                                          R(16), 12, T(4), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity, A(IM_PI), M(1)); break;
           case $(22) ImSpinner::SpinnerIncDots          (Name("SpinnerIncDots"),
                                                           R(16), T(4), C(white), S(5.6f) * velocity, 6); break;
           case $(23) nextdot2 -= 0.2f * velocity;
@@ -4381,6 +4384,8 @@ namespace ImSpinner
                                                           R(16), T(1.3), C(white), S(4) * velocity, DT(6), M(0)); break;
           case $(196) ImSpinner::SpinnerRotateDots       (Name("SpinnerRotateDots"),
                                                           R(16), T(2.3), C(white), S(4) * velocity, DT(5), M(2)); break;
+          case $(197) ImSpinner::SpinnerTwinAng360       (Name("SpinnerTwinAng360"),
+                                                          R(16), 11, T(4), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity); break;
           }
 #undef $
         }
