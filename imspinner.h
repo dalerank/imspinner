@@ -367,7 +367,7 @@ namespace ImSpinner
       window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(start * 0.5f) * radius / 2.f, centre.y + ImSin(start * 0.5f) * radius / 2.f), color_alpha(color, 1.f), thickness * 2);
     }
 
-    inline void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg = half_white, float speed = 2.8f, bool sequence = true)
+    inline void SpinnerPulsar(const char *label, float radius, float thickness, const ImColor &bg = half_white, float speed = 2.8f, bool sequence = true, float angle = 0.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -379,6 +379,9 @@ namespace ImSpinner
       const float bg_angle_offset = PI_2 / (num_segments - 1);
 
       float start_r = ImFmod(start, PI_DIV_2);
+      switch (mode) {
+      case 1: start_r = damped_infinity(angle, start_r).second; break;
+      }
       float radius_k = ImSin(start_r);
       float radius1 = radius_k * radius;
 
@@ -4050,7 +4053,7 @@ namespace ImSpinner
           case $(27) ImSpinner::SpinnerFadeBars         (Name("SpinnerFadeBars"),
                                                           10, C(white), S(4.8f) * velocity, 3); break;
           case $(28) ImSpinner::SpinnerPulsar           (Name("SpinnerPulsar"),
-                                                          R(16), T(2), C(white), S(1) * velocity); break;
+                                                          R(16), T(2), C(white), S(1) * velocity, true, A(0), M(0)); break;
           case $(29) ImSpinner::SpinnerIngYang          (Name("SpinnerIngYangR2"),
                                                           R(16), T(5), true, 3.f, C(white), CB(ImColor(255, 0, 0)), S(4) * velocity, A(IM_PI * 0.8f)); break;
           case $(30) ImSpinner::SpinnerBarChartRainbow  (Name("SpinnerBarChartRainbow"),
@@ -4395,6 +4398,8 @@ namespace ImSpinner
                                                           &nextdot2, R(16), T(4), C(white), S(0.3f) * velocity, DT(4), A(1.49f), M(1)); break;
           case $(200) ImSpinner::SpinnerIncScaleDots     (Name("SpinnerIncScaleDots2"),
                                                           R(16), T(4), C(white), S(6.6f) * velocity, DT(8), A(1.22), M(1)); break;
+          case $(201) ImSpinner::SpinnerPulsar           (Name("SpinnerPulsar2"),
+                                                          R(16), T(2), C(white), S(1) * velocity, true, A(PI_2), M(1)); break;
           }
 #undef $
         }
