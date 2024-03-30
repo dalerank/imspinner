@@ -1361,7 +1361,13 @@ namespace ImSpinner
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num) {
           window->DrawList->PathClear();
           float arc_start = 2 * IM_PI / arcs;
-          float b = mode ? start + damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0) : start;
+          float b = start;
+          switch (mode) {
+          case 1: b = start + damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0); break;
+          case 2: b = start + damped_infinity(PI_2 - angle, start).second; break;
+          default: b = start;
+          }
+          
           for (size_t i = 0; i < num_segments; i++) {
             const float a = b + arc_start * arc_num + (i * angle_offset);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2));
@@ -4065,13 +4071,13 @@ namespace ImSpinner
           case $(33) ImSpinner::SpinnerBarsScaleMiddle  (Name("SpinnerBarsScaleMiddle"),
                                                           6, C(white), S(8.8f) * velocity, 3); break;
           case $(34) ImSpinner::SpinnerAngTwin          (Name("SpinnerAngTwin1"),
-                                                          R(16), 13, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2)); break;
+                                                          R(16), 13, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2), DT(1), M(0)); break;
           case $(35) ImSpinner::SpinnerAngTwin          (Name("SpinnerAngTwin2"),
-                                                          13, 16, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2)); break;
+                                                          13, 16, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2), DT(1), M(0)); break;
           case $(36) ImSpinner::SpinnerAngTwin          (Name("SpinnerAngTwin3"),
-                                                          13, 16, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2), 2); break;
+                                                          13, 16, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2), DT(2), M(0)); break;
           case $(37) ImSpinner::SpinnerAngTwin          (Name("SpinnerAngTwin4"),
-                                                          R(16), 13, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2), 2); break;
+                                                          R(16), 13, T(2), C(ImColor(255, 0, 0)), CB(white), S(6) * velocity, A(PI_DIV_2), DT(2), M(0)); break;
           case $(38) ImSpinner::SpinnerTwinPulsar       (Name("SpinnerTwinPulsar"),
                                                           R(16), T(2), C(white), S(0.5f) * velocity, 2); break;
           case $(39) ImSpinner::SpinnerAngTwin          (Name("SpinnerAngTwin4"),
@@ -4400,6 +4406,10 @@ namespace ImSpinner
                                                           R(16), T(4), C(white), S(6.6f) * velocity, DT(8), A(1.22), M(1)); break;
           case $(201) ImSpinner::SpinnerPulsar           (Name("SpinnerPulsar2"),
                                                           R(16), T(2), C(white), S(1) * velocity, true, A(PI_2), M(1)); break;
+          case $(202) ImSpinner::SpinnerAngTwin          (Name("SpinnerAngTwin4"),
+                                                          R(16), 13, T(2), C(ImColor(255, 0, 0)), CB(white), S(1.6f) * velocity, A(3.14), DT(1), M(2)); break;
+          case $(203) ImSpinner::SpinnerAngTwin          (Name("SpinnerAngTwin5"),
+                                                          R(14), 16, T(2), C(ImColor(255, 0, 0)), CB(white), S(0.8f) * velocity, A(1.57), DT(3), M(2)); break;
           }
 #undef $
         }
