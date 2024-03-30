@@ -2144,7 +2144,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t dots = 6)
+    inline void SpinnerIncScaleDots(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t dots = 6, float angle = 0.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -2157,6 +2157,9 @@ namespace ImSpinner
       for (size_t i = 0; i <= dots; i++)
       {
         float a = start + (i * bg_angle_offset);
+        switch (mode) {
+        case 1: a += damped_infinity(angle, start).second; break;
+        }
         float th = thickness * ImMax(0.1f, i / (float)dots);
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), th, color_alpha(color, 1.f), 8);
       }
@@ -3943,7 +3946,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 200;
+      constexpr int num_spinners = 210;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -4039,7 +4042,7 @@ namespace ImSpinner
                      ImSpinner::SpinnerDots             (Name("SpinnerDotsWoBg"),
                                                           &nextdot2, R(16), T(4), C(white), S(0.3f) * velocity, DT(12), A(0.f), M(0)); break;
           case $(24) ImSpinner::SpinnerIncScaleDots     (Name("SpinnerIncScaleDots"),
-                                                          R(16), T(4), C(white), S(6.6f) * velocity, 6); break;
+                                                          R(16), T(4), C(white), S(6.6f) * velocity, DT(6), A(0), M(0)); break;
           case $(25) ImSpinner::SpinnerAng              (Name("SpinnerAng90"),
                                                           R(16), T(6), C(white), CB(ImColor(255, 255, 255, 128)), S(8.f) * velocity, A(PI_DIV_2), M(0)); break;
           case $(26) ImSpinner::SpinnerAng              (Name("SpinnerAng90"),
@@ -4390,6 +4393,8 @@ namespace ImSpinner
                                                           &nextdot2, R(16), T(4), C(white), S(0.3f) * velocity, DT(6), A(1.49f), M(0)); break;
           case $(199) ImSpinner::SpinnerDots             (Name("SpinnerDotsWoBg3"),
                                                           &nextdot2, R(16), T(4), C(white), S(0.3f) * velocity, DT(4), A(1.49f), M(1)); break;
+          case $(200) ImSpinner::SpinnerIncScaleDots     (Name("SpinnerIncScaleDots2"),
+                                                          R(16), T(4), C(white), S(6.6f) * velocity, DT(8), A(1.22), M(1)); break;
           }
 #undef $
         }
