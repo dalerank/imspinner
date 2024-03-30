@@ -3867,6 +3867,24 @@ namespace ImSpinner
         }
     }
 
+    inline void SpinnerSplineAng(const char *label, float radius, float thickness, const ImColor &color = white, const ImColor &bg = white, float speed = 2.8f, float angle = IM_PI, int mode = 0)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);                            // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
+        float start = (float)ImGui::GetTime() * speed;                        // The start angle of the spinner is calculated based on the current time and the specified speed.
+        radius = (mode == 1) ? (0.8f + ImCos(start) * 0.2f) * radius : radius;
+
+        circle([&] (int i) {                                                         // Draw the background of the spinner using the `circle` function, with the specified background color and thickness.
+            const float a = start + (i * (PI_2 / (num_segments - 1)));               // Calculate the angle for each segment based on the start angle and the number of segments.
+            return ImVec2(ImCos(a) * (radius + thickness), damped_infinity(1.3f, (float)a).second * radius);
+        }, color_alpha(bg, 1.f), thickness);
+
+        const float b = damped_gravity(ImSin(start * 1.1f)) * angle;
+        circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
+            const float a = start - b + (i * angle / num_segments);
+            return ImVec2(ImCos(a) * radius, damped_infinity(1.f, (float)a).second * radius);
+        }, color_alpha(color, 1.f), thickness);
+    }
+
     namespace detail {
       static struct SpinnerDraw { SpinnerTypeT type; void (*func)(const char *, const detail::SpinnerConfig &); } spinner_draw_funcs[e_st_count] = {
         { e_st_rainbow, [] (const char *label, const detail::SpinnerConfig &c) { SpinnerRainbow(label, c.m_Radius, c.m_Thickness, c.m_Color, c.m_Speed, c.m_AngleMin, c.m_AngleMax); } },
@@ -4338,6 +4356,8 @@ namespace ImSpinner
                                                           R(16), T(7), C(ImColor(255, 255, 255, 30)), CB(ImColor::HSV(hue * 0.005f, 0.8f, 0.8f)), S(5) * velocity); break;
           case $(191) ImSpinner::SpinnerAng              (Name("SpinnerAng90"),
                                                           R(16), T(4), C(white), CB(ImColor(255, 255, 255, 128)), S(8.f) * velocity, A(PI_DIV_2), 3); break;
+          case $(192) ImSpinner::SpinnerSplineAng        (Name("SpinnerSplineAng90"),
+                                                          R(16), T(2), C(white), CB(ImColor(255, 255, 255, 128)), S(8.f) * velocity, A(PI_DIV_2), 0); break;
 
 
           }
