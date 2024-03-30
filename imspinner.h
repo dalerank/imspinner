@@ -898,9 +898,14 @@ namespace ImSpinner
 
       for (int i = 0; i < dots; i++)
       {
-        float a = mode ? start + i * PI_2_DIV(dots) + damped_spring(1, 10.f, 1.0f, ImSin(start + i * PI_2_DIV(dots)), PI_2_DIV(dots), 0)
-                       : start + (i * PI_2_DIV(dots));
-        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, color_alpha(color, 1.f), 8);
+          float a = 0.f;
+          switch (mode) {
+          case 1: a = start + i * PI_2_DIV(dots) + damped_spring(1, 10.f, 1.0f, ImSin(start + i * PI_2_DIV(dots)), PI_2_DIV(dots), 0); break;
+          case 2: a = start + i * PI_2_DIV(dots) + damped_infinity(1.f, (float)(start + i * PI_DIV(dots * 2))).second; break;
+          default:
+            a = start + (i * PI_2_DIV(dots));
+          }
+          window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, color_alpha(color, 1.f), 8);
       }
     }
 
@@ -4012,7 +4017,7 @@ namespace ImSpinner
           case $(14) ImSpinner::SpinnerMovingDots       (Name("SpinnerMovingDots"), R(16),
                                                           T(6), C(white), S(30) * velocity, DT(3)); break;
           case $(15) ImSpinner::SpinnerRotateDots       (Name("SpinnerRotateDots"),
-                                                          R(16), T(6), C(white), S(4) * velocity, DT(2)); break;
+                                                          R(16), T(6), C(white), S(4) * velocity, DT(2), M(0)); break;
           case $(16) ImSpinner::SpinnerTwinAng          (Name("SpinnerTwinAng"),
                                                           R(16), 16, T(6), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity, A(IM_PI)); break;
           case $(17) ImSpinner::SpinnerClock            (Name("SpinnerClock"),
@@ -4372,6 +4377,10 @@ namespace ImSpinner
                                                           Radius{R(16)}, Thickness{T(2)}, Color{C(white)}, BgColor{CB(ImColor(255, 255, 255, 0))}, Speed{S(6) * velocity}, Angle{A(IM_PI)}, Mode{M(0)}); break;
           case $(194) ImSpinner::SpinnerBounceDots       (Name("SpinnerBounceDots2"), R(16),
                                                           T(2.5), C(white), S(1) * velocity, DT(6), M(2)); break;
+          case $(195) ImSpinner::SpinnerRotateDots       (Name("SpinnerRotateDots"),
+                                                          R(16), T(1.3), C(white), S(4) * velocity, DT(6), M(0)); break;
+          case $(196) ImSpinner::SpinnerRotateDots       (Name("SpinnerRotateDots"),
+                                                          R(16), T(2.3), C(white), S(4) * velocity, DT(5), M(2)); break;
           }
 #undef $
         }
