@@ -4037,7 +4037,7 @@ namespace ImSpinner
                                                           R(16), T(4), C(white), S(5.6f) * velocity, 6); break;
           case $(23) nextdot2 -= 0.2f * velocity;
                      ImSpinner::SpinnerDots             (Name("SpinnerDotsWoBg"),
-                                                          &nextdot2, R(16), T(4), C(white), S(0.3f) * velocity, 12, 0.f); break;
+                                                          &nextdot2, R(16), T(4), C(white), S(0.3f) * velocity, DT(12), A(0.f), M(0)); break;
           case $(24) ImSpinner::SpinnerIncScaleDots     (Name("SpinnerIncScaleDots"),
                                                           R(16), T(4), C(white), S(6.6f) * velocity, 6); break;
           case $(25) ImSpinner::SpinnerAng              (Name("SpinnerAng90"),
@@ -4386,6 +4386,10 @@ namespace ImSpinner
                                                           R(16), T(2.3), C(white), S(4) * velocity, DT(5), M(2)); break;
           case $(197) ImSpinner::SpinnerTwinAng360       (Name("SpinnerTwinAng360"),
                                                           R(16), 11, T(4), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity); break;
+          case $(198) ImSpinner::SpinnerDots             (Name("SpinnerDotsWoBg2"),
+                                                          &nextdot2, R(16), T(4), C(white), S(0.3f) * velocity, DT(6), A(1.49f), M(0)); break;
+          case $(199) ImSpinner::SpinnerDots             (Name("SpinnerDotsWoBg3"),
+                                                          &nextdot2, R(16), T(4), C(white), S(0.3f) * velocity, DT(4), A(1.49f), M(1)); break;
           }
 #undef $
         }
