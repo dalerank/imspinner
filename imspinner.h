@@ -177,7 +177,7 @@ namespace ImSpinner
         float omega = ImSqrt(stiffness / mass);
         float alpha = damping / (2 * mass);
         float exponent = std::exp(-alpha * time);
-        float cosTerm = ImCos(omega * ImSqrt(1 - alpha * alpha) * time); // Косинусная составляющая
+        float cosTerm = ImCos(omega * ImSqrt(1 - alpha * alpha) * time); // ГЉГ®Г±ГЁГ­ГіГ±Г­Г Гї Г±Г®Г±ГІГ ГўГ«ГїГѕГ№Г Гї
         float result = exponent * cosTerm;
         return ((result *= a) + b);
     };
@@ -3936,8 +3936,8 @@ namespace ImSpinner
 
     inline void Spinner(const char *label, const detail::SpinnerConfig& config)
     {
-      if (config.m_SpinnerType < sizeof(detail::spinner_draw_funcs))
-        detail::spinner_draw_funcs[config.m_SpinnerType].func(label, config);
+        if (config.m_SpinnerType < sizeof(detail::spinner_draw_funcs) / sizeof(detail::spinner_draw_funcs[0]))
+            detail::spinner_draw_funcs[config.m_SpinnerType].func(label, config);
     }
 
     template<SpinnerTypeT Type, typename... Args>
