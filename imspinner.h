@@ -177,7 +177,7 @@ namespace ImSpinner
         float omega = ImSqrt(stiffness / mass);
         float alpha = damping / (2 * mass);
         float exponent = std::exp(-alpha * time);
-        float cosTerm = ImCos(omega * ImSqrt(1 - alpha * alpha) * time); // Êîñèíóñíàÿ ñîñòàâëÿþùàÿ
+        float cosTerm = ImCos(omega * ImSqrt(1 - alpha * alpha) * time);
         float result = exponent * cosTerm;
         return ((result *= a) + b);
     };
