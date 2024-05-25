@@ -964,6 +964,16 @@ namespace ImSpinner
           }
           window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), thickness, color_alpha(color, 1.f), 8);
       }
+
+      if (mode == 3) {
+          float sm_thickness = thickness * 0.5f;
+          const float bstart = (float)ImGui::GetTime() * speed;
+          for (size_t i = 0; i < dots; i++)
+          {
+              const float b = bstart + (IM_PI - i * PI_DIV(dots) * 2.f);
+              window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(b) * radius, centre.y + ImSin(b) * radius), sm_thickness, color_alpha(color, 1.f), 8);
+          }
+      }
     }
 
     inline void SpinnerOrionDots(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, int arcs = 4)
@@ -4495,8 +4505,8 @@ namespace ImSpinner
                                                           R(12), T(2.5), C(white), CB(0), S(5) * velocity, A(5.0f), M(5), D(0.75f)); break;
           case $(211) ImSpinner::SpinnerAng8             (Name("SpinnerAng8.3"),
                                                           R(19), T(2.5), C(white), CB(0), S(5) * velocity, A(5.0f), M(0), D(0.70f)); break;
-          case $(212) ImSpinner::Spinner<e_st_angle>     (Name("SpinnerAng"),
-                                                         Radius{R(16)}, Thickness{T(2)}, Color{C(white)}, BgColor{CB(ImColor(255, 255, 255, 128))}, Speed{S(8) * velocity}, Angle{A(IM_PI)}, Mode{M(0)}); break;
+          case $(212) ImSpinner::SpinnerRotateDots       (Name("SpinnerRotateDots"),
+                                                          R(16), T(3), C(white), S(4) * velocity, DT(4), M(3)); break;
           case $(213) ImSpinner::Spinner<e_st_dots>      (Name("SpinnerDots/3"),
                                                           Radius{R(16)}, Thickness{T(4)}, Color{C(white)}, FloatPtr{&nextdot}, Speed{S(1) * velocity}, Dots{DT(12)}, MinThickness{-1.f}, Mode{M(3)}); break;
           case $(214) ImSpinner::Spinner<e_st_dots>      (Name("SpinnerDots/4"),
@@ -4515,6 +4525,8 @@ namespace ImSpinner
                                                           R(16), T(1.4), C(white), S(3) * velocity, DT(1), MDT(4), M(1)); break;
           case $(221) ImSpinner::SpinnerRotateSegments   (Name("SpinnerRotateSegments/1"),
                                                           R(16), T(4), C(white), S(3) * velocity, DT(4), MDT(1), M(1)); break;
+          case $(222) ImSpinner::Spinner<e_st_angle>     (Name("SpinnerAng"),
+                                                          Radius{R(16)}, Thickness{T(2)}, Color{C(white)}, BgColor{CB(ImColor(255, 255, 255, 128))}, Speed{S(8) * velocity}, Angle{A(IM_PI)}, Mode{M(1)}); break;
           }
 #undef $
         }
