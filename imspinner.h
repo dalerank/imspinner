@@ -293,22 +293,49 @@ namespace ImSpinner
     {
         SPINNER_HEADER(pos, size, centre, num_segments);                            // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
         float start = (float)ImGui::GetTime() * speed;                        // The start angle of the spinner is calculated based on the current time and the specified speed.
-        radius = (mode == 2) ? (0.8f + ImCos(start) * 0.2f) * radius : radius;
+        float b = 0.f;
+        switch (mode) {
+        case 1: b = damped_gravity(ImSin(start * 1.1f)) * angle; break;
+        case 2: radius = (0.8f + ImCos(start) * 0.2f) * radius; break;
+        case 3: b = damped_infinity(1.f, (float)start * 1.1f).second; break;
+        }
+
         auto radiusmode = [radius, mode] (float a) { switch (mode) { case 4: return damped_trifolium(a) * radius; } return radius; };
         circle([&] (int i) {                                                         // Draw the background of the spinner using the `circle` function, with the specified background color and thickness.
             const float a = start + (i * (PI_2 / (num_segments - 1)));               // Calculate the angle for each segment based on the start angle and the number of segments.
             return ImVec2(ImCos(a) * radiusmode(a), ImSin(a) * radiusmode(a));
         }, color_alpha(bg, 1.f), thickness);
 
-        float b = 0.f;
-        switch (mode) {
-        case 1: b = damped_gravity(ImSin(start * 1.1f)) * angle; break;
-        case 3: b = damped_infinity(1.f, (float)start * 1.1f).second; break;
-        }
-
         circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
             const float a = start - b + (i * angle / num_segments);
             return ImVec2(ImCos(a) * radiusmode(a), ImSin(a) * radiusmode(a));
+        }, color_alpha(color, 1.f), thickness);
+    }
+
+    inline void SpinnerAng8(const char *label, float radius, float thickness, const ImColor &color = white, const ImColor &bg = white, float speed = 2.8f, float angle = IM_PI, int mode = 0, float rkoef = 0.5f)
+    {
+        SPINNER_HEADER(pos, size, centre, num_segments);                            // Get the position, size, centre, and number of segments of the spinner using the SPINNER_HEADER macro.
+        float start = (float)ImGui::GetTime() * speed;                        // The start angle of the spinner is calculated based on the current time and the specified speed.
+        float b = 0.f, kb = 1.f;
+        switch (mode) {
+        case 1: b = damped_gravity(ImSin(start * 1.1f)) * angle; break;
+        case 2: radius = (0.8f + ImCos(start) * 0.2f) * radius; break;
+        case 3: b = damped_infinity(1.f, (float)start * 1.1f).second; break;
+        case 5: kb = 2.f; break;
+        }
+
+        auto radiusmode = [radius, mode, kb] (float a, float k) { switch (mode) { case 4: return damped_trifolium(a) * radius; } return radius * k * kb; };
+        float centerx_save = centre.x;
+        centre.x = centerx_save + radius * (1.f - rkoef);
+        circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
+            const float a = start - b + (i * angle / num_segments);
+            return ImVec2(ImCos(a) * radiusmode(a, rkoef), ImSin(a) * radiusmode(a, rkoef));
+        }, color_alpha(color, 1.f), thickness);
+
+        centre.x = centerx_save - radius * rkoef;
+        circle([&] (int i) {                                                        // Draw the spinner itself using the `circle` function, with the specified color and thickness.
+            const float a = start - b + (i * angle / num_segments);
+            return ImVec2(ImCos(-a) * radiusmode(a, 1.f - rkoef), ImSin(-a) * radiusmode(a, 1.f - rkoef));
         }, color_alpha(color, 1.f), thickness);
     }
 
@@ -3961,7 +3988,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 210;
+      constexpr int num_spinners = 220;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -4424,6 +4451,14 @@ namespace ImSpinner
                                                           Radius{R(16)}, Thickness{T(2)}, Color{C(white)}, BgColor{CB(ImColor(255, 255, 255, 128))}, Speed{S(2.8) * velocity}, Angle{A(PI_DIV_2)}, Mode{M(4)}); break;
           case $(207) ImSpinner::SpinnerTwinAng180       (Name("SpinnerTwinAngX"),
                                                           R(16), 12, T(2), C(white), CB(ImColor(255, 0, 0)), S(0.5f) * velocity, A(PI_DIV_4), M(2)); break;
+          case $(208) ImSpinner::SpinnerAng8             (Name("SpinnerAng8"),
+                                                          R(21), T(2), C(white), CB(0), S(8.f) * velocity, A(PI_DIV_4 * 6), M(3), D(0.5f)); break;
+          case $(209) ImSpinner::SpinnerAng8             (Name("SpinnerAng8.1"),
+                                                          R(14.5), T(2.5), C(white), CB(0), S(4) * velocity, A(PI_DIV_4), M(4), D(0.5f)); break;
+          case $(210) ImSpinner::SpinnerAng8             (Name("SpinnerAng8.2"),
+                                                          R(12), T(2.5), C(white), CB(0), S(5) * velocity, A(5.0f), M(5), D(0.75f)); break;
+          case $(211) ImSpinner::SpinnerAng8             (Name("SpinnerAng8.3"),
+                                                          R(19), T(2.5), C(white), CB(0), S(5) * velocity, A(5.0f), M(0), D(0.70f)); break;
           }
 #undef $
         }
