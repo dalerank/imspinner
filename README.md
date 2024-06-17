@@ -1,7 +1,6 @@
 # imspinner
 Set of nice spinners for imgui
-
-![spinners](https://github.com/dalerank/imspinner/assets/918081/4d27bb63-04ab-4061-b191-d78f2c3b8135)
+![spinners](https://github.com/dalerank/imspinner/assets/918081/d7250fe9-21ee-4dee-9f43-2e524d068d84)
 
 # how to test
 
