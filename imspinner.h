@@ -4492,7 +4492,7 @@ namespace ImSpinner
             for(int current_spi = 0; current_spi < num_spinners; current_spi++)
             {
               // BeginChild here needed to restrict item width&height by specific size
-              if( ImGui::BeginChild(100 + current_spi, item_size, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NavFlattened) )
+              if( ImGui::BeginChild(100 + current_spi, item_size, false, ImGuiWindowFlags_NoScrollbar | ImGuiChildFlags_NavFlattened) )
               {
                   draw_spinner(current_spi, widget_size);
               }
