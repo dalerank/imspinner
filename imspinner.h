@@ -2282,9 +2282,7 @@ namespace ImSpinner
       for (size_t i = 0; i <= dots; i++)
       {
         float a = start + (i * bg_angle_offset);
-        switch (mode) {
-        case 1: a += damped_infinity(angle, start).second; break;
-        }
+        a += ease((ease_mode)mode, a, angle);
         float th = thickness * ImMax(0.1f, i / (float)dots);
         window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius), th, color_alpha(color, 1.f), 8);
       }
@@ -4582,6 +4580,8 @@ namespace ImSpinner
                                                           R(13), T(5), C(white), S(3) * velocity, DT(4), M(3)); break;
           case $(224) ImSpinner::SpinnerArcFade          (Name("SpinnerArcFade/2"),
                                                           R(13), T(5), C(white), S(3) * velocity, DT(4), M(1)); break;
+          case $(225) ImSpinner::SpinnerIncScaleDots     (Name("SpinnerIncScaleDots"),
+                                                          R(16), T(4), C(white), S(4.6f) * velocity, DT(16), A(1), M(5)); break;
           }
 #undef $
         }
