@@ -206,22 +206,29 @@ namespace ImSpinner
     inline float ease_inquad(float time) { return time * time; }
     inline float ease_outquad(float time) { return time * (2.f - time); }
     inline float ease_inoutquad(float t) { if (t < 0.5f) { return 2 * t * t; } else { return -1 + (4 - 2 * t) * t; }}
-    inline float ease_inoutquad(float t, float r) { float tr = ImMax(ImSin(t) - 0.5f, 0.f) * (r * 0.5f); return ease_inoutquad(tr); }
+    inline float ease_inoutquad(float *p) { float tr = ImMax(ImSin(p[0]) - 0.5f, 0.f) * (p[1] * 0.5f); return ease_inoutquad(tr); }
     inline float ease_outcubic(float t) { float ft = t - 1; return ft * ft * ft + 1; }
     inline float ease_inexpo(float t) { return t == 0 ? 0 : pow(2, 10 * (t - 1)); }
     inline float ease_inoutexpo(float t) { if (t == 0) return 0; if (t == 1) return 1; if (t < 0.5f) return 0.5f * pow(2, (20 * t) - 10); return 0.5f * (2 - pow(2, -20 * t + 10)); }
-    inline float ease_inoutexpo(float t, float r) { float tr = ImMax(ImSin(t) - 0.5f, 0.f) * (r * 0.4f); return ease_inoutexpo(tr) * (r * 0.3f); }
+    inline float ease_inoutexpo(float *p) { float tr = ImMax(ImSin(p[0]) - 0.5f, 0.f) * (p[1] * 0.4f); return ease_inoutexpo(tr) * (p[1] * 0.3f); }
+    inline float ease_spring(float *p) { return damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(p[0], p[1])), p[2], p[3]);}
+    inline float ease_gravity(float *p) { return damped_gravity(p[0]); }
 
     enum ease_mode {
         e_ease_none = 0,
         e_ease_inoutquad = 1,
         e_ease_inoutexpo = 2,
+        e_ease_spring = 3,
+        e_ease_gravity = 3,
     };
 
-    inline float ease(ease_mode mode, float t, float r) {
+    template<typename ... Args>
+    inline float ease(ease_mode mode, Args ... args) {
+        float params[] = {args...}; 
         switch (mode) {
-        case e_ease_inoutquad: return ease_inoutquad(t, r);
-        case e_ease_inoutexpo: return ease_inoutexpo(t, r);
+        case e_ease_inoutquad: return ease_inoutquad(params);
+        case e_ease_inoutexpo: return ease_inoutexpo(params);
+        case e_ease_spring: return ease_spring(params);
         case e_ease_none: return (0.f);
         }
         return 0.f;
@@ -1470,9 +1477,9 @@ namespace ImSpinner
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num) {
         window->DrawList->PathClear();
         ImColor c = color_alpha(color, ImMax(0.1f, arc_num / (float)arcs));
-        float b = mode ? start + damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0) : start;
+        float b = ease((ease_mode)mode, start + arc_num * PI_DIV(2) / arcs, IM_PI, 1, 0);
         for (size_t i = 0; i <= num_segments; i++) {
-          const float a = b + arc_angle * arc_num + (i * angle_offset);
+          const float a = start + b + arc_angle * arc_num + (i * angle_offset);
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
         }
         window->DrawList->PathStroke(c, false, thickness);
@@ -4200,7 +4207,7 @@ namespace ImSpinner
           case $(49) ImSpinner::SpinnerMoonLine         (Name("SpinnerMoonLine"),
                                                           R(16), T(3), C(ImColor(200, 80, 0)), ImColor(80, 80, 80), S(5) * velocity); break;
           case $(50) ImSpinner::SpinnerArcRotation      (Name("SpinnerArcRotation"),
-                                                          R(13), T(5), C(white), S(3) * velocity, DT(4)); break;
+                                                          R(13), T(5), C(white), S(3) * velocity, DT(4), M(0)); break;
           case $(51) ImSpinner::SpinnerFluid            (Name("SpinnerFluid"),
                                                           R(16), C(ImColor(0, 0, 255)), S(3.8f) * velocity, 4); break;
           case $(52) ImSpinner::SpinnerArcFade          (Name("SpinnerArcFade"),
