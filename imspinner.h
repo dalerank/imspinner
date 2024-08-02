@@ -547,7 +547,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerCircularLines(const char *label, float radius, const ImColor &color = white, float speed = 1.8f, int lines = 8)
+    inline void SpinnerCircularLines(const char *label, float radius, const ImColor &color = white, float speed = 1.8f, int lines = 8, int mode = 0)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -564,6 +564,7 @@ namespace ImSpinner
             for (size_t i = 0; i <= lines; i++)
             {
                 float a = (i * bg_angle_offset);
+                a += ease((ease_mode)mode, start_offset, radius);
                 window->DrawList->AddLine(ImVec2(centre.x + ImCos(a) * rmin, centre.y + ImSin(a) * rmin),
                                           ImVec2(centre.x + ImCos(a) * rmax, centre.y + ImSin(a) * rmax),
                                           color_alpha(c, 1.f), 1.f);
@@ -4336,7 +4337,7 @@ namespace ImSpinner
           case $(100) ImSpinner::SpinnerTrianglesShift  (Name("SpinnerTrianglesShift"),
                                                           R(16), T(8), C(ImColor(0, 0, 0)), CB(white), S(1.8f) * velocity, DT(8)); break;
           case $(101) ImSpinner::SpinnerCircularLines   (Name("SpinnerCircularLines"),
-                                                          R(16), C(white), S(1.5f) * velocity, DT(8));  break;
+                                                          R(16), C(white), S(1.5f) * velocity, DT(8), M(0));  break;
           case $(102) ImSpinner::SpinnerLoadingRing     (Name("SpinnerLoadingRing"),
                                                           R(16), T(6), C(red), CB(ImColor(255, 255, 255, 128)), S(1.f) * velocity, DT(5)); break;
           case $(103) ImSpinner::SpinnerPatternRings    (Name("SpinnerPatternRings"),
@@ -4589,6 +4590,8 @@ namespace ImSpinner
                                                           R(16), T(2), C(white), S(0.5f) * velocity, DT(5), M(5)); break;
           case $(227) ImSpinner::SpinnerTwinPulsar       (Name("SpinnerTwinPulsar/0"),
                                                           R(16), T(2), C(white), S(0.5f) * velocity, DT(5), M(0)); break;
+          case $(228) ImSpinner::SpinnerCircularLines   (Name("SpinnerCircularLines/4"),
+                                                          R(16), C(white), S(1.5f) * velocity, DT(16), M(4));  break;
           }
 #undef $
         }
