@@ -206,10 +206,27 @@ namespace ImSpinner
     inline float ease_inquad(float time) { return time * time; }
     inline float ease_outquad(float time) { return time * (2.f - time); }
     inline float ease_inoutquad(float t) { if (t < 0.5f) { return 2 * t * t; } else { return -1 + (4 - 2 * t) * t; }}
+    inline float ease_inoutquad(float t, float r) { float tr = ImMax(ImSin(t) - 0.5f, 0.f) * (r * 0.5f); return ease_inoutquad(tr); }
     inline float ease_outcubic(float t) { float ft = t - 1; return ft * ft * ft + 1; }
     inline float ease_inexpo(float t) { return t == 0 ? 0 : pow(2, 10 * (t - 1)); }
     inline float ease_inoutexpo(float t) { if (t == 0) return 0; if (t == 1) return 1; if (t < 0.5f) return 0.5f * pow(2, (20 * t) - 10); return 0.5f * (2 - pow(2, -20 * t + 10)); }
-    
+    inline float ease_inoutexpo(float t, float r) { float tr = ImMax(ImSin(t) - 0.5f, 0.f) * (r * 0.4f); return ease_inoutexpo(tr) * (r * 0.3f); }
+
+    enum ease_mode {
+        e_ease_none = 0,
+        e_ease_inoutquad = 1,
+        e_ease_inoutexpo = 2,
+    };
+
+    inline float ease(ease_mode mode, float t, float r) {
+        switch (mode) {
+        case e_ease_inoutquad: return ease_inoutquad(t, r);
+        case e_ease_inoutexpo: return ease_inoutexpo(t, r);
+        case e_ease_none: return (0.f);
+        }
+        return 0.f;
+    }
+
     /*
         const char *label: A string label for the spinner, used to identify it in ImGui.
         float radius: The radius of the spinner.
@@ -2388,19 +2405,20 @@ namespace ImSpinner
         window->DrawList->AddRectFilled(ImVec2(centre.x - radius + radius1 - thickness - lenb, centre.y - thickness), ImVec2(centre.x - radius + radius1 + thickness + lenb, centre.y + thickness), color_alpha(color, 1.f), thickness);
     }
 
-    inline void SpinnerRotateGooeyBalls(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls)
+    inline void SpinnerRotateGooeyBalls(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float start = ImFmod((float)ImGui::GetTime(), IM_PI);
       const float rstart = ImFmod((float)ImGui::GetTime() * speed, PI_2);
-      const float radius1 = (0.2f + 0.3f * ImSin(start)) * radius;
+      float radius1 = (0.2f + 0.3f * ImSin(start)) * radius;
       const float angle_offset = PI_2 / balls;
 
+      float roff = ease((ease_mode)mode, start, radius);
       for (int i = 0; i <= balls; i++)
       {
         const float a = rstart + (i * angle_offset);
-        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), thickness, color_alpha(color, 1.f), num_segments);
+        window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * (radius1 + roff), centre.y + ImSin(a) * (radius1 + roff)), thickness, color_alpha(color, 1.f), num_segments);
       }
     }
 
@@ -4176,9 +4194,9 @@ namespace ImSpinner
           case $(46) ImSpinner::SpinnerGooeyBalls       (Name("SpinnerGooeyBalls"),
                                                           R(16), C(white), S(2.f) * velocity); break;
           case $(47) ImSpinner::SpinnerRotateGooeyBalls (Name("SpinnerRotateGooeyBalls2"),
-                                                          R(16), T(5), C(white), S(6.f) * velocity, 2); break;
+                                                          R(16), T(5), C(white), S(6.f) * velocity, DT(2), M(0)); break;
           case $(48) ImSpinner::SpinnerRotateGooeyBalls (Name("SpinnerRotateGooeyBalls3"),
-                                                          R(16), T(5), C(white), S(6.f) * velocity, 3); break;
+                                                          R(16), T(5), C(white), S(6.f) * velocity, DT(3), M(0)); break;
           case $(49) ImSpinner::SpinnerMoonLine         (Name("SpinnerMoonLine"),
                                                           R(16), T(3), C(ImColor(200, 80, 0)), ImColor(80, 80, 80), S(5) * velocity); break;
           case $(50) ImSpinner::SpinnerArcRotation      (Name("SpinnerArcRotation"),
