@@ -531,7 +531,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerFadePulsar(const char *label, float radius, const ImColor &color = white, float speed = 2.8f, int rings = 2)
+    inline void SpinnerFadePulsar(const char *label, float radius, const ImColor &color = white, float speed = 2.8f, int rings = 2, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -542,6 +542,7 @@ namespace ImSpinner
       for (int num_ring = 0; num_ring < rings; ++num_ring) {
         float radius_k = ImSin(ImFmod(start + (num_ring * koeff), PI_DIV_2));
         ImColor c = color_alpha(color, (radius_k > 0.5f) ? (2.f - (radius_k * 2.f)) : color.Value.w);
+        c.Value.w -= ease((ease_mode)mode, start, c.Value.w);
         window->DrawList->AddCircleFilled(centre, radius_k * radius, c, num_segments);
       }
     }
@@ -4243,9 +4244,9 @@ namespace ImSpinner
           case $(54) ImSpinner::SpinnerTopup            (Name("SpinnerTopup"),
                                                           R(16), 12, C(ImColor(255, 0, 0)), ImColor(80, 80, 80), CB(white), S(1) * velocity);  break;
           case $(55) ImSpinner::SpinnerFadePulsar       (Name("SpinnerFadePulsar"),
-                                                          R(16), C(white), S(1.5f) * velocity, 1);  break;
+                                                          R(16), C(white), S(1.5f) * velocity, DT(1), M(0));  break;
           case $(56) ImSpinner::SpinnerFadePulsar       (Name("SpinnerFadePulsar2"),
-                                                          R(16), C(white), S(0.9f) * velocity, 2); break;
+                                                          R(16), C(white), S(0.9f) * velocity, DT(2), M(0)); break;
           case $(57) ImSpinner::SpinnerPulsar           (Name("SpinnerPulsar"),
                                                           R(16), T(2), C(white), S(1) * velocity, false); break;
           case $(58) ImSpinner::SpinnerDoubleFadePulsar (Name("SpinnerDoubleFadePulsar"),
