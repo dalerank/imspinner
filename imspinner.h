@@ -3574,7 +3574,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerArcPolarFade(const char *label, float radius, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerArcPolarFade(const char *label, float radius, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -3588,6 +3588,7 @@ namespace ImSpinner
         const float a = arc_angle * arc_num;
         float h = (0.6f + 0.3f * ImSin((float)ImGui::GetTime() * (speed * rkoeff[arc_num % 6][2] * 2.f) + (2 * rkoeff[arc_num % 6][0])));
         ImColor c = color_alpha(color, h);
+        c.Value.w += ease((ease_mode)mode, h, arc_angle);
 
         window->DrawList->PathClear();
         window->DrawList->PathLineTo(centre);
@@ -4289,7 +4290,7 @@ namespace ImSpinner
           case $(75) ImSpinner::SpinnerCamera           (Name("SpinnerCamera"),
                                                           R(16), T(8), [] (int i) { return ImColor::HSV(i * 0.25f, 0.8f, 0.8f); }, S(4.8f) * velocity, DT(8), M(0)); break;
           case $(76) ImSpinner::SpinnerArcPolarFade     (Name("SpinnerArcPolarFade"),
-                                                          R(16), C(white), S(6) * velocity, 6); break;
+                                                          R(16), C(white), S(6) * velocity, DT(6), M(0)); break;
           case $(77) ImSpinner::SpinnerArcPolarRadius   (Name("SpinnerArcPolarRadius"),
                                                           R(16), C(ImColor::HSV(0.25f, 0.8f, 0.8f)), S(6.f) * velocity, 6); break;
           case $(78) ImSpinner::SpinnerCaleidoscope     (Name("SpinnerArcPolarPies"),
