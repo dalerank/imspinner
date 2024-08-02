@@ -3163,7 +3163,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, int elipses = 3)
+    inline void SpinnerRotatedAtom(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, int elipses = 3, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -3178,9 +3178,10 @@ namespace ImSpinner
         const float bg_angle_offset = PI_2 / num_segments;
         for (size_t i = 0; i < num_segments; ++i) {
           float anga = (i * bg_angle_offset);
+          float h = ease((ease_mode)mode, start, radius);
 
-          pts[i].x = a * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
-          pts[i].y = b * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
+          pts[i].x = (a + h) * ImCos(anga) * ImCos(alpha) + b * ImSin(anga) * ImSin(alpha) + centre.x;
+          pts[i].y = (b + h) * ImSin(anga) * ImCos(alpha) - a * ImCos(anga) * ImSin(alpha) + centre.y;
         }
         for (size_t i = 1; i < num_segments; ++i) {
           window->DrawList->AddLine(pts[i-1], pts[i], color_alpha(color, 1.f), thickness);
@@ -4087,7 +4088,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 230;
+      constexpr int num_spinners = 240;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -4279,7 +4280,7 @@ namespace ImSpinner
           case $(71) ImSpinner::SpinnerRotateGear       (Name("SpinnerRotateGear"),
                                                           R(16), T(6), C(white), S(2.1f) * velocity, 8); break;
           case $(72) ImSpinner::SpinnerRotatedAtom      (Name("SpinnerRotatedAtom"),
-                                                          R(16), T(2), C(white), S(2.1f) * velocity, 3); break;
+                                                          R(16), T(2), C(white), S(2.1f) * velocity, DT(3), M(0)); break;
           case $(73) ImSpinner::SpinnerAtom             (Name("SpinnerAtom"),
                                                           R(16), T(2), C(white), S(4.1f) * velocity, 3); break;
           case $(74) ImSpinner::SpinnerRainbowBalls     (Name("SpinnerRainbowBalls"),
@@ -4592,6 +4593,12 @@ namespace ImSpinner
                                                           R(16), T(2), C(white), S(0.5f) * velocity, DT(5), M(0)); break;
           case $(228) ImSpinner::SpinnerCircularLines   (Name("SpinnerCircularLines/4"),
                                                           R(16), C(white), S(1.5f) * velocity, DT(16), M(4));  break;
+          case $(229) ImSpinner::SpinnerRotatedAtom      (Name("SpinnerRotatedAtom/5"),
+                                                          R(16), T(2), C(white), S(2.1f) * velocity, DT(2), M(5)); break;
+          case $(230) ImSpinner::SpinnerRotatedAtom      (Name("SpinnerRotatedAtom/2"),
+                                                          R(16), T(2), C(white), S(2.1f) * velocity, DT(2), M(1)); break;
+          case $(231) ImSpinner::SpinnerRotatedAtom      (Name("SpinnerRotatedAtom/2"),
+                                                          R(16), T(2), C(white), S(2.1f) * velocity, DT(3), M(5)); break;
           }
 #undef $
         }
