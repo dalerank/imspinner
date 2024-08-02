@@ -3338,7 +3338,7 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerBarChartRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5)
+    inline void SpinnerBarChartRainbow(const char *label, float radius, float thickness, const ImColor &color, float speed, int bars = 5, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -3355,6 +3355,7 @@ namespace ImSpinner
       {
         ImColor c = ImColor::HSV(out_h + i * 0.1f, out_s, out_v);
         float h = (0.6f + 0.4f * ImSin(start + (1.f + rkoeff[i % 6] * i * hspeed)) ) * size.y;
+        h += ease((ease_mode)mode, start, radius);
         window->DrawList->AddRectFilled(ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) - thickness / 2, centre.y + size.y / 2.f),
                                         ImVec2(pos.x + style.FramePadding.x + i * (thickness * nextItemKoeff) + thickness / 2, centre.y + size.y / 2.f - h * yOffsetKoeftt),
                                         color_alpha(c, 1.f));
@@ -4191,7 +4192,7 @@ namespace ImSpinner
           case $(29) ImSpinner::SpinnerIngYang          (Name("SpinnerIngYangR2"),
                                                           R(16), T(5), true, 3.f, C(white), CB(ImColor(255, 0, 0)), S(4) * velocity, A(IM_PI * 0.8f)); break;
           case $(30) ImSpinner::SpinnerBarChartRainbow  (Name("SpinnerBarChartRainbow"),
-                                                          R(16), T(4), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(6.8f) * velocity, 4); break;
+                                                          R(16), T(4), ImColor::HSV(hue * 0.005f, 0.8f, 0.8f), S(6.8f) * velocity, DT(4), M(0)); break;
           case $(31) ImSpinner::SpinnerBarsRotateFade   (Name("SpinnerBarsRotateFade"),
                                                           8, 18, T(4), C(white), S(7.6f) * velocity, 6); break;
           case $(32) ImSpinner::SpinnerFadeBars         (Name("SpinnerFadeScaleBars"),
