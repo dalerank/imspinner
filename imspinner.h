@@ -1486,7 +1486,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerArcFade(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4)
+    inline void SpinnerArcFade(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t arcs = 4, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -1508,13 +1508,15 @@ namespace ImSpinner
           c.Value.w = 0.f;
           if (start > a && start < (a + arc_angle)) { c.Value.w = 1.f - (start - a) / (float)arc_angle; }
           else if (start < a) { c.Value.w = 1.f; }
-          c.Value.w = ImMax(0.05f, 1.f - c.Value.w);
+          float woff = ease((ease_mode)mode, start - a, 4.f); 
+          c.Value.w = ImMax(0.05f, 1.f - c.Value.w - woff);
         } else {
           const float startk = start - PI_2;
           c.Value.w = 0.f;
           if (startk > a && startk < (a + arc_angle)) { c.Value.w = 1.f - (startk - a) / (float)arc_angle; }
           else if (startk < a) { c.Value.w = 1.f; }
-          c.Value.w = ImMax(0.05f, c.Value.w);
+          float woff = ease((ease_mode)mode, start - a, 4.f); 
+          c.Value.w = ImMax(0.05f, c.Value.w + woff);
         }
        
         window->DrawList->PathStroke(color_alpha(c, 1.f), false, thickness);
@@ -4211,7 +4213,7 @@ namespace ImSpinner
           case $(51) ImSpinner::SpinnerFluid            (Name("SpinnerFluid"),
                                                           R(16), C(ImColor(0, 0, 255)), S(3.8f) * velocity, 4); break;
           case $(52) ImSpinner::SpinnerArcFade          (Name("SpinnerArcFade"),
-                                                          R(13), T(5), C(white), S(3) * velocity, 4); break;
+                                                          R(13), T(5), C(white), S(3) * velocity, DT(4), M(0)); break;
           case $(53) ImSpinner::SpinnerFilling          (Name("SpinnerFilling"),
                                                           R(16), T(6), C(white), CB(ImColor(255, 0, 0)), S(4) * velocity); break;
           case $(54) ImSpinner::SpinnerTopup            (Name("SpinnerTopup"),
@@ -4552,6 +4554,10 @@ namespace ImSpinner
                                                           R(16), T(4), C(white), S(3) * velocity, DT(4), MDT(1), M(1)); break;
           case $(222) ImSpinner::Spinner<e_st_angle>     (Name("SpinnerAng"),
                                                           Radius{R(16)}, Thickness{T(2)}, Color{C(white)}, BgColor{CB(ImColor(255, 255, 255, 128))}, Speed{S(8) * velocity}, Angle{A(IM_PI)}, Mode{M(1)}); break;
+          case $(223) ImSpinner::SpinnerArcRotation      (Name("SpinnerArcRotation/3"),
+                                                          R(13), T(5), C(white), S(3) * velocity, DT(4), M(3)); break;
+          case $(224) ImSpinner::SpinnerArcFade          (Name("SpinnerArcFade/2"),
+                                                          R(13), T(5), C(white), S(3) * velocity, DT(4), M(1)); break;
           }
 #undef $
         }
