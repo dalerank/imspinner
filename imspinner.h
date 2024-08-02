@@ -198,7 +198,24 @@ namespace ImSpinner
         return a * ImSin(limtime) - b * ImSin(3 * limtime);
     }
 
-    inline std::pair<float, float> damped_infinity(float const& a, float const& t) {
+    inline float damped_inoutelastic(float t, float amplitude, float period) {
+        if( t == 0 ) return 0;
+        t *= 2;
+        if( t == 2 ) return 1;
+
+        float s;
+        if( amplitude < 1 ) {
+            amplitude = 1;
+            s = period / 4;
+        } else {
+            s = period / (2 * IM_PI) * std::asin( 1 / amplitude );
+        }
+
+        if( t < 1 ) return -0.5f * ( amplitude * ImPow(2.0f, 10.f*(t-1.f) ) * ImSin( (t-1.f-s)*(2.f*IM_PI)/period ));
+        return amplitude * ImPow( 2.0f, -10*(t-1) ) * ImSin( (t-1.f-s)*(2.f*IM_PI)/period ) * 0.5f + 1.f;
+    }
+
+    inline std::pair<float, float> damped_infinity(float t, float a) {
         return std::make_pair((a * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))),
                               (a * ImSin(t) * ImCos(t)) / (1 + (powf(ImSin(t), 2.0f))));
     };
@@ -213,13 +230,17 @@ namespace ImSpinner
     inline float ease_inoutexpo(float *p) { float tr = ImMax(ImSin(p[0]) - 0.5f, 0.f) * (p[1] * 0.4f); return ease_inoutexpo(tr) * (p[1] * 0.3f); }
     inline float ease_spring(float *p) { return damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(p[0], p[1])), p[2], p[3]);}
     inline float ease_gravity(float *p) { return damped_gravity(p[0]); }
+    inline float ease_infinity(float *p) { return damped_infinity(p[0], p[1]).second; }
+    inline float ease_inoutelastic(float *p) { return damped_inoutelastic(p[1], p[2], p[3]); }
 
     enum ease_mode {
         e_ease_none = 0,
         e_ease_inoutquad = 1,
         e_ease_inoutexpo = 2,
         e_ease_spring = 3,
-        e_ease_gravity = 3,
+        e_ease_gravity = 4,
+        e_ease_infinity = 5,
+        e_ease_elastic = 6,
     };
 
     template<typename ... Args>
@@ -229,6 +250,9 @@ namespace ImSpinner
         case e_ease_inoutquad: return ease_inoutquad(params);
         case e_ease_inoutexpo: return ease_inoutexpo(params);
         case e_ease_spring: return ease_spring(params);
+        case e_ease_gravity: return ease_gravity(params);
+        case e_ease_infinity: return ease_infinity(params);
+        case e_ease_elastic: return ease_inoutelastic(params);
         case e_ease_none: return (0.f);
         }
         return 0.f;
@@ -332,7 +356,7 @@ namespace ImSpinner
         switch (mode) {
         case 1: b = damped_gravity(ImSin(start * 1.1f)) * angle; break;
         case 2: radius = (0.8f + ImCos(start) * 0.2f) * radius; break;
-        case 3: b = damped_infinity(1.f, (float)start * 1.1f).second; break;
+        case 3: b = damped_infinity(start * 1.1f, 1.f).second; break;
         }
 
         auto radiusmode = [radius, mode] (float a) { switch (mode) { case 4: return damped_trifolium(a) * radius; } return radius; };
@@ -355,7 +379,7 @@ namespace ImSpinner
         switch (mode) {
         case 1: b = damped_gravity(ImSin(start * 1.1f)) * angle; break;
         case 2: radius = (0.8f + ImCos(start) * 0.2f) * radius; break;
-        case 3: b = damped_infinity(1.f, (float)start * 1.1f).second; break;
+        case 3: b = damped_infinity(start * 1.1f, 1.f).second; break;
         case 4: b = ease_outquad(ImSin(start * 1.1f)) * angle; break;
         case 5: kb = 2.f; break;
         }
@@ -447,7 +471,7 @@ namespace ImSpinner
 
       float start_r = ImFmod(start, PI_DIV_2);
       switch (mode) {
-      case 1: start_r = damped_infinity(angle, start_r).second; break;
+      case 1: start_r = damped_infinity(start_r, angle).second; break;
       }
       float radius_k = ImSin(start_r);
       float radius1 = radius_k * radius;
@@ -571,7 +595,7 @@ namespace ImSpinner
         };
 
         switch (mode) {
-        case 1: start = damped_infinity(1.f, (float)start * 1.1f).second; break;
+        case 1: start = damped_infinity(start * 1.1f, 1.f).second; break;
         case 4: start = ease_outquad(ImSin(ImFmod(start, IM_PI))); break;
         case 5: start = ease_inoutexpo(ImSin(ImFmod(start, IM_PI))); break;
         }
@@ -636,7 +660,7 @@ namespace ImSpinner
         float a = start + (IM_PI - i * offset);
         switch (mode) {
         case 1: a = damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + i * PI_DIV(dots * 2), PI_2))); break;
-        case 2: a = damped_infinity(radius, (float)(start + i * PI_DIV(dots * 2))).second; break;
+        case 2: a = damped_infinity((float)(start + i * PI_DIV(dots * 2)), radius).second; break;
         }
         float y =  centre.y + ImSin(a * heightSpeed) * thickness * heightKoeff;
         window->DrawList->AddCircleFilled(ImVec2(centre.x - hsize + i * (thickness * nextItemKoeff), ImMin(y, centre.y)), thickness, color_alpha(color, 1.f), 8);
@@ -982,7 +1006,7 @@ namespace ImSpinner
           float a = 0.f;
           switch (mode) {
           case 1: a = start + i * PI_2_DIV(dots) + damped_spring(1, 10.f, 1.0f, ImSin(start + i * PI_2_DIV(dots)), PI_2_DIV(dots), 0); break;
-          case 2: a = start + i * PI_2_DIV(dots) + damped_infinity(1.f, (float)(start + i * PI_DIV(dots * 2))).second; break;
+          case 2: a = start + i * PI_2_DIV(dots) + damped_infinity(start + i * PI_DIV(dots * 2), 1.f).second; break;
           default:
             a = start + (i * PI_2_DIV(dots));
           }
@@ -1195,7 +1219,7 @@ namespace ImSpinner
       {
         ared = start + (i * angle_offset);
         switch (mode) {
-        case 1: ared += damped_infinity(angle, start).second; break;
+        case 1: ared += damped_infinity(start, angle).second; break;
         }
 
         if (i * angle_offset < ared_min)
@@ -1451,15 +1475,15 @@ namespace ImSpinner
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num) {
           window->DrawList->PathClear();
           float arc_start = 2 * IM_PI / arcs;
-          float b = start;
-          switch (mode) {
-          case 1: b = start + damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(start + arc_num * PI_DIV(2) / arcs, IM_PI)), 1, 0); break;
-          case 2: b = start + damped_infinity(PI_2 - angle, start).second; break;
-          default: b = start;
-          }
+          float b = ease((ease_mode)mode, start + arc_num * PI_DIV(2) / arcs, IM_PI, 1, 0);
+          //switch (mode) {
+          //case 1: b = start + damped_spring(1, 10.f, 1.0f, , )), 1, 0); break;
+          //case 2: b = start + damped_infinity(PI_2 - angle, start).second; break;
+          //default: b = start;
+          //}
           
           for (size_t i = 0; i < num_segments; i++) {
-            const float a = b + arc_start * arc_num + (i * angle_offset);
+            const float a = start + b + arc_start * arc_num + (i * angle_offset);
             window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius2, centre.y + ImSin(a) * radius2));
           }
           window->DrawList->PathStroke(color_alpha(color, 1.f), false, thickness);
@@ -2837,8 +2861,8 @@ namespace ImSpinner
 
       for (size_t i = 0; i < num_segments; i++)
       {
-          const auto xy0 = damped_infinity(a, start + (i * step));
-          const auto xy1 = damped_infinity(a, start + ((i + 1) * step));
+          const auto xy0 = damped_infinity(start + (i * step), a);
+          const auto xy1 = damped_infinity(start + ((i + 1) * step), a);
       
           window->DrawList->AddLine(ImVec2(centre.x + xy0.first, centre.y + xy0.second),
               ImVec2(centre.x + xy1.first, centre.y + xy1.second),
@@ -4678,7 +4702,7 @@ namespace ImSpinner
           if (__dt.count(last_cci)) ImGui::SliderInt("Dots", &__dt[last_cci], 1, 100, "dots = %u");
           if (__mdt.count(last_cci)) ImGui::SliderInt("MidDots", &__mdt[last_cci], 1, 100, "mid dots = %u");
           if (__dd.count(last_cci)) ImGui::SliderFloat("Delta", &__dd[last_cci], -1.f, 1.f, "delta = %f");
-          if (__mm.count(last_cci)) ImGui::SliderInt("Mode", &__mm[last_cci], 0, 5, "mode = %f");
+          if (__mm.count(last_cci)) ImGui::SliderInt("Mode", &__mm[last_cci], 0, 7, "mode = %f");
         }
 
         ImGui::EndTable();
