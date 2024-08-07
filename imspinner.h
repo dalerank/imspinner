@@ -1479,7 +1479,7 @@ namespace ImSpinner
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num) {
           window->DrawList->PathClear();
           float arc_start = 2 * IM_PI / arcs;
-          float b = ease((ease_mode)mode, start + static_cast<float>(arc_num) * PI_DIV(2) / static_cast<float>(arcs), IM_PI, 1.0f, 0.0f);
+          float b = ease((ease_mode)mode, start + arc_num * PI_DIV(2) / arcs, IM_PI, 1.0f, 0.0f);
           //switch (mode) {
           //case 1: b = start + damped_spring(1, 10.f, 1.0f, , )), 1, 0); break;
           //case 2: b = start + damped_infinity(PI_2 - angle, start).second; break;
@@ -1505,7 +1505,7 @@ namespace ImSpinner
       for (size_t arc_num = 0; arc_num < arcs; ++arc_num) {
         window->DrawList->PathClear();
         ImColor c = color_alpha(color, ImMax(0.1f, arc_num / (float)arcs));
-        float b = ease((ease_mode)mode, start + static_cast<float>(arc_num) * PI_DIV(2) / arcs, IM_PI, 1.0f, 0.0f);
+        float b = ease((ease_mode)mode, start + arc_num * PI_DIV(2) / arcs, IM_PI, 1.0f, 0.0f);
         for (size_t i = 0; i <= num_segments; i++) {
           const float a = start + b + arc_angle * arc_num + (i * angle_offset);
           window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a) * radius, centre.y + ImSin(a) * radius));
