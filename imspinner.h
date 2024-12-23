@@ -1930,6 +1930,41 @@ namespace ImSpinner
       }
     }
 
+    inline void SpinnerPointsRoller(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t points = 8, int circles = 2, float rspeed = 1.f) {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float start = ImFmod((float)ImGui::GetTime() * speed, IM_PI / (points / 2));
+        const float arc_angle = PI_2 / (float)points;
+        const float angle_offset = arc_angle / num_segments;
+
+        float dspeed = rspeed;
+        float angleStep = IM_PI * 2.0f / points; // Step between dots
+
+        for (int c_num = 0; c_num < circles; c_num++) {
+            float vradius = radius * (1.f - (1.f / (circles + 2.f) * c_num));
+            float adv_angle = ((IM_PI * 2) / circles) * c_num;// *(1.f + (0.1f * circles) * c_num);
+            for (size_t arc_num = 0; arc_num < points; ++arc_num) {
+                const float b = arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
+                const float e = arc_angle * arc_num + arc_angle - PI_DIV_2 - PI_DIV_4;
+                const float a = arc_angle * arc_num;
+
+                float angle = angleStep * arc_num + start * speed; // Calculate angle for each dot
+                float alpha = 1.0f - (angle / (IM_PI * 2.0f)); // Fade effect
+
+                ImU32 dotColor = ImGui::GetColorU32(ImVec4(
+                    (color >> IM_COL32_R_SHIFT) / 255.0f,
+                    (color >> IM_COL32_G_SHIFT) / 255.0f,
+                    (color >> IM_COL32_B_SHIFT) / 255.0f,
+                    alpha
+                ));
+
+                const float ar = start + adv_angle + arc_angle * arc_num - PI_DIV_2 - PI_DIV_4;
+                window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(ar) * vradius, centre.y + ImSin(ar) * vradius), thickness, color_alpha(dotColor, 1.f), 8);
+            }
+            dspeed += rspeed;
+        }
+    }
+
     inline void SpinnerPointsArcBounce(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, size_t points = 4, int circles = 2, float rspeed = 0.f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -4609,6 +4644,12 @@ namespace ImSpinner
                                                           R(16), T(4), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(3), M(1)); break;
           case $(233) ImSpinner::SpinnerRainbowBalls     (Name("SpinnerRainbowBalls/5"),
                                                           R(16), T(4), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(4), M(5)); break;
+          case $(234) ImSpinner::SpinnerPointsRoller     (Name("SpinnerPointsRoller"),
+                                                          R(16), T(3.5), C(white), S(1.4) * velocity, DT(8), MDT(1), 1.f); break;
+          case $(235) ImSpinner::SpinnerPointsRoller     (Name("SpinnerPointsRoller2"),
+                                                          R(16), T(1), C(white), S(1.0) * velocity, DT(18), MDT(3), 1.f); break;
+          case $(236) ImSpinner::SpinnerPointsRoller     (Name("SpinnerPointsRoller2"),
+                                                          R(16), T(3), C(white), S(1.0) * velocity, DT(2), MDT(12), 1.f); break;
           }
 #undef $
         }
