@@ -232,6 +232,7 @@ namespace ImSpinner
     inline float ease_gravity(float *p) { return damped_gravity(p[0]); }
     inline float ease_infinity(float *p) { return damped_infinity(p[0], p[1]).second; }
     inline float ease_inoutelastic(float *p) { return damped_inoutelastic(p[1], p[2], p[3]); }
+    inline float ease_sine(float *p) { return 0.5f * (1.0f - cosf(p[0] * IM_PI)); }
 
     enum ease_mode {
         e_ease_none = 0,
@@ -241,6 +242,7 @@ namespace ImSpinner
         e_ease_gravity = 4,
         e_ease_infinity = 5,
         e_ease_elastic = 6,
+        e_ease_sine = 7,
     };
 
     template<typename ... Args>
@@ -254,6 +256,7 @@ namespace ImSpinner
         case e_ease_gravity: return ease_gravity(params);
         case e_ease_infinity: return ease_infinity(params);
         case e_ease_elastic: return ease_inoutelastic(params);
+        case e_ease_sine: return ease_sine(params);
         case e_ease_none: return (0.f);
         }
         return 0.f;
@@ -280,7 +283,7 @@ namespace ImSpinner
              const float a_min = ImMax(ang_min, PI_2 * ((float)start) / (float)num_segments + (IM_PI / arcs) * i);
             const float a_max = ImMin(ang_max, PI_2 * ((float)num_segments + 3 * (i + 1)) / (float)num_segments);
             
-            circle([&](int i) {
+            circle([&] (int i) {
                 const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
                 const float rspeed = a + (float)ImGui::GetTime() * speed;
                 float pulse_factor = 1.f;
@@ -919,6 +922,35 @@ namespace ImSpinner
             }
         }
     }
+
+    inline void SpinnerThickToSin(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, int lt = 8, int mode = 0) {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
+        float length = ImFmod(start, IM_PI);
+        const float dangle = ImSin(length) * IM_PI * 0.5f;
+        const float angle_offset = IM_PI / (lt * 2);
+
+        auto draw_spring = [&] (float k) {
+            float arc = 0.f;
+            size_t i = 0;
+            for (; i < (lt * 2); i++) {
+                float a = start + (i * angle_offset);
+                a += ease((ease_mode)mode, a, dangle);
+                if (ImSin(a) < 0.f)
+                    a *= -1;
+                arc += angle_offset;
+                if (arc > dangle)
+                    break;
+                float th = thickness * (2 * fabs(ImCos(start)));
+                th = ImMax(th, 1.f);
+                window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + k * ImSin(a) * radius), th, color_alpha(color, 1.f), 8);
+            }
+        };
+
+        draw_spring(-1);
+    }
+
 
     inline void SpinnerScaleDots(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 2.8f, int lt = 8)
     {
@@ -4650,6 +4682,12 @@ namespace ImSpinner
                                                           R(16), T(1), C(white), S(1.0) * velocity, DT(18), MDT(3), 1.f); break;
           case $(236) ImSpinner::SpinnerPointsRoller     (Name("SpinnerPointsRoller2"),
                                                           R(16), T(3), C(white), S(1.0) * velocity, DT(2), MDT(12), 1.f); break;
+          case $(237) ImSpinner::SpinnerThickToSin       (Name("SpinnerThickToSin"),
+                                                          R(16), T(2), C(white), S(3) * velocity, DT(8), M(0)); break;
+          case $(238) ImSpinner::SpinnerThickToSin       (Name("SpinnerThickToSin2"),
+                                                          R(16), T(1), C(white), S(3) * velocity, DT(20), M(5)); break;
+          case $(239) ImSpinner::SpinnerThickToSin       (Name("SpinnerThickToSin2"),
+                                                          R(16), T(1), C(white), S(3) * velocity, DT(20), M(6)); break;
           }
 #undef $
         }
@@ -4770,7 +4808,7 @@ namespace ImSpinner
           if (__dt.count(last_cci)) ImGui::SliderInt("Dots", &__dt[last_cci], 1, 100, "dots = %u");
           if (__mdt.count(last_cci)) ImGui::SliderInt("MidDots", &__mdt[last_cci], 1, 100, "mid dots = %u");
           if (__dd.count(last_cci)) ImGui::SliderFloat("Delta", &__dd[last_cci], -1.f, 1.f, "delta = %f");
-          if (__mm.count(last_cci)) ImGui::SliderInt("Mode", &__mm[last_cci], 0, 7, "mode = %f");
+          if (__mm.count(last_cci)) ImGui::SliderInt("Mode", &__mm[last_cci], 0, 8, "mode = %f");
         }
 
         ImGui::EndTable();
