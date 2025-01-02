@@ -32,6 +32,7 @@
 #include <cmath>
 #include <map>
 #include <cctype>
+#include <algorithm>
 
 #ifdef __has_include
     #if !__has_include(<imgui.h>)
