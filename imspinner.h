@@ -551,6 +551,29 @@ namespace ImSpinner
       }
     }
 
+    inline void SpinnerFadePulsarSquare(const char *label, float radius, const ImColor &color = white, float speed = 2.8f, int rings = 2, int mode = 0) {
+        SPINNER_HEADER(pos, size, centre, num_segments);
+
+        const float bg_angle_offset = PI_2_DIV(num_segments);
+        const float koeff = PI_DIV(2 * rings);
+        float start = (float)ImGui::GetTime() * speed;
+
+        for (int num_ring = 0; num_ring < rings; ++num_ring) {
+            float start_r = ImFmod(start, PI_DIV_2);
+            float radius_k = ImSin(start_r * (1.f - (1.f / rings) * num_ring));
+            radius_k += ease((ease_mode)mode, bg_angle_offset, speed);
+            radius_k = std::clamp(radius_k, 0.f, 1.f);
+
+            ImColor c = color_alpha(color, (radius_k > 0.5f) ? (2.f - (radius_k * 2.f)) : color.Value.w);
+            c.Value.w = 0.8f / (1 + rings);//ease((ease_mode)mode, start, c.Value.w);
+            float px = radius_k * radius;
+            window->DrawList->AddRectFilled(ImVec2(centre.x - px, centre.y - px), ImVec2(centre.x + px, centre.y + px), c, 2.f);
+
+            px = radius * (1.f - radius_k);
+            window->DrawList->AddRectFilled(ImVec2(centre.x - px, centre.y - px), ImVec2(centre.x + px, centre.y + px), c, 2.f);
+        }
+    }
+
     inline void SpinnerCircularLines(const char *label, float radius, const ImColor &color = white, float speed = 1.8f, int lines = 8, int mode = 0)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -944,6 +967,7 @@ namespace ImSpinner
                     break;
                 float th = thickness * (2 * fabs(ImCos(start)));
                 th = ImMax(th, 1.f);
+
                 window->DrawList->AddCircleFilled(ImVec2(centre.x + ImCos(a) * radius, centre.y + k * ImSin(a) * radius), th, color_alpha(color, 1.f), 8);
             }
         };
@@ -1382,7 +1406,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerFadeTris(const char *label, float radius, const ImColor &color = white, float speed = 2.8f, size_t dim = 2, bool scale = false)
+    inline void SpinnerFadeTris(const char *label, float radius, const ImColor &color = white, float speed = 2.8f, size_t dim = 2, bool scale = false, int mode = 0)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -4161,7 +4185,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 240;
+      constexpr int num_spinners = 250;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -4517,7 +4541,7 @@ namespace ImSpinner
           case $(153) ImSpinner::SpinnerMovingArcs       (Name("SpinnerMovingArcs"),
                                                           R(16), T(4), C(white), S(2) * velocity, DT(4)); break;
           case $(154) ImSpinner::SpinnerFadeTris         (Name("SpinnerFadeTris"),
-                                                          R(20), C(white), S(5.f) * velocity, DT(2)); break;
+                                                          R(20), C(white), S(5.f) * velocity, DT(2), false, M(0)); break;
           case $(155) ImSpinner::SpinnerBounceDots       (Name("SpinnerBounceDots1"), R(16),
                                                           T(2.5), C(white), S(3) * velocity, DT(6), M(1)); break;
           case $(156) ImSpinner::SpinnerRotateDots       (Name("SpinnerRotateDots"),
@@ -4688,6 +4712,8 @@ namespace ImSpinner
                                                           R(16), T(1), C(white), S(3) * velocity, DT(20), M(5)); break;
           case $(239) ImSpinner::SpinnerThickToSin       (Name("SpinnerThickToSin2"),
                                                           R(16), T(1), C(white), S(3) * velocity, DT(20), M(6)); break;
+          case $(240) ImSpinner::SpinnerFadePulsarSquare (Name("SpinnerFadePulsarSquare"),
+                                                          R(16), C(white), S(1.5f) * velocity, DT(5), M(0));  break;
           }
 #undef $
         }
