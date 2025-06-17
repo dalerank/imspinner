@@ -1682,6 +1682,13 @@ namespace ImSpinner
         }
     }
 
+#if IMGUI_VERSION_NUM < 19197
+    #define IMSPINNER_FIND_GLYPH(x) Font->FindGlyph(x)
+#else
+    #define IMSPINNER_FIND_GLYPH(x) FontBaked->FindGlyph(x)
+#endif
+
+
     inline void SpinnerAsciiSymbolPoints(const char *label, const char* text, float radius, float thickness, const ImColor &color = white, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
@@ -1690,13 +1697,21 @@ namespace ImSpinner
             return;
 
         const float start = ImFmod((float)ImGui::GetTime() * speed, (float)strlen(text));
-        const ImFontGlyph* glyph = ImGui::GetCurrentContext()->Font->FindGlyph(text[(int)start]);
+        const ImFontGlyph* glyph = ImGui::GetCurrentContext()->IMSPINNER_FIND_GLYPH(text[(int)start]);
 
         ImVec2 pp(centre.x - radius, centre.y - radius);
         ImFontAtlas* atlas = ImGui::GetIO().Fonts;
         unsigned char* bitmap;
         int out_width, out_height;
+
+#if IMGUI_VERSION_NUM < 19197
         atlas->GetTexDataAsAlpha8(&bitmap, &out_width, &out_height);
+#else
+        const auto* atlas_tex_data = atlas->TexData;
+        out_width = atlas_tex_data->Width;
+        out_height = atlas_tex_data->Height;
+        bitmap = atlas_tex_data->Pixels;
+#endif
 
         const int U1 = (int)(glyph->U1 * out_width);
         const int U0 = (int)(glyph->U0 * out_width);
@@ -1707,10 +1722,16 @@ namespace ImSpinner
         
         for (int x = U0, ppx = 0; x < U1; x++, ppx++) {
             for (int y = V0, ppy = 0; y < V1; y++, ppy++) {
-               ImVec2 point(pp.x + (ppx * px), pp.y + (ppy * py));
-               const unsigned char alpha = bitmap[out_width * y + x];
-               window->DrawList->AddCircleFilled(point, thickness * 1.5f, color_alpha({.5f,.5f,.5f,.5f}, alpha / 255.f));
-               window->DrawList->AddCircleFilled(point, thickness, color_alpha(color, alpha / 255.f));
+                ImVec2 point(pp.x + (ppx * px), pp.y + (ppy * py));
+                // * 4 + 3 because dear imgui now defaults to RGBA32
+                const unsigned char alpha = bitmap[(out_width * y + x)
+#if IMGUI_VERSION_NUM > 19197
+                                                                        * 4 + 3];
+#else
+                                                                               ];
+#endif
+                window->DrawList->AddCircleFilled(point, thickness * 1.5f, color_alpha({.5f,.5f,.5f,.5f}, alpha / 255.f));
+                window->DrawList->AddCircleFilled(point, thickness, color_alpha(color, alpha / 255.f));
             }
         }
     }
@@ -1736,7 +1757,8 @@ namespace ImSpinner
         float out_h, out_s, out_v;
         ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
         for (int i = 0; text != last_symbol; ++text, ++i) {
-            const ImFontGlyph* glyph = ImGui::GetCurrentContext()->Font->FindGlyph(*text);
+            const ImFontGlyph* glyph = ImGui::GetCurrentContext()->IMSPINNER_FIND_GLYPH(*text);
+
             const float alpha = ImClamp(ImSin(-start + (i / (float)text_len * PI_DIV_2)), 0.f, 1.f);
             ImColor c = ImColor::HSV(out_h + i * (1.f / text_len), out_s, out_v);
             font->RenderChar(window->DrawList, fsize, pp, color_alpha(c, alpha), (ImWchar)*text);
