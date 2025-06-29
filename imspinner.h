@@ -3376,7 +3376,7 @@ namespace ImSpinner
       }
     }
 
-    inline void SpinnerRainbowShot(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls = 5)
+    inline void SpinnerRainbowShot(const char *label, float radius, float thickness, const ImColor &color, float speed, int balls = 5, int mode = 0)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -3395,7 +3395,17 @@ namespace ImSpinner
             const float radius1 = ImMin(radius * rmul, radius);
             const float a = (i * angle_offset);
             ImColor c = rainbow ? ImColor::HSV(out_h + i * (1.f / balls) + colorback, out_s, out_v) : color;
-            window->DrawList->AddLine(centre, ImVec2(centre.x + ImCos(a) * radius1, centre.y + ImSin(a) * radius1), color_alpha(c, 1.f), thickness);
+            float ax, ay;
+            switch(mode) {
+            default: ax = ImCos(a) * radius1; ay = ImSin(a) * radius1; break;
+            case 1: ax = ImCos(a) * radius1; ay = ImSin(a) * radius1 + ImSin(a * 4) * radius1 * 0.2f; break;
+            case 2: { float pulse = 0.8f + 0.2f * ImSin(start * 2); ax = ImCos(a) * radius1 * pulse; ay = ImSin(a) * radius1 * pulse; } break;
+            case 3: { float R = radius1, r = radius1 * 0.3f, d = radius1 * 0.1f; float t = a; ax = (R - r) * ImCos(t) + d * ImCos((R - r) / r * t); ay = (R - r) * ImSin(t) - d * ImSin((R - r) / r * t); } break;
+            case 4: { float t = a; ax = radius1 * ImCos(t) / (1 + ImSin(t) * ImSin(t)); ay = radius1 * ImSin(t) * ImCos(t) / (1 + ImSin(t) * ImSin(t)); } break;
+            case 5: { float zigzag = (ImSin(a * 8) > 0) ? radius1 * 0.3f : -radius1 * 0.3f; ax = ImCos(a) * radius1 + zigzag * ImCos(a + IM_PI / 2); ay = ImSin(a) * radius1 + zigzag * ImSin(a + IM_PI / 2); } break;
+            case 6: ax = ImCos(a) * (radius1 + ImSin(a * 3) * radius1 * 0.3f); ay = ImSin(a) * (radius1 + ImSin(a * 3) * radius1 * 0.3f); break;
+            }
+            window->DrawList->AddLine(centre, ImVec2(centre.x + ax, centre.y + ay), color_alpha(c, 1.f), thickness);
         }
     }
 
@@ -4253,7 +4263,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 250;
+      constexpr int num_spinners = 260;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -4534,7 +4544,7 @@ namespace ImSpinner
           case $(115) ImSpinner::SpinnerMultiFadeDots   (Name("SpinnerMultiFadeDots"), R(16),
                                                           T(2), C(white), S(8) * velocity, DT(8)); break;
           case $(116) ImSpinner::SpinnerRainbowShot     (Name("SpinnerRainbowShot"),
-                                                          R(16), T(4), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(5)); break;
+                                                          R(16), T(4), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(5), M(0)); break;
           case $(117) ImSpinner::SpinnerSpiral          (Name("SpinnerSpiral"),
                                                           R(16), T(2), C(white), S(6) * velocity, DT(5)); break;
           case $(118) ImSpinner::SpinnerSpiralEye       (Name("SpinnerSpiralEye"),
@@ -4799,6 +4809,14 @@ namespace ImSpinner
                                                           R(16), T(1), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(0.9f) * velocity, DT(17), M(4), MDT(30), MX(6)); break;
           case $(248) ImSpinner::SpinnerRainbowBalls     (Name("SpinnerRainbowBalls7"),
                                                           R(16), T(1), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(0.9f) * velocity, DT(4), M(0), MDT(30), MX(8)); break;
+          case $(249) ImSpinner::SpinnerRainbowShot      (Name("SpinnerRainbowShot2"),
+                                                          R(16), T(2), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(30), M(1)); break;
+          case $(250) ImSpinner::SpinnerRainbowShot      (Name("SpinnerRainbowShot3"),
+                                                          R(16), T(2), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(30), M(3)); break;
+          case $(251) ImSpinner::SpinnerRainbowShot      (Name("SpinnerRainbowShot2"),
+                                                          R(16), T(2), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(30), M(5)); break;
+          case $(252) ImSpinner::SpinnerRainbowShot      (Name("SpinnerRainbowShot2"),
+                                                          R(16), T(2), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(30), M(6)); break;
           }
 #undef $
         }
