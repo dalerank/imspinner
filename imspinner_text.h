@@ -393,6 +393,55 @@ namespace ImSpinner
         x += cw;
       }
     }
+
+    // Split-and-slide text, a port of the CSS l12 / l13:
+    //   two stacked copies clipped to the top / bottom half of the text slide in
+    //   opposite directions by one text-width, then pause; a shadow copy one
+    //   text-width away wraps them seamlessly, overflow:hidden clips to the width.
+    //   mode 0 (l12): both halves move together (top right, bottom left).
+    //   mode 1 (l13): the bottom half is half a cycle behind, and the dash happens
+    //                 in the first quarter -> the halves slide one after the other.
+    inline void SpinnerTextSplit(const char *label, float radius, const ImColor &color = white, float speed = 1.f, int mode = 0, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      // Scale the font down so the full text fits the cell (the slide window width).
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor c = color_alpha(color, 1.f);
+      const float midy = tp.y + ts.y * 0.5f;
+
+      // l12: move over 1/2 of the cycle, no delay; l13: move over 1/4, bottom half delayed half a cycle.
+      const float move_frac = (mode == 0) ? 0.5f : 0.25f;
+      const float delay = (mode == 0) ? 0.f : 0.5f;
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float shift_t = ease_inoutquad(ImMin(1.f, t / move_frac)) * ts.x;
+      const float tb = ImFmod(t + delay, 1.f);
+      const float shift_b = ease_inoutquad(ImMin(1.f, tb / move_frac)) * ts.x;
+
+      // Top half slides right (with a wrap copy entering from the left).
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(tp.x + ts.x, midy), true);
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x + shift_t, tp.y), c, text);
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x + shift_t - ts.x, tp.y), c, text);
+      window->DrawList->PopClipRect();
+
+      // Bottom half slides left (with a wrap copy entering from the right).
+      window->DrawList->PushClipRect(ImVec2(tp.x, midy), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x - shift_b, tp.y), c, text);
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x - shift_b + ts.x, tp.y), c, text);
+      window->DrawList->PopClipRect();
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
