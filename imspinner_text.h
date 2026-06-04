@@ -355,6 +355,44 @@ namespace ImSpinner
       window->DrawList->AddText(font, font_size, tp, cB, text);
       window->DrawList->PopClipRect();
     }
+
+    // Bouncing letters, a port of the CSS l11:
+    //   two stacked copies masked to alternating characters move in opposite
+    //   directions; a wild cubic-bezier(.5,220,.5,-220) makes translateY oscillate.
+    // Here each character is drawn with a vertical offset whose sign alternates by
+    // index and oscillates over time -> neighbouring letters bob up/down in antiphase.
+    inline void SpinnerTextBounce(const char *label, float radius, const ImColor &color = white, float speed = 1.f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor c = color_alpha(color, 1.f);
+      const float osc = ImSin((float)ImGui::GetTime() * speed * PI_2); // -1..1, 1s period at speed 1
+      const float amp = ts.y * 0.25f;
+
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float sign = (i & 1) ? -1.f : 1.f;
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y + sign * amp * osc), c, text + i, text + i + 1);
+        x += cw;
+      }
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
