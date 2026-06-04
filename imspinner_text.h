@@ -526,6 +526,69 @@ namespace ImSpinner
       }
       window->DrawList->PopClipRect();
     }
+
+    // Per-letter color blink, a port of the CSS l16. The CSS uses letter-spacing +
+    // 9 shifted text-shadows so every character is an independent shadow that can be
+    // colored on its own; keyframes (20/40/60/80%) recolor different letters, here
+    // reproduced as a palette + a 5-keyframe table, interpolated over the cycle.
+    // (CSS uncolored letters are currentColor; here that's 'color', default white.)
+    // The color table targets the 10 chars of "Loading..."; extra chars stay 'color'.
+    inline void SpinnerTextColorful(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImColor pal[] = {
+        color,                       // 0: base (CSS currentColor)
+        ImColor(255, 0, 0),          // 1: red
+        ImColor(0, 128, 0),          // 2: green
+        ImColor(255, 165, 0),        // 3: orange
+        ImColor(255, 255, 0),        // 4: yellow
+        ImColor(173, 216, 230),      // 5: lightblue
+        ImColor(128, 128, 128),      // 6: grey
+        ImColor(255, 165, 22),       // 7: #ffa516
+        ImColor(99, 255, 244),       // 8: #63fff4
+        ImColor(233, 69, 233)        // 9: #e945e9
+      };
+      static const int kf[5][10] = {
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, //  0%
+        { 0, 0, 1, 0, 7, 8, 0, 0, 2, 0 }, // 20%
+        { 0, 0, 1, 9, 0, 2, 3, 0, 2, 0 }, // 40%
+        { 0, 5, 0, 9, 0, 2, 0, 4, 7, 1 }, // 60%
+        { 0, 5, 4, 8, 7, 1, 0, 6, 8, 0 }  // 80%
+      };
+
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const int seg = ImMin(4, (int)(t * 5.f));
+      const float u = t * 5.f - seg;
+      auto lerp = [](const ImColor &a, const ImColor &b, float k) {
+        return ImColor(a.Value.x + (b.Value.x - a.Value.x) * k, a.Value.y + (b.Value.y - a.Value.y) * k,
+                       a.Value.z + (b.Value.z - a.Value.z) * k, a.Value.w + (b.Value.w - a.Value.w) * k);
+      };
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        const ImColor col = (i < 10) ? lerp(pal[kf[seg][i]], pal[kf[(seg + 1) % 5][i]], u) : color;
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y), color_alpha(col, 1.f), text + i, text + i + 1);
+        x += cw;
+      }
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
