@@ -263,6 +263,52 @@ namespace ImSpinner
           window->DrawList->AddText(font, font_size, ImVec2(char_x(step), tp.y), cfg, text + step, text + step + 1);
       }
     }
+
+    // Multi-color scrolling marquee, a port of the CSS l9:
+    //   5 text-shadow copies (base, olive, crimson, teal, base) spaced 11ch apart,
+    //   shifting left by 11ch each quarter with cubic-bezier(.3,1,0,1) easing;
+    //   animation: 5s infinite. overflow:hidden clips to the text width.
+    // Each segment snaps the text to the next color, looping seamlessly because the
+    // first and last copies share 'color'. (CSS base is #000; here it defaults to
+    // white so it shows on a dark theme.)
+    inline void SpinnerTextScrollColors(const char *label, float radius, const ImColor &color = white, float speed = 0.2f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell (the scroll window width).
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const float ch = ts.x / (float)len;                    // monospace char width
+      const float wrap = ts.x + ch;                          // 11ch for a 10-char string
+      const ImColor palette[] = { color, ImColor(0x8A, 0x9B, 0x0F), ImColor(0xC0, 0x29, 0x42), ImColor(0x00, 0xA0, 0xB0), color };
+      const int K = (int)(sizeof(palette) / sizeof(palette[0]));
+
+      // Per-segment ease (each 1/(K-1) of the cycle shifts one wrap, cubic-bezier-ish).
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const int seg = ImMin(K - 2, (int)(t * (K - 1)));
+      const float local = t * (K - 1) - seg;
+      const float shift = (seg + ease_outcubic(local)) * wrap;
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+
+      // overflow: hidden -> clip to the text window, then draw the colored copies.
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      for (int i = 0; i < K; i++)
+        window->DrawList->AddText(font, font_size, ImVec2(tp.x + i * wrap - shift, tp.y), color_alpha(palette[i], 1.f), text);
+      window->DrawList->PopClipRect();
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
