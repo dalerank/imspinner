@@ -3,6 +3,8 @@ Set of nice spinners for imgui
 
 ![spinners](https://github.com/user-attachments/assets/796d734b-eb2b-4d6f-9199-e4609a57935d)
 
+<img width="913" height="177" alt="texts" src="https://github.com/user-attachments/assets/90374d7f-6282-44e7-97c3-1e3d681fe8bb" />
+
 # headers
 
 The library is header-only and split into three files; each one includes the
