@@ -142,6 +142,42 @@ namespace ImSpinner
         window->DrawList->AddRectFilled(ImVec2(x0, y), ImVec2(x0 + dash, y + thickness), c);
       }
     }
+
+    // Typing text, a port of the CSS clip-path typers:
+    //   l4: clip-path inset 3ch  -> -1ch, steps(4)   -> reveals the last 'tail' chars
+    //   l5: clip-path inset 100% -> -1ch, steps(11)  -> types the whole word out
+    // The last 'tail' characters are revealed one by one, left to right (e.g.
+    // "Loading" -> "Loading." -> "Loading.." -> "Loading..."), then it repeats.
+    // Pass tail <= 0 to type out the entire string. The full text is laid out
+    // (left edge fixed) so nothing shifts as it reveals.
+    inline void SpinnerTextTyping(const char *label, float radius, const ImColor &color = white, float speed = 1.f, int tail = 3, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+      const int ntail = (tail <= 0) ? len : ImMin(tail, len); // tail<=0 -> type out the whole text
+      const int nsteps = ntail + 1;                          // hidden..fully revealed
+
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const int step = ImMin(nsteps - 1, (int)(t * nsteps)); // 0..ntail (CSS steps())
+      const int visible = (len - ntail) + step;
+
+      // Scale the font down so the FULL text fits the cell (so it never jumps).
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      window->DrawList->AddText(font, font_size, tp, color_alpha(color, 1.f), text, text + visible);
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
