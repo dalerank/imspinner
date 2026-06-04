@@ -3,12 +3,34 @@ Set of nice spinners for imgui
 
 ![spinners](https://github.com/user-attachments/assets/796d734b-eb2b-4d6f-9199-e4609a57935d)
 
+# headers
+
+The library is header-only and split into three files; each one includes the
+one below it, so just include the highest level you need:
+
+| header | what you get | includes |
+|--------|--------------|----------|
+| `imspinner.h` | the spinners themselves + the `Spinner<>` dispatcher | — |
+| `imspinner_text.h` | text loaders (e.g. `SpinnerTextFade`) | `imspinner.h` |
+| `imspinner_demo.h` | the interactive demo gallery (`demoSpinners()`) | `imspinner_text.h` |
+
+```c++
+#include "../imspinner/imspinner.h"          // graphical spinners only
+// or
+#include "../imspinner/imspinner_text.h"     // + text loaders
+// or
+#include "../imspinner/imspinner_demo.h"     // + interactive demo
+
+// use a single spinner anywhere inside an ImGui window:
+ImSpinner::SpinnerRainbow("rainbow", 16.f, 2.f, ImColor(255, 255, 255), 8.f);
+```
+
 # how to test
 
-1. add a little code that enable test mode
+1. include the demo header (no `#define` needed — including it is the opt-in)
+   and call `demoSpinners()` once per frame:
 ```c++
-#define IMSPINNER_DEMO
-#include "../imspinner/imspinner.h"
+#include "../imspinner/imspinner_demo.h"
 
 int main(int, char**) {
   ...
