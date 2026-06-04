@@ -1763,36 +1763,6 @@ namespace ImSpinner
         }
     }
 
-    inline void SpinnerTextFading(const char *label, const char* text, float radius, float fsize, const ImColor &color = white, float speed = 2.8f)
-    {
-        SPINNER_HEADER(pos, size, centre, num_segments);
-
-        if (!text || !*text)
-            return;
-
-        const float start = ImFmod((float)ImGui::GetTime() * speed, PI_2);
-        const char *last_symbol = ImGui::FindRenderedTextEnd(text);
-        const ImVec2 text_size = ImGui::CalcTextSize(text, last_symbol);
-#if IMGUI_VERSION_NUM < 19150
-        const // Newer imgui versions require make the current context's font non-const
-#endif
-        ImFont* font = ImGui::GetCurrentContext()->Font;
-
-        ImVec2 pp(centre.x - text_size.x / 2.f, centre.y - text_size.y / 2.f);
-
-        const int text_len = last_symbol - text;
-        float out_h, out_s, out_v;
-        ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, out_h, out_s, out_v);
-        for (int i = 0; text != last_symbol; ++text, ++i) {
-            const ImFontGlyph* glyph = ImGui::GetCurrentContext()->IMSPINNER_FIND_GLYPH(*text);
-
-            const float alpha = ImClamp(ImSin(-start + (i / (float)text_len * PI_DIV_2)), 0.f, 1.f);
-            ImColor c = ImColor::HSV(out_h + i * (1.f / text_len), out_s, out_v);
-            font->RenderChar(window->DrawList, fsize, pp, color_alpha(c, alpha), (ImWchar)*text);
-            pp.x += glyph->AdvanceX;
-        }
-    }
-
     inline void SpinnerSevenSegments(const char *label, const char* text, float radius, float thickness, const ImColor &color = white, float speed = 2.8f)
     {
         SPINNER_HEADER(pos, size, centre, num_segments);

@@ -18,6 +18,7 @@ namespace ImSpinner
       static int hue = 0;
       static float nextdot = 0, nextdot2;
       static bool show_number = false;
+      static int view_mode = 0;   // 0 = graphical spinners, 1 = text animations
       
       nextdot -= 0.07f;
 
@@ -375,8 +376,10 @@ namespace ImSpinner
                                                           R(16), T(3.f), C(white), S(1.4f) * velocity); break;
           case $(149) ImSpinner::SpinnerSquareLoading   (Name("SpinnerSquareLoanding"),
                                                           R(16), T(2), C(white), S(3) * velocity); break;
+#ifdef _IMSPINNER_TEXT_H_
           case $(150) ImSpinner::SpinnerTextFading      (Name("SpinnerTextFading"), "Loading",
                                                           R(16), T(15), C(ImColor::HSV(hue * 0.0011f, 0.8f, 0.8f)), S(4) * velocity); break;
+#endif
           case $(151) ImSpinner::SpinnerBarChartAdvSine (Name("SpinnerBarChartAdvSine"),
                                                           R(16), T(5), C(white), S(4.8f) * velocity, 0); break;
           case $(152) ImSpinner::SpinnerBarChartAdvSineFade(Name("SpinnerBarChartAdvSineFade"),
@@ -583,7 +586,7 @@ namespace ImSpinner
                                                           R(16), T(2), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(30), M(6)); break;
 #ifdef _IMSPINNER_TEXT_H_
           case $(253) ImSpinner::SpinnerTextFade        (Name("SpinnerTextFade"),
-                                                          R(16), C(white), S(1.f) * velocity, "Loading..."); break;
+                                                          R(30), C(white), S(1.f) * velocity, "Loading..."); break;
 #endif
           }
 #undef $
@@ -615,8 +618,25 @@ namespace ImSpinner
             const float region_visible_x2 = ImGui::GetWindowPos().x + ImGui::GetColumnWidth();
 
             const ImVec2 item_size = ImVec2(widget_size, widget_size);
-            for(int current_spi = 0; current_spi < num_spinners; current_spi++)
+
+            // Text-based animation cells; everything else is a graphical spinner.
+            static const int text_spinners[] = { 134, 150, 253 };
+            auto is_text_spinner = [&](int idx) {
+              for (int k = 0; k < (int)(sizeof(text_spinners) / sizeof(text_spinners[0])); ++k)
+                if (text_spinners[k] == idx) return true;
+              return false;
+            };
+
+            // Pick the cells matching the current view mode (0 = spinners, 1 = text).
+            std::vector<int> shown;
+            shown.reserve(num_spinners);
+            for (int i = 0; i < num_spinners; i++)
+              if (is_text_spinner(i) == (view_mode == 1))
+                shown.push_back(i);
+
+            for(size_t j = 0; j < shown.size(); j++)
             {
+              const int current_spi = shown[j];
               // BeginChild here needed to restrict item width&height by specific size
               if( ImGui::BeginChild(100 + current_spi, item_size, false, ImGuiWindowFlags_NoScrollbar) )
               {
@@ -647,7 +667,7 @@ namespace ImSpinner
 
               const float last_item_x2 = ImGui::GetItemRectMax().x;
               const float next_item_x2 = last_item_x2 + style.ItemSpacing.x + item_size.x; // Expected position if next item was on same line
-              if ((current_spi + 1 < num_spinners) && (next_item_x2 < region_visible_x2)) {
+              if ((j + 1 < shown.size()) && (next_item_x2 < region_visible_x2)) {
                 ImGui::SameLine();
               }
             }
@@ -665,6 +685,12 @@ namespace ImSpinner
 
         ImGui::TableNextColumn(); // Options
         {
+          ImGui::TextUnformatted("View");
+          if (ImGui::RadioButton("Spinners", &view_mode, 0)) widget_size = 50.f;
+          ImGui::SameLine();
+          if (ImGui::RadioButton("Text", &view_mode, 1)) widget_size = 75.f;
+          ImGui::Separator();
+
           ImGui::SliderFloat("Velocity", &velocity, 0.0f, 10.0f, "velocity = %.2f");
           ImGui::Checkbox("Show Numbers", &show_number);
           ImGui::SliderFloat("Grid size", &widget_size, 0.0f, 100.0f, "size = %.2f");
