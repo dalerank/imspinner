@@ -4261,6 +4261,10 @@ namespace ImSpinner
       Spinner(label, config);
     }
 
+#ifdef _IMSPINNER_TEXT_H_
+    void SpinnerTextFade(const char *label, float radius, const ImColor &color, float speed, const char *text);
+#endif
+
 #ifdef IMSPINNER_DEMO
     inline void demoSpinners() {
       static int hue = 0;
@@ -4829,6 +4833,10 @@ namespace ImSpinner
                                                           R(16), T(2), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(30), M(5)); break;
           case $(252) ImSpinner::SpinnerRainbowShot      (Name("SpinnerRainbowShot2"),
                                                           R(16), T(2), ImColor::HSV(0.25f, 0.8f, 0.8f, 0.f), S(1.5f) * velocity, DT(30), M(6)); break;
+#ifdef _IMSPINNER_TEXT_H_
+          case $(253) ImSpinner::SpinnerTextFade        (Name("SpinnerTextFade"),
+                                                          R(16), C(white), S(1.f) * velocity, "Loading..."); break;
+#endif
           }
 #undef $
         }
