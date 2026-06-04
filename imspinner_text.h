@@ -485,6 +485,47 @@ namespace ImSpinner
       const float y = tp.y + ts.y + thickness;
       window->DrawList->AddRectFilled(ImVec2(tp.x, y), ImVec2(tp.x + ts.x * bar_frac, y + thickness), c);
     }
+
+    // Rolling letters, a port of the CSS l15:
+    //   alternating characters roll vertically by one line-height in opposite
+    //   directions (a copy rolls out while an identical one rolls in), moving over
+    //   0..80% of the cycle then pausing. Clipped to the line box so it's seamless.
+    inline void SpinnerTextRoll(const char *label, float radius, const ImColor &color = white, float speed = 1.f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor c = color_alpha(color, 1.f);
+      const float H = ts.y;                                  // one line-height roll distance
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float roll = ImMin(1.f, t / 0.8f);               // roll over 0..80%, hold 80..100%
+
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float sign = (i & 1) ? -1.f : 1.f;             // neighbours roll opposite ways
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y + sign * roll * H), c, text + i, text + i + 1);          // rolling out
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y + sign * (roll - 1.f) * H), c, text + i, text + i + 1);  // rolling in
+        x += cw;
+      }
+      window->DrawList->PopClipRect();
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
