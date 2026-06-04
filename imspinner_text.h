@@ -218,14 +218,14 @@ namespace ImSpinner
       window->DrawList->PopClipRect();
     }
 
-    // Two-tone progressive color fill, a port of the CSS:
-    //   color:#0000; background: linear-gradient(90deg,#C02942 50%+.5ch,#000 0)
-    //                right/calc(200% + 1ch) 100%; background-clip: text;
-    //   @keyframes l7 { to { background-position: left } }   /* 2s steps(11) */
-    // The hard gradient edge sweeps across the text one character per step, so the
-    // characters recolor from 'color' to 'bg' left to right, then it repeats.
+    // Two-tone color sweep, a port of the CSS background-clip:text loaders:
+    //   l7 (mode 0): linear-gradient(#C02942 .., #000 0) -> a hard edge sweeps across,
+    //                chars fill from 'bg' to 'color' left to right (cumulative).
+    //   l8 (mode 1): linear-gradient(#000 .., #C02942 1ch, #000 0) -> a 1-char 'color'
+    //                band scans across, one character is highlighted at a time.
+    // Both step one character per cycle (CSS steps()), then repeat.
     // (CSS base is #000; here 'bg' defaults to white so it shows on a dark theme.)
-    inline void SpinnerTextColorFill(const char *label, float radius, const ImColor &color = ImColor(0xC0, 0x29, 0x42), const ImColor &bg = white, float speed = 0.5f, const char *text = "Loading...")
+    inline void SpinnerTextColorFill(const char *label, float radius, const ImColor &color = ImColor(0xC0, 0x29, 0x42), const ImColor &bg = white, float speed = 0.5f, int mode = 0, const char *text = "Loading...")
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
@@ -235,7 +235,7 @@ namespace ImSpinner
       const int len = (int)strlen(text);
       const int nsteps = len + 1;
       const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
-      const int filled = ImMin(len, (int)(t * nsteps));      // 0..len chars recolored (CSS steps())
+      const int step = ImMin(len, (int)(t * nsteps));        // 0..len (CSS steps())
 
       // Scale the font down so the full text fits the cell.
       ImFont *font = ImGui::GetFont();
@@ -248,11 +248,20 @@ namespace ImSpinner
       }
 
       const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
-      const float prefix_w = font->CalcTextSizeA(font_size, 99999.f, 0.f, text, text + filled).x;
+      const ImColor cfg = color_alpha(color, 1.f);
+      const ImColor cbg = color_alpha(bg, 1.f);
+      auto char_x = [&](int n) { return tp.x + font->CalcTextSizeA(font_size, 99999.f, 0.f, text, text + n).x; };
 
-      // Filled prefix in 'color', the rest in 'bg'.
-      window->DrawList->AddText(font, font_size, tp, color_alpha(color, 1.f), text, text + filled);
-      window->DrawList->AddText(font, font_size, ImVec2(tp.x + prefix_w, tp.y), color_alpha(bg, 1.f), text + filled, text + len);
+      if (mode == 0) {
+        // Cumulative fill: prefix [0, step) in 'color', the rest in 'bg'.
+        window->DrawList->AddText(font, font_size, tp, cfg, text, text + step);
+        window->DrawList->AddText(font, font_size, ImVec2(char_x(step), tp.y), cbg, text + step, text + len);
+      } else {
+        // Single moving highlight: whole text in 'bg', the char at 'step' in 'color'.
+        window->DrawList->AddText(font, font_size, tp, cbg, text, text + len);
+        if (step < len)
+          window->DrawList->AddText(font, font_size, ImVec2(char_x(step), tp.y), cfg, text + step, text + step + 1);
+      }
     }
 }
 
