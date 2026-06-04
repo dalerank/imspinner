@@ -73,6 +73,75 @@ namespace ImSpinner
             pp.x += glyph->AdvanceX;
         }
     }
+
+    // Text with a growing underline, a port of the CSS:
+    //   background: linear-gradient(currentColor 0 0) 0 100%/0% 3px no-repeat;
+    //   @keyframes l2 { to { background-size: 100% 3px } }   /* 2s linear infinite */
+    // A 'thickness'-tall bar under the text grows from 0 to full text width, then
+    // snaps back to 0 and repeats (linear, not alternate).
+    inline void SpinnerTextUnderline(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, float thickness = 3.f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float progress = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+
+      // Scale the font down so the text fits inside the spinner cell (2*radius wide).
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor c = color_alpha(color, 1.f);
+      window->DrawList->AddText(font, font_size, tp, c, text);
+
+      // Underline bar growing left-to-right (CSS background-size 0% -> 100%).
+      const float y = tp.y + ts.y + thickness;
+      window->DrawList->AddRectFilled(ImVec2(tp.x, y), ImVec2(tp.x + ts.x * progress, y + thickness), c);
+    }
+
+    // Text with a marching dashed underline, a port of the CSS:
+    //   background: repeating-linear-gradient(90deg,currentColor 0 8%,#0000 0 10%) ... 3px;
+    //   @keyframes l3 { to { background-position: 80% 100% } }   /* 2s steps(6) infinite */
+    // A row of dashes under the text shifts by one period over the cycle in
+    // 'steps' discrete jumps (steps() timing), looping seamlessly.
+    inline void SpinnerTextUnderlineDots(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, float thickness = 3.f, int dashes = 6, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const int ndashes = ImMax(1, dashes);
+
+      // Scale the font down so the text fits inside the spinner cell (2*radius wide).
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor c = color_alpha(color, 1.f);
+      window->DrawList->AddText(font, font_size, tp, c, text);
+
+      // Dashes light up one after another, left to right (CSS steps()): the count
+      // grows from 1 to 'dashes' over the cycle, then resets. Dash fills 80% of the
+      // period (8% solid / 2% gap in CSS).
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const int shown = ImMin(ndashes, (int)(t * ndashes) + 1);
+      const float period = ts.x / (float)ndashes;
+      const float dash = period * 0.8f;
+      const float y = tp.y + ts.y + thickness;
+      for (int i = 0; i < shown; i++) {
+        const float x0 = tp.x + i * period;
+        window->DrawList->AddRectFilled(ImVec2(x0, y), ImVec2(x0 + dash, y + thickness), c);
+      }
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_

@@ -587,6 +587,10 @@ namespace ImSpinner
 #ifdef _IMSPINNER_TEXT_H_
           case $(253) ImSpinner::SpinnerTextFade        (Name("SpinnerTextFade"),
                                                           R(30), C(white), S(1.f) * velocity, "Loading..."); break;
+          case $(254) ImSpinner::SpinnerTextUnderline   (Name("SpinnerTextUnderline"),
+                                                          R(30), C(white), S(0.5f) * velocity, T(3), "Loading..."); break;
+          case $(255) ImSpinner::SpinnerTextUnderlineDots(Name("SpinnerTextUnderlineDots"),
+                                                          R(30), C(white), S(0.5f) * velocity, T(3), DT(6), "Loading..."); break;
 #endif
           }
 #undef $
@@ -620,7 +624,7 @@ namespace ImSpinner
             const ImVec2 item_size = ImVec2(widget_size, widget_size);
 
             // Text-based animation cells; everything else is a graphical spinner.
-            static const int text_spinners[] = { 134, 150, 253 };
+            static const int text_spinners[] = { 134, 150, 253, 254, 255 };
             auto is_text_spinner = [&](int idx) {
               for (int k = 0; k < (int)(sizeof(text_spinners) / sizeof(text_spinners[0])); ++k)
                 if (text_spinners[k] == idx) return true;
