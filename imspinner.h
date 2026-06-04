@@ -300,19 +300,21 @@ namespace ImSpinner
     {
         SPINNER_HEADER(pos, size, centre, num_segments);
 
-        const float start = ImAbs(ImSin((float)ImGui::GetTime()) * (num_segments - 5));
+        const float t = (float)ImGui::GetTime();
+        const ImColor c = color_alpha(color, 1.f);
+        const float start = ImAbs(ImSin(t) * (num_segments - 5));
         for (int i = 0; i < arcs; ++i)
         {
             const float rb = (radius / arcs) * (i + 1);
-            const float ab = ease((ease_mode)mode, (float)ImGui::GetTime() * speed + i * PI_DIV(2) / arcs, IM_PI, 1.0f, 0.0f);
+            const float ab = ease((ease_mode)mode, t * speed + i * PI_DIV(2) / arcs, IM_PI, 1.0f, 0.0f);
             const float a_min = ImMax(ang_min, PI_2 * ((float)start) / (float)num_segments + (IM_PI / arcs) * i) + ab;
             const float a_max = ImMin(ang_max, PI_2 * ((float)num_segments + 3 * (i + 1)) / (float)num_segments) - ab;
 
-            circle([&] (int i) {
-                const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
-                const float rspeed = a + (float)ImGui::GetTime() * speed;
+            circle([&] (int seg) {
+                const float a = a_min + ((float)seg / (float)num_segments) * (a_max - a_min);
+                const float rspeed = a + t * speed;
                 return ImVec2(ImCos(rspeed) * rb, ImSin(rspeed) * rb);
-            }, color_alpha(color, 1.f), thickness);
+            }, c, thickness);
         }
     }
 
