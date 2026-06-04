@@ -309,6 +309,52 @@ namespace ImSpinner
         window->DrawList->AddText(font, font_size, ImVec2(tp.x + i * wrap - shift, tp.y), color_alpha(palette[i], 1.f), text);
       window->DrawList->PopClipRect();
     }
+
+    // Color-cycling text, a port of the CSS l10:
+    //   linear-gradient of 4 solid blocks (base, olive, crimson, teal), each one
+    //   text-width wide, scrolled under background-clip:text with cubic-bezier easing.
+    // The whole text cycles through the palette; on each transition the boundary
+    // between two colors wipes across the text (pixel-accurate, not per-character).
+    // animation: 5s infinite, loops seamlessly (teal -> base -> ...).
+    // (CSS base is #000; here it defaults to white so it shows on a dark theme.)
+    inline void SpinnerTextColorCycle(const char *label, float radius, const ImColor &color = white, float speed = 0.2f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImColor palette[] = { color, ImColor(0x8A, 0x9B, 0x0F), ImColor(0xC0, 0x29, 0x42), ImColor(0x00, 0xA0, 0xB0) };
+      const int K = (int)(sizeof(palette) / sizeof(palette[0]));
+
+      // Pick the current color pair and the eased wipe progress within the segment.
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const int seg = ImMin(K - 1, (int)(t * K));
+      const float e = ease_outcubic(t * K - seg);
+      const ImColor cA = color_alpha(palette[seg], 1.f);
+      const ImColor cB = color_alpha(palette[(seg + 1) % K], 1.f);
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const float bx = tp.x + (1.f - e) * ts.x;              // colorA left of bx, colorB right of it
+
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(bx, tp.y + ts.y), true);
+      window->DrawList->AddText(font, font_size, tp, cA, text);
+      window->DrawList->PopClipRect();
+
+      window->DrawList->PushClipRect(ImVec2(bx, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      window->DrawList->AddText(font, font_size, tp, cB, text);
+      window->DrawList->PopClipRect();
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
