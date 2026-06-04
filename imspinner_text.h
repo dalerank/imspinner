@@ -178,6 +178,45 @@ namespace ImSpinner
       const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
       window->DrawList->AddText(font, font_size, tp, color_alpha(color, 1.f), text, text + visible);
     }
+
+    // Scrolling marquee text, a port of the CSS:
+    //   color: #0000; text-shadow: 0 0 c, 11ch 0 c;  overflow: hidden;
+    //   @keyframes l6 { to { text-shadow: -11ch 0 c, 0ch 0 c } }   /* 2s linear infinite */
+    // Two copies of the text, spaced one text-width + 1ch apart, slide left inside
+    // a text-width window: as one leaves to the left the next enters from the
+    // right, looping seamlessly.
+    inline void SpinnerTextScroll(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell (the scroll window width).
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const float ch = ts.x / (float)len;                    // monospace char width
+      const float wrap = ts.x + ch;                          // 11ch for a 10-char string
+      const float shift = ImFmod((float)ImGui::GetTime() * speed, 1.f) * wrap;
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor c = color_alpha(color, 1.f);
+
+      // overflow: hidden -> clip to the text window, then draw both sliding copies.
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x - shift, tp.y), c, text);
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x - shift + wrap, tp.y), c, text);
+      window->DrawList->PopClipRect();
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
