@@ -217,6 +217,43 @@ namespace ImSpinner
       window->DrawList->AddText(font, font_size, ImVec2(tp.x - shift + wrap, tp.y), c, text);
       window->DrawList->PopClipRect();
     }
+
+    // Two-tone progressive color fill, a port of the CSS:
+    //   color:#0000; background: linear-gradient(90deg,#C02942 50%+.5ch,#000 0)
+    //                right/calc(200% + 1ch) 100%; background-clip: text;
+    //   @keyframes l7 { to { background-position: left } }   /* 2s steps(11) */
+    // The hard gradient edge sweeps across the text one character per step, so the
+    // characters recolor from 'color' to 'bg' left to right, then it repeats.
+    // (CSS base is #000; here 'bg' defaults to white so it shows on a dark theme.)
+    inline void SpinnerTextColorFill(const char *label, float radius, const ImColor &color = ImColor(0xC0, 0x29, 0x42), const ImColor &bg = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+      const int nsteps = len + 1;
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const int filled = ImMin(len, (int)(t * nsteps));      // 0..len chars recolored (CSS steps())
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const float prefix_w = font->CalcTextSizeA(font_size, 99999.f, 0.f, text, text + filled).x;
+
+      // Filled prefix in 'color', the rest in 'bg'.
+      window->DrawList->AddText(font, font_size, tp, color_alpha(color, 1.f), text, text + filled);
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x + prefix_w, tp.y), color_alpha(bg, 1.f), text + filled, text + len);
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
