@@ -442,6 +442,49 @@ namespace ImSpinner
       window->DrawList->AddText(font, font_size, ImVec2(tp.x - shift_b + ts.x, tp.y), c, text);
       window->DrawList->PopClipRect();
     }
+
+    // Fill-then-scroll text, a port of the CSS l14 (two phases over the cycle):
+    //   0..80%:   text stays put while an underline bar grows 0% -> 100%.
+    //   80..100%: the bar retracts 100% -> 0% and the text scrolls one text-width
+    //             left (a wrap copy slides in from the right, overflow:hidden clips).
+    // So the progress fills, then the line slides away and a fresh one comes in.
+    inline void SpinnerTextUnderlineScroll(const char *label, float radius, const ImColor &color = white, float speed = 0.66f, float thickness = 3.f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      // Scale the font down so the full text fits the cell (the scroll window width).
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor c = color_alpha(color, 1.f);
+      const float wrap = ts.x;                               // 10ch == text width
+
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float fill_end = 0.8f;
+      float bar_frac, shift;
+      if (t < fill_end) { bar_frac = t / fill_end; shift = 0.f; }            // grow the bar, text still
+      else { const float l = (t - fill_end) / (1.f - fill_end); bar_frac = 1.f - l; shift = l * wrap; } // retract + scroll
+
+      // Text: two scrolling copies clipped to the window (overflow: hidden).
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x - shift, tp.y), c, text);
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x - shift + wrap, tp.y), c, text);
+      window->DrawList->PopClipRect();
+
+      // Underline bar.
+      const float y = tp.y + ts.y + thickness;
+      window->DrawList->AddRectFilled(ImVec2(tp.x, y), ImVec2(tp.x + ts.x * bar_frac, y + thickness), c);
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
