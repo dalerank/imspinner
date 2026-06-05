@@ -46,7 +46,7 @@ int main(int, char**) {
 
 # dot spinners
 
-<img width="922" height="294" alt="dots" src="https://github.com/user-attachments/assets/c59d2389-a616-4417-9997-6e80da27013a" />
+<img width="922" height="303" alt="dots" src="https://github.com/user-attachments/assets/7956b9d3-d314-4164-8b3e-57224b7941df" />
 
 A large family of **dot**-based spinners lives in the `imspinner_dots.h` add-on. They
 mostly share the shape `SpinnerXxxDots(const char *label, float radius, float thickness,
