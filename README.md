@@ -10,11 +10,12 @@ one below it, so just include the highest level you need:
 
 | header | what you get | includes |
 |--------|--------------|----------|
-| `imspinner.h` | the spinners themselves + the `Spinner<>` dispatcher | — |
+| `imspinner.h` | the spinners themselves | — |
+| `imspinner_compat.h` | `Spinner<>` typed dispatcher | `imspinner.h` + `imspinner_bars.h` |
 | `imspinner_bars.h` | bar-chart spinners (e.g. `SpinnerFadeBars`) | `imspinner.h` |
 | `imspinner_dots.h` | dot-based spinners (e.g. `SpinnerBounceDots`) | `imspinner.h` |
 | `imspinner_text.h` | text loaders (e.g. `SpinnerTextFade`) | `imspinner.h` |
-| `imspinner_demo.h` | the interactive demo gallery (`demoSpinners()`) | `imspinner_text.h` + `imspinner_dots.h` + `imspinner_bars.h` |
+| `imspinner_demo.h` | the interactive demo gallery (`demoSpinners()`) | above + `imspinner_compat.h` |
 
 ```c++
 #include "../imspinner/imspinner.h"          // graphical spinners only
@@ -68,6 +69,36 @@ ImSpinner::SpinnerBarChartRainbow("rainbow", 16.f, 4.f, ImColor(255, 255, 255), 
 | `SpinnerBarChartRainbow` | rainbow bars with independent wave heights |
 | `SpinnerFluid` | fluid equalizer-style columns |
 | `SpinnerFluidPoints` | fluid columns drawn as stacked dots |
+| `SpinnerBarsSeqPulse` | three bars shrink height in sequence (CSS bars/l1) |
+| `SpinnerBarsCascadeGrow` | bottom bars grow in a cascade (CSS bars/l2) |
+| `SpinnerBarsRise` | three bars slide upward with stagger (CSS bars/l3) |
+| `SpinnerBarsCornerHop` | bars hop diagonally toward the top (CSS bars/l4) |
+| `SpinnerBarsDiagonalGrow` | bars step through corner positions (CSS bars/l5) |
+| `SpinnerBarsBounceCenter` | centre-anchored bars bounce between slots (CSS bars/l6) |
+| `SpinnerBarsScaleAlt` | bars pulse height with alternate timing (CSS bars/l7) |
+| `SpinnerBarsCornerWave` | bottom bars step in a corner wave (CSS bars/l8) |
+| `SpinnerBarsJump` | bars swap between top and bottom (CSS bars/l9) |
+| `SpinnerBarsDoubleRow` | two rows of bar segments slide horizontally (CSS bars/l10) |
+| `SpinnerBarsSixPulse` | six corner bars pulse height 50↔30% (CSS bars/l11) |
+| `SpinnerBarsSixStagger` | six bars shrink in staggered wave order (CSS bars/l12) |
+| `SpinnerBarsMorphPlus` | five bars morph tall→square→wide (CSS bars/l13) |
+| `SpinnerBarsFlipSix` | six bars shrink while positions flip every 2 s (CSS bars/l14) |
+| `SpinnerBarsSwapTriBottom` | three bars swap bottom anchors while shrinking (CSS bars/l15) |
+| `SpinnerBarsSwapTriZigzag` | three bars zigzag between corner pairs (CSS bars/l16) |
+| `SpinnerBarsMorphDiagonal` | three diagonal bars morph tall→square→wide (CSS bars/l17) |
+| `SpinnerBarsSlideDiagonal` | three diagonal bars shrink while outers swap (CSS bars/l18) |
+| `SpinnerBarsConicAlternate` | two conic-corner tiles slide diagonally (CSS bars/l19) |
+| `SpinnerBarsConicWalk` | two conic corners step a 2×2 path (CSS bars/l20) |
+| `SpinnerBarsMarchIn` | four stripe rows march in from the left (CSS bars/l21) |
+| `SpinnerBarsMarchDown` | four stripe rows drop in from the top (CSS bars/l22) |
+| `SpinnerBarsWaveSkew` | four rows skew diagonally then reset (CSS bars/l23) |
+| `SpinnerBarsRowDrop` | four rows drop one-by-one (CSS bars/l24) |
+| `SpinnerBarsZigzagRows` | four rows alternate stripe alignment (CSS bars/l25) |
+| `SpinnerBarsFillCascade` | rows fill left→right in stagger (CSS bars/l26) |
+| `SpinnerBarsPingPongRows` | rows ping-pong stripe alignment (CSS bars/l27) |
+| `SpinnerBarsWaveRowsWide` | four rows wave centre↔edges (CSS bars/l28) |
+| `SpinnerBarsGridFade` | 3×3 dot grid fade wave (CSS bars/l29) |
+| `SpinnerBarsGridSpread` | 3×3 dot grid spread pulse (CSS bars/l30) |
 
 # dot spinners
 

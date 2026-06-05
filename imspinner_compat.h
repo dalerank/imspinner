@@ -6,7 +6,8 @@
  *
  * Wires add-on spinners into the core Spinner<> dispatcher (spinner_draw_funcs)
  * and provides Spinner() / Spinner<Type>() entry points.
- * Included from imspinner.h; include directly for Spinner<> without other add-ons.
+ * Included after imspinner_bars.h (or include this header directly for Spinner<>).
+ * imspinner_demo.h pulls it in for Spinner<e_st_*> cases in the gallery.
  */
 
 #ifndef _IMSPINNER_COMPAT_INTERNAL_
