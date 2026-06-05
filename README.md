@@ -15,6 +15,7 @@ one below it, so just include the highest level you need:
 | `imspinner_bars.h` | bar-chart spinners (e.g. `SpinnerFadeBars`) | `imspinner.h` |
 | `imspinner_dots.h` | dot-based spinners (e.g. `SpinnerBounceDots`) | `imspinner.h` |
 | `imspinner_text.h` | text loaders (e.g. `SpinnerTextFade`) | `imspinner.h` |
+| `imspinner_shapes.h` | shape spinners (e.g. `SpinnerMorphShape`) | `imspinner.h` |
 | `imspinner_demo.h` | the interactive demo gallery (`demoSpinners()`) | above + `imspinner_compat.h` |
 
 ```c++
@@ -297,6 +298,48 @@ ImSpinner::SpinnerTextTyping("typing", 30.f, ImColor(255, 255, 255), 1.f, 3, "Lo
 | `SpinnerTextScramble` | slot-machine scramble of the letters | fixed `"Loading..."` (no `text`) |
 | `SpinnerTextDecode` | letters decode/encode into symbols | |
 | `SpinnerTextVanish` | letters fly up & fade out, then drop back in | |
+
+# shape spinners
+
+`imspinner_shapes.h` adds a family of **shape**-morphing spinners, triangles, discs and
+arrows that fold, tumble, skew and spin). They are kept out of `imspinner.h` and surface
+under the **Shapes** tab of the demo gallery. Each one shares the standard signature
+`SpinnerXxx(const char *label, float radius, float thickness, const ImColor &color = white,
+float speed = 1.f, int mode = 0)`. Most use the loader's own fixed colour (the `color`
+argument is ignored), and `mode = 2` runs the timeline in reverse.
+
+```c++
+#include "../imspinner/imspinner_shapes.h"   // pulls in imspinner.h
+...
+ImSpinner::SpinnerMorphShape("morph", 16.f, 1.f);
+ImSpinner::SpinnerPinwheel("pinwheel", 16.f, 1.f, ImColor(255, 255, 255), 1.f, 0);
+```
+
+| function | effect | 
+|----------|--------|-----|
+| `SpinnerMorphShape` | a blob morphs circle → square → triangle, recolouring at each step |
+| `SpinnerFlipTriangle` | a 3-corner triangle "rolls" around the box, one vertex sliding per quarter |
+| `SpinnerFoldSquare` | two triangles fold the square over onto the other diagonal |
+| `SpinnerPinwheel` | four wedges pull apart into a pinwheel while spinning (box pulses 40→60) |
+| `SpinnerCornerSquares` | four corner squares spread, step one corner clockwise, then shrink back |
+| `SpinnerSplitSquare` | two halves slide apart into interlocking triangles and back |
+| `SpinnerCornerBurst` | static diamond + four corner triangles burst out, rotate 90°, snap back |
+| `SpinnerSkewSquare` | halves fly to opposite corners, return, then skewX reforms the square on the other diagonal |
+| `SpinnerTumbleSquare` | stacked squares swing ±180° about bottom corners while the block climbs and flips |
+| `SpinnerTriDiamond` | two halves morph triangle ↔ diamond while the container flips and turns 180° |
+| `SpinnerTwinBlades` | two triangular blades spin in stepped half-turns, offset 90° |
+| `SpinnerCrossBlades` | static bow-tie + two blades rotate −270° about opposite corners; container mirrors |
+| `SpinnerDriftSquare` | two halves drift together along a diagonal, rotate 180°, return |
+| `SpinnerPieBounce` | a 270° pie steps 90° per second while a rounded quarter bounces into the gap |
+| `SpinnerLeapFrog` | two half-panels hinged at bottom-centre fold ±90° while the assembly climbs and flips |
+| `SpinnerPlusSquares` | static plus; four corner squares expand, rotate 90°, contract |
+| `SpinnerSevenMarch` | two point-reflected "7" tiles march up/right and rotate −90° |
+| `SpinnerCornerArcs` | centre dot + annulus splits into four quarter-arcs that pull apart and rotate 90° |
+| `SpinnerWalkBlocks` | two half-squares walk apart/down while the bar climbs and flips |
+| `SpinnerTumbleHalfDisc` | a disc of two semicircles tumbles, folding about the bottom point, while climbing |
+| `SpinnerFoldHalfDisc` | two semicircles swap places, each rotating about a box corner |
+| `SpinnerWiperArrow` | conic-wedge arrow; two corner triangles wipe like windshield wipers; container flips/rotates |
+| `SpinnerSkewSquares` | a diagonal band skews while two corner triangles rotate 180° with a growing outline |
 
 ## Contributing
 
