@@ -11,8 +11,9 @@ one below it, so just include the highest level you need:
 | header | what you get | includes |
 |--------|--------------|----------|
 | `imspinner.h` | the spinners themselves + the `Spinner<>` dispatcher | — |
+| `imspinner_dots.h` | dot-based spinners (e.g. `SpinnerBounceDots`) | `imspinner.h` |
 | `imspinner_text.h` | text loaders (e.g. `SpinnerTextFade`) | `imspinner.h` |
-| `imspinner_demo.h` | the interactive demo gallery (`demoSpinners()`) | `imspinner_text.h` |
+| `imspinner_demo.h` | the interactive demo gallery (`demoSpinners()`) | `imspinner_text.h` + `imspinner_dots.h` |
 
 ```c++
 #include "../imspinner/imspinner.h"          // graphical spinners only
@@ -42,6 +43,53 @@ int main(int, char**) {
 ```
 2. enable edit mode with checkbox 'show number' or play with options
 ![image](https://github.com/dalerank/imspinner/assets/918081/dac20ca2-30ab-48a2-b4bb-36caa4676d2c)
+
+# dot spinners
+
+A large family of **dot**-based spinners lives in the `imspinner_dots.h` add-on. They
+mostly share the shape `SpinnerXxxDots(const char *label, float radius, float thickness,
+ImColor color = white, float speed = 2.8f, …)`, where the trailing count argument is
+usually `dots`/`lt` (number of dots). `SpinnerDots` additionally takes a `float*` phase
+pointer; some take `bg`/`mode`/`delta`. (`SpinnerDots` and `SpinnerVDots` stay in the
+core `imspinner.h` because the `Spinner<>` dispatcher references them.)
+
+```c++
+#include "../imspinner/imspinner_dots.h"   // pulls in imspinner.h
+...
+ImSpinner::SpinnerBounceDots("dots", 16.f, 6.f, ImColor(255, 255, 255), 6.f, 3);
+```
+
+| function | effect |
+|----------|--------|
+| `SpinnerDots` | dots fade in turn around a circle (also exposed via `Spinner<e_st_dots>`) |
+| `SpinnerVDots` | ring of dots with a second rotating set (also `Spinner<e_st_vdots>`) |
+| `SpinnerBounceDots` | a few dots bounce up in sequence |
+| `SpinnerZipDots` | dots zip together and apart |
+| `SpinnerDotsToPoints` | dots contract from a ring toward points |
+| `SpinnerDotsToBar` | dots line up into a bar and back |
+| `SpinnerWaveDots` | a row of dots ripples in a sine wave |
+| `SpinnerFadeDots` | dots fade in/out in sequence |
+| `SpinnerThreeDots` | three pulsing dots |
+| `SpinnerFiveDots` | five pulsing dots |
+| `SpinnerMultiFadeDots` | multiple rows of fading dots |
+| `SpinnerScaleDots` | dots scale up/down in turn |
+| `SpinnerMovingDots` | dots travel across and wrap around |
+| `SpinnerRotateDots` | groups of dots rotate around the centre |
+| `SpinnerOrionDots` | dots spread along rotating arcs |
+| `SpinnerGalaxyDots` | dots swirl along galaxy-like arms |
+| `SpinnerIncDots` | dots light up incrementally around a circle |
+| `SpinnerIncFullDots` | incremental dots filling the full ring |
+| `SpinnerIncScaleDots` | dots scale up incrementally around a circle |
+| `SpinnerSomeScaleDots` | a subset of dots scales in turn |
+| `SpinnerDotsLoading` | dots with a separate background ring |
+| `SpinnerSquareRandomDots` | dots blink at random inside a square grid |
+| `SpinnerHboDots` | HBO-style fading dots |
+| `SpinnerMoonDots` | two dots chasing like a moon orbit |
+| `SpinnerTwinHboDots` | two interleaved HBO dot rings |
+| `SpinnerThreeDotsStar` | three dots arranged/rotating in a star |
+| `SpinnerSwingDots` | dots swinging like a pendulum |
+| `SpinnerDnaDots` | dots winding along a DNA double helix |
+| `Spinner3SmuggleDots` | three dots weaving/smuggling past each other |
 
 # text loaders
 

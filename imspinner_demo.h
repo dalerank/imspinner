@@ -11,6 +11,7 @@
  */
 
 #include "imspinner_text.h"
+#include "imspinner_dots.h"
 
 namespace ImSpinner
 {
@@ -703,17 +704,19 @@ namespace ImSpinner
 
             // Text-based animation cells; everything else is a graphical spinner.
             static const int text_spinners[] = { 134, 150, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294 };
-            auto is_text_spinner = [&](int idx) {
-              for (int k = 0; k < (int)(sizeof(text_spinners) / sizeof(text_spinners[0])); ++k)
-                if (text_spinners[k] == idx) return true;
-              return false;
+            static const int dot_spinners[] = { 2, 3, 6, 11, 12, 13, 14, 15, 22, 23, 24, 45, 84, 85, 91, 93, 97, 98, 115, 120, 121, 122, 123, 124, 125, 132, 133, 137, 138, 139, 141, 142, 143, 145, 155, 156, 169, 170, 171, 172, 173, 175, 176, 177, 179, 185, 186, 194, 195, 196, 198, 199, 200, 204, 205, 212, 213, 214, 215, 225 };
+            auto in_list = [](const int *arr, int n, int idx) { for (int k = 0; k < n; ++k) if (arr[k] == idx) return true; return false; };
+            auto category = [&](int idx) {                   // 0 = spinners, 1 = text, 2 = dots
+              if (in_list(text_spinners, (int)(sizeof(text_spinners) / sizeof(int)), idx)) return 1;
+              if (in_list(dot_spinners, (int)(sizeof(dot_spinners) / sizeof(int)), idx)) return 2;
+              return 0;
             };
 
-            // Pick the cells matching the current view mode (0 = spinners, 1 = text).
+            // Pick the cells matching the current view mode.
             std::vector<int> shown;
             shown.reserve(num_spinners);
             for (int i = 0; i < num_spinners; i++)
-              if (is_text_spinner(i) == (view_mode == 1))
+              if (category(i) == view_mode)
                 shown.push_back(i);
 
             for(size_t j = 0; j < shown.size(); j++)
@@ -769,6 +772,8 @@ namespace ImSpinner
         {
           ImGui::TextUnformatted("View");
           if (ImGui::RadioButton("Spinners", &view_mode, 0)) widget_size = 50.f;
+          ImGui::SameLine();
+          if (ImGui::RadioButton("Dots", &view_mode, 2)) widget_size = 50.f;
           ImGui::SameLine();
           if (ImGui::RadioButton("Text", &view_mode, 1)) widget_size = 75.f;
           ImGui::Separator();
