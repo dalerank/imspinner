@@ -48,8 +48,6 @@ int main(int, char**) {
 
 # bar spinners
 
-<img width="989" height="298" alt="bars" src="https://github.com/user-attachments/assets/4d9c4560-1a3d-492a-9f55-acd2116239da" />
-
 Bar-chart and fading-bar spinners live in `imspinner_bars.h`. `SpinnerBarChartSine` is
 also wired into the core `Spinner<e_st_barchartsine>` dispatcher.
 
@@ -72,41 +70,88 @@ ImSpinner::SpinnerBarChartRainbow("rainbow", 16.f, 4.f, ImColor(255, 255, 255), 
 | `SpinnerFluid` | fluid equalizer-style columns |
 | `SpinnerFluidPoints` | fluid columns drawn as stacked dots |
 | `SpinnerBarsSeqPulse` | three bars shrink height in sequence |
-| `SpinnerBarsCascadeGrow` | bottom bars grow in a cascade  |
-| `SpinnerBarsRise` | three bars slide upward with stagger  |
-| `SpinnerBarsCornerHop` | bars hop diagonally toward the top  |
-| `SpinnerBarsDiagonalGrow` | bars step through corner positions  |
-| `SpinnerBarsBounceCenter` | centre-anchored bars bounce between slots  |
+| `SpinnerBarsCascadeGrow` | bottom bars grow in a cascade |
+| `SpinnerBarsRise` | three bars slide upward with stagger |
+| `SpinnerBarsCornerHop` | bars hop diagonally toward the top |
+| `SpinnerBarsDiagonalGrow` | bars step through corner positions |
+| `SpinnerBarsBounceCenter` | centre-anchored bars bounce between slots |
 | `SpinnerBarsScaleAlt` | bars pulse height with alternate timing |
-| `SpinnerBarsCornerWave` | bottom bars step in a corner wave  |
+| `SpinnerBarsCornerWave` | bottom bars step in a corner wave |
 | `SpinnerBarsJump` | bars swap between top and bottom |
-| `SpinnerBarsDoubleRow` | two rows of bar segments slide horizontally  |
-| `SpinnerBarsSixPulse` | six corner bars pulse height 50↔30%  |
-| `SpinnerBarsSixStagger` | six bars shrink in staggered wave order  |
+| `SpinnerBarsDoubleRow` | two rows of bar segments slide horizontally |
+| `SpinnerBarsSixPulse` | six corner bars pulse height 50↔30% |
+| `SpinnerBarsSixStagger` | six bars shrink in staggered wave order |
 | `SpinnerBarsMorphPlus` | five bars morph tall→square→wide |
-| `SpinnerBarsFlipSix` | six bars shrink while positions flip every 2 s  |
-| `SpinnerBarsSwapTriBottom` | three bars swap bottom anchors while shrinking  |
+| `SpinnerBarsFlipSix` | six bars shrink while positions flip every 2 s |
+| `SpinnerBarsSwapTriBottom` | three bars swap bottom anchors while shrinking |
 | `SpinnerBarsSwapTriZigzag` | three bars zigzag between corner pairs |
-| `SpinnerBarsMorphDiagonal` | three diagonal bars morph tall→square→wide  |
-| `SpinnerBarsSlideDiagonal` | three diagonal bars shrink while outers swap  |
+| `SpinnerBarsMorphDiagonal` | three diagonal bars morph tall→square→wide |
+| `SpinnerBarsSlideDiagonal` | three diagonal bars shrink while outers swap |
 | `SpinnerBarsConicAlternate` | two conic-corner tiles slide diagonally |
-| `SpinnerBarsConicWalk` | two conic corners step a 2×2 path  |
+| `SpinnerBarsConicWalk` | two conic corners step a 2×2 path |
 | `SpinnerBarsMarchIn` | four stripe rows march in from the left |
-| `SpinnerBarsMarchDown` | four stripe rows drop in from the top  |
+| `SpinnerBarsMarchDown` | four stripe rows drop in from the top |
 | `SpinnerBarsWaveSkew` | four rows skew diagonally then reset |
-| `SpinnerBarsRowDrop` | four rows drop one-by-one  |
-| `SpinnerBarsZigzagRows` | four rows alternate stripe alignment  |
-| `SpinnerBarsFillCascade` | rows fill left→right in stagger  |
-| `SpinnerBarsPingPongRows` | rows ping-pong stripe alignment  |
-| `SpinnerBarsWaveRowsWide` | four rows wave centre↔edges  |
-| `SpinnerBarsGridFade` | 3×3 dot grid fade wave  |
-| `SpinnerBarsGridSpread` | 3×3 dot grid spread pulse  |
+| `SpinnerBarsRowDrop` | four rows drop one-by-one |
+| `SpinnerBarsZigzagRows` | four rows alternate stripe alignment |
+| `SpinnerBarsFillCascade` | rows fill left→right in stagger |
+| `SpinnerBarsPingPongRows` | rows ping-pong stripe alignment |
+| `SpinnerBarsWaveRowsWide` | four rows wave centre↔edges |
+| `SpinnerBarsGridFade` | 3×3 dot grid fade wave |
+| `SpinnerBarsGridSpread` | 3×3 dot grid spread pulse |
+| `SpinnerBarsStretch` | three pill bars stretch vertically from a centre dot |
+| `SpinnerBarsStretchSeq` | three pill bars grow to full height one-by-one |
+| `SpinnerBarsBounceBall` | ball rolls across three bars while bouncing |
+| `SpinnerBarsKnockDots` | bouncing bar knocks a row of dots downward |
+| `SpinnerBarsStaircase` | ball bounces down a descending staircase of bars |
+| `SpinnerBarsKnockAway` | bar knocks two dots down then shoves the last away |
+| `SpinnerBarsGates` | column gates retract to let a ball roll through |
+| `SpinnerBarsCapture` | ball rolls to the centre and the gate traps it |
+| `SpinnerBarsEscape` | trapped ball slips aside and shoots out of the top |
+| `SpinnerBarsDevour` | ball swallows two dots, grows, then dashes away |
+| `SpinnerBarsLift` | three tall rounded bars rise in a staggered wave |
+| `SpinnerBarsGapSlide` | a round gap travels along three static bars |
+| `SpinnerBarsConverge` | bar and dot meet in the centre of each column |
+| `SpinnerBarsSwapEnds` | bar and dot swap top/bottom ends in a wave |
+| `SpinnerBarsRelay` | bars drop, rise with dots, then dots drop in a wave |
+| `SpinnerBarsPush` | descending dots push the bars down column by column |
+| `SpinnerBarsPushWave` | a single dot-push travels across the columns |
+| `SpinnerBarsGather` | four arms assemble a rotating plus around a dot |
+| `SpinnerBarsSplit` | two bars spread from the centre while the figure rotates |
+| `SpinnerBarsSlot` | a dot passes through two opening bars while rotating |
+
 
 | mode | effect |
 |------|--------|
 | `0` | default timing and direction |
 | `1` | alternate animation per spinner (sync pulse, reverse stagger, top anchor, single walking tile, synchronized rows, reverse grid wave, etc.) |
 | `2` | reversed timeline (`t → 1−t`) |
+
+
+| function | effect |
+|----------|--------|
+| `SpinnerDotsBarsGrowSync` | three bars grow in sync; end dots ride top/bottom |
+| `SpinnerDotsBarsGrowCascade` | columns grow one after another |
+| `SpinnerDotsBarsDotRun` | three bottom bars; dot runs along the top |
+| `SpinnerDotsBarsBarRun` | three top dots bounce; bar runs below |
+| `SpinnerDotsBarsDotArc` | tiered bars; dot arcs diagonally |
+| `SpinnerDotsBarsBarJump` | bar jumps along the bottom; dots swap above |
+| `SpinnerDotsBarsHalfPulse` | six half-bars pulse; dot walks left→right |
+| `SpinnerDotsBarsHalfPulseMid` | like HalfPulse; dot stops at centre |
+| `SpinnerDotsBarsHalfPulseExit` | like HalfPulseMid; dot exits upward |
+| `SpinnerDotsBarsVersus` | wide arena — scaling dot vs shuttling bar |
+| `SpinnerDotsBarsMaskGrow` | three bars grow upward with cap dots |
+| `SpinnerDotsBarsMaskCascade` | cap dots slide along full-height bars |
+| `SpinnerDotsBarsColSplit` | bars split around dots per column |
+| `SpinnerDotsBarsColSwap` | bars and dots swap top/bottom |
+| `SpinnerDotsBarsColDrop` | bars shrink from bottom in sequence |
+| `SpinnerDotsBarsSwapAlt` | bars and dots bounce in alternating order |
+| `SpinnerDotsBarsSwapLoop` | continuous SwapAlt loop |
+| `SpinnerDotsBarsCrossSpin` | four bars slide in; frame rotates 90° |
+| `SpinnerDotsBarsRailSpin` | bar–dot–bar slides off-screen while rotating |
+| `SpinnerDotsBarsRailOrbit` | like RailSpin; dot also orbits vertically |
+
+These also accept optional `mode` (0 = default, 2 = reversed timeline).
 
 # dot spinners
 

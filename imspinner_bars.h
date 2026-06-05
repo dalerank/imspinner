@@ -234,6 +234,11 @@ namespace ImSpinner
       dl->AddRectFilled(ImVec2(cx - hw, top), ImVec2(cx + hw, bot), c);
     }
 
+    inline void bars_draw_capsule_v(ImDrawList *dl, float cx, float yc, float hh, float hw, const ImColor &c)
+    {
+      dl->AddRectFilled(ImVec2(cx - hw, yc - hh), ImVec2(cx + hw, yc + hh), c, hw);
+    }
+
     inline void bars_draw_box(ImDrawList *dl, float left, float top, float W, float H,
                               float ax, float ay, float wf, float hf, const ImColor &c)
     {
@@ -1063,6 +1068,702 @@ namespace ImSpinner
       for (int i = 0; i < 9; i++)
         if (m & (1 << i)) spread[i] = spread_u;
       bars_draw_grid3(window->DrawList, centre, cell, dot_r, color_alpha(color, 1.f), 0x1FF, spread);
+    }
+
+    // Stretch capsules:
+    //   three vertical pill bars grow from a centre dot to full height and back
+    //   (animation-direction: alternate). mode 1 staggers the three columns.
+    inline void SpinnerBarsStretch(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, halfH = H * 0.5f, hw = thickness * 0.5f;
+      const float cx[] = { centre.x - 0.4f * W, centre.x, centre.x + 0.4f * W };
+      const float ph = ImFmod((float)ImGui::GetTime() * speed, 2.f);
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
+      static const float kt[] = { 0.f, 0.1f, 0.9f, 1.f };
+      static const float hf[] = { 0.f, 0.f, 1.f, 1.f };
+      const ImColor c = color_alpha(color, 1.f);
+      for (int i = 0; i < 3; i++) {
+        const float ti = (mode == 1) ? ImFmod(t + (float)i / 3.f, 1.f) : t;
+        const float f = bars_kf_eval(kt, hf, 4, ti);
+        const float hh = hw + f * (halfH - hw);
+        bars_draw_capsule_v(window->DrawList, cx[i], centre.y, hh, hw, c);
+      }
+    }
+
+    // Stretch sequential:
+    //   three pill bars grow to full height one-by-one (left->right), then the
+    //   alternate timeline shrinks them back. mode 1 fills right->left.
+    inline void SpinnerBarsStretchSeq(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, halfH = H * 0.5f, hw = thickness * 0.5f;
+      const float cx[] = { centre.x - 0.4f * W, centre.x, centre.x + 0.4f * W };
+      const float ph = ImFmod((float)ImGui::GetTime() * speed, 2.f);
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
+      static const float kt[] = { 0.f, 0.25f, 0.5f, 0.75f, 0.95f, 1.f };
+      static const float h0[] = { 0.f, 0.f, 1.f, 1.f, 1.f, 1.f };
+      static const float h1[] = { 0.f, 0.f, 0.f, 1.f, 1.f, 1.f };
+      static const float h2[] = { 0.f, 0.f, 0.f, 0.f, 1.f, 1.f };
+      const float *hv[] = { h0, h1, h2 };
+      const ImColor c = color_alpha(color, 1.f);
+      for (int i = 0; i < 3; i++) {
+        const int bi = (mode == 1) ? (2 - i) : i;
+        const float f = bars_kf_eval(kt, hv[bi], 6, t);
+        const float hh = hw + f * (halfH - hw);
+        bars_draw_capsule_v(window->DrawList, cx[i], centre.y, hh, hw, c);
+      }
+    }
+
+    // Bounce ball:
+    //   three tall bottom-anchored bars; a ball rolls left<->right (1.5 s) across
+    //   their tops while bouncing (0.75 s). mode 1 uses one long arc per traverse;
+    //   mode 2 reverses the travel direction.
+    inline void SpinnerBarsBounceBall(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W * 0.65f, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f, top = centre.y - H * 0.5f;
+      const float barTop = top + 0.45f * H, barBot = top + H;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      const ImColor c = color_alpha(color, 1.f);
+      for (int i = 0; i < 3; i++)
+        bars_draw_v(window->DrawList, cx[i], barTop, barBot, hw, c);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      const float txph = ImFmod(time / 1.5f, 2.f);
+      float tx = (txph <= 1.f) ? txph : 2.f - txph;
+      if (mode == 2) tx = 1.f - tx;
+      const float bxc = left + hw + tx * (W - thickness);
+
+      const float bouncePeriod = (mode == 1) ? 1.5f : 0.75f;
+      const float arch = ImAbs(ImSin(time / bouncePeriod * IM_PI));
+      const float restY = barTop - hw, topY = top + hw;
+      const float byc = restY - arch * (restY - topY);
+
+      window->DrawList->AddCircleFilled(ImVec2(bxc, byc), hw, c, num_segments);
+    }
+
+    // Knock dots:
+    //   three dots in a row; a bar rolls left<->right (1 s) bouncing (0.5 s) and
+    //   the dot it lands on is knocked down to the bottom. mode 1 pops the dot's
+    //   size instead of dropping it; mode 2 reverses the travel direction.
+    inline void SpinnerBarsKnockDots(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W * 0.5f;
+      const float left = centre.x - W * 0.5f, top = centre.y - H * 0.5f;
+      const float rdot = thickness * 0.5f, bw = thickness, bh = H * 0.6f;
+      const float dcx[] = { left + rdot, centre.x, left + W - rdot };
+      const float dotY = top + rdot, dropY = top + H - rdot;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      const float txph = ImFmod(time, 2.f);
+      float tx = (txph <= 1.f) ? txph : 2.f - txph;
+      if (mode == 2) tx = 1.f - tx;
+
+      static const float centers[3] = { 0.f, 0.5f, 1.f };
+      const float halfw = 0.12f;
+      for (int i = 0; i < 3; i++) {
+        const float d = ImAbs(tx - centers[i]);
+        const float drop = (d < halfw) ? (1.f - d / halfw) : 0.f;
+        if (mode == 1)
+          window->DrawList->AddCircleFilled(ImVec2(dcx[i], dotY), rdot * (1.f + 0.9f * drop), c, num_segments);
+        else
+          window->DrawList->AddCircleFilled(ImVec2(dcx[i], dotY + drop * (dropY - dotY)), rdot, c, num_segments);
+      }
+
+      const float bxc = left + rdot + tx * (W - bw);
+      const float hgt = ImAbs(ImSin(time / 0.5f * IM_PI));
+      const float barCY = dotY - hgt * 0.35f * H;
+      window->DrawList->AddRectFilled(ImVec2(bxc - bw * 0.5f, barCY - bh * 0.5f),
+                                      ImVec2(bxc + bw * 0.5f, barCY + bh * 0.5f), c);
+    }
+
+    // Staircase ball:
+    //   three bottom-anchored bars of descending height (100/66/33%); a ball rolls
+    //   left->right (2 s loop) bouncing (0.5 s) while drifting down the steps.
+    //   mode 1 uses three bounces; mode 2 reverses (rolls up, right->left).
+    inline void SpinnerBarsStaircase(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W * 0.75f, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f, top = centre.y - H * 0.5f, bot = top + H;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      static const float hf[] = { 1.f, 2.f / 3.f, 1.f / 3.f };
+      const ImColor c = color_alpha(color, 1.f);
+      for (int i = 0; i < 3; i++)
+        bars_draw_v(window->DrawList, cx[i], bot - hf[i] * H, bot, hw, c);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float p = ImFmod(time / 2.f, 1.f);
+      if (mode == 2) p = 1.f - p;
+      const float bx = (left - 1.5f * thickness) + p * (W + 3.f * thickness);
+      const float yBase = top + (p * 1.0f - 0.27f) * H + hw;
+      const float n = (mode == 1) ? 3.f : 4.f;
+      const float arch = ImAbs(ImSin(p * n * IM_PI));
+      const float by = yBase - arch * 0.3f * H;
+
+      window->DrawList->AddCircleFilled(ImVec2(bx, by), hw, c, num_segments);
+    }
+
+    // Knock away:
+    //   a bar rolls left->right (bouncing) and knocks the first two dots down at
+    //   1/3 and 2/3; at the end it shoves the last dot sideways and tumbles off.
+    //   mode 1 drops all three dots in sequence; mode 2 reverses the timeline.
+    inline void SpinnerBarsKnockAway(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W * 0.5f;
+      const float left = centre.x - W * 0.5f, top = centre.y - H * 0.5f;
+      const float rdot = thickness * 0.5f, bw = thickness, bh = H * 0.6f;
+      const float dcx[] = { left + rdot, centre.x, left + W - rdot };
+      const float dotY = top + rdot, dropY = top + H - rdot;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float p = ImFmod(time / 1.5f, 1.f);
+      if (mode == 2) p = 1.f - p;
+
+      const float hwp = 0.08f;
+      const float d0 = ImAbs(p - 0.33f) < hwp ? 1.f - ImAbs(p - 0.33f) / hwp : 0.f;
+      const float d1 = ImAbs(p - 0.66f) < hwp ? 1.f - ImAbs(p - 0.66f) / hwp : 0.f;
+      window->DrawList->AddCircleFilled(ImVec2(dcx[0], dotY + d0 * (dropY - dotY)), rdot, c, num_segments);
+      window->DrawList->AddCircleFilled(ImVec2(dcx[1], dotY + d1 * (dropY - dotY)), rdot, c, num_segments);
+
+      if (mode == 1) {
+        const float d2 = ImAbs(p - 0.95f) < hwp ? 1.f - ImAbs(p - 0.95f) / hwp : 0.f;
+        window->DrawList->AddCircleFilled(ImVec2(dcx[2], dotY + d2 * (dropY - dotY)), rdot, c, num_segments);
+      } else {
+        const float k2 = (p > 0.8f) ? ImSin((p - 0.8f) / 0.2f * IM_PI) : 0.f;
+        window->DrawList->AddCircleFilled(ImVec2(dcx[2] + k2 * 0.6f * W, dotY), rdot, c, num_segments);
+      }
+
+      const float bxc = left + (-0.3f + p * 1.2f) * W;
+      const float arch = ImAbs(ImSin(p * 3.f * IM_PI));
+      float by = dotY - arch * 0.35f * H;
+      if (mode != 1 && p > 0.9f)
+        by += (p - 0.9f) / 0.1f * 0.9f * H;
+      window->DrawList->AddRectFilled(ImVec2(bxc - bw * 0.5f, by - bh * 0.5f),
+                                      ImVec2(bxc + bw * 0.5f, by + bh * 0.5f), c);
+    }
+
+    // Gates:
+    //   three columns (top + bottom bar) act as gates that retract from the centre
+    //   to let a ball roll through, then close behind it. mode 1 adds a vertical
+    //   weave to the ball; mode 2 reverses the travel direction.
+    inline void SpinnerBarsGates(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f, top = centre.y - H * 0.5f, bot = top + H;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      const float ccen[] = { 0.2f, 0.4f, 0.6f };
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float p = ImFmod(time, 1.f);
+      if (mode == 2) p = 1.f - p;
+
+      for (int i = 0; i < 3; i++) {
+        const float d = ImAbs(p - ccen[i]);
+        const float sh = (d < 0.22f) ? (1.f - d / 0.22f) : 0.f;
+        const float barH = (0.5f - sh * 0.2f) * H;
+        bars_draw_v(window->DrawList, cx[i], top, top + barH, hw, c);
+        bars_draw_v(window->DrawList, cx[i], bot - barH, bot, hw, c);
+      }
+
+      static const float kt[] = { 0.f, 0.2f, 0.4f, 0.6f, 0.8f, 1.f };
+      static const float bxv[] = { -0.12f, 0.1f, 0.5f, 0.9f, 1.12f, 1.12f };
+      const float bx = left + bars_kf_eval(kt, bxv, 6, p) * W;
+      float by = centre.y;
+      if (mode == 1) by += ImSin(p * 3.f * IM_PI) * 0.12f * H;
+      window->DrawList->AddCircleFilled(ImVec2(bx, by), hw, c, num_segments);
+    }
+
+    // Capture:
+    //   a ball rolls in through the first gate to the centre, where the middle
+    //   gate opens to admit it and then closes around it, trapping the ball.
+    //   mode 1 pulses the trapped ball; mode 2 reverses (ball escapes left).
+    inline void SpinnerBarsCapture(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f, top = centre.y - H * 0.5f, bot = top + H;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float p = ImFmod(time / 2.f, 1.f);
+      if (mode == 2) p = 1.f - p;
+
+      static const float kt0[] = { 0.f, 0.1f, 0.5f, 0.66f, 1.f };
+      static const float sv0[] = { 0.f, 1.f, 1.f, 0.f, 0.f };
+      static const float kt1[] = { 0.f, 0.27f, 0.33f, 0.66f, 0.83f, 1.f };
+      static const float sv1[] = { 0.f, 0.f, 1.f, 1.f, 0.f, 0.f };
+      const float sh[] = { bars_kf_eval(kt0, sv0, 5, p), bars_kf_eval(kt1, sv1, 6, p), 0.f };
+      for (int i = 0; i < 3; i++) {
+        const float barH = (0.5f - sh[i] * 0.2f) * H;
+        bars_draw_v(window->DrawList, cx[i], top, top + barH, hw, c);
+        bars_draw_v(window->DrawList, cx[i], bot - barH, bot, hw, c);
+      }
+
+      static const float ktb[] = { 0.f, 0.2f, 0.4f, 1.f };
+      static const float bxv[] = { -0.12f, 0.1f, 0.5f, 0.5f };
+      const float bx = left + bars_kf_eval(ktb, bxv, 4, p) * W;
+      float rb = hw;
+      if (mode == 1 && p > 0.4f) rb = hw * (1.f + 0.4f * ImAbs(ImSin((p - 0.4f) * 5.f * IM_PI)));
+      window->DrawList->AddCircleFilled(ImVec2(bx, centre.y), rb, c, num_segments);
+    }
+
+    // Escape:
+    //   like Capture, but after being trapped at the centre the ball slips to a
+    //   side gap and shoots out of the top. mode 1 ejects downward; mode 2
+    //   reverses the timeline.
+    inline void SpinnerBarsEscape(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f, top = centre.y - H * 0.5f, bot = top + H;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float p = ImFmod(time / 2.f, 1.f);
+      if (mode == 2) p = 1.f - p;
+
+      static const float kt0[] = { 0.f, 0.1f, 0.5f, 0.66f, 1.f };
+      static const float sv0[] = { 0.f, 1.f, 1.f, 0.f, 0.f };
+      static const float kt1[] = { 0.f, 0.27f, 0.33f, 0.66f, 0.83f, 1.f };
+      static const float sv1[] = { 0.f, 0.f, 1.f, 1.f, 0.f, 0.f };
+      const float sh[] = { bars_kf_eval(kt0, sv0, 5, p), bars_kf_eval(kt1, sv1, 6, p), 0.f };
+      for (int i = 0; i < 3; i++) {
+        const float barH = (0.5f - sh[i] * 0.2f) * H;
+        bars_draw_v(window->DrawList, cx[i], top, top + barH, hw, c);
+        bars_draw_v(window->DrawList, cx[i], bot - barH, bot, hw, c);
+      }
+
+      static const float ktb[] = { 0.f, 0.2f, 0.4f, 0.7f, 0.8f, 0.85f, 1.f };
+      static const float bxv[] = { -0.12f, 0.1f, 0.5f, 0.5f, 0.3f, 0.3f, 0.3f };
+      const float bx = left + bars_kf_eval(ktb, bxv, 7, p) * W;
+      const float dir = (mode == 1) ? 1.f : -1.f;
+      const float by = centre.y + ((p > 0.85f) ? (p - 0.85f) / 0.15f * 0.7f * H * dir : 0.f);
+      window->DrawList->AddCircleFilled(ImVec2(bx, by), hw, c, num_segments);
+    }
+
+    // Devour:
+    //   a ball sucks in two dots from the right, growing (1x -> 1.5x -> 2x) with
+    //   each, while a bar slides in to the centre; then the ball dashes off left
+    //   and resets. mode 1 keeps the ball in place (no dash); mode 2 reverses.
+    inline void SpinnerBarsDevour(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 3.2f, H = radius * 1.4f, hw = thickness * 0.5f;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float p = ImFmod(time / 3.f, 1.f);
+      if (mode == 2) p = 1.f - p;
+
+      static const float ktbar[] = { 0.f, 0.1f, 0.2f, 0.7f, 0.85f, 1.f };
+      static const float barxv[] = { -0.55f, -0.55f, 0.f, 0.f, -0.55f, -0.55f };
+      const float barx = centre.x + bars_kf_eval(ktbar, barxv, 6, p) * W;
+      const float barhh = 0.25f * H;
+      window->DrawList->AddRectFilled(ImVec2(barx - hw, centre.y - barhh),
+                                      ImVec2(barx + hw, centre.y + barhh), c);
+
+      static const float ktbx[] = { 0.f, 0.1f, 0.2f, 0.7f, 0.85f, 0.87f, 1.f };
+      static const float bxv0[] = { 0.f, 0.f, 0.28f, 0.28f, -0.71f, -0.71f, 0.f };
+      static const float bxv1[] = { 0.f, 0.f, 0.28f, 0.28f, 0.f, 0.f, 0.f };
+      const float bx = centre.x + bars_kf_eval(ktbx, (mode == 1) ? bxv1 : bxv0, 7, p) * W;
+
+      static const float kts[] = { 0.f, 0.48f, 0.5f, 0.58f, 0.6f, 0.85f, 0.87f, 1.f };
+      static const float sv[] = { 1.f, 1.f, 1.5f, 1.5f, 2.f, 2.f, 1.f, 1.f };
+      const float scale = bars_kf_eval(kts, sv, 8, p);
+
+      static const float ktd1[] = { 0.f, 0.4f, 0.48f, 0.5f, 1.f };
+      static const float dv1[] = { 0.857f, 0.857f, 0.114f, 0.f, 0.f };
+      static const float ktd2[] = { 0.f, 0.5f, 0.58f, 0.6f, 1.f };
+      static const float dv2[] = { 0.857f, 0.857f, 0.114f, 0.f, 0.f };
+      const float d1 = bars_kf_eval(ktd1, dv1, 5, p);
+      const float d2 = bars_kf_eval(ktd2, dv2, 5, p);
+      if (d1 > 0.01f) window->DrawList->AddCircleFilled(ImVec2(bx + d1 * W, centre.y), hw, c, num_segments);
+      if (d2 > 0.01f) window->DrawList->AddCircleFilled(ImVec2(bx + d2 * W, centre.y), hw, c, num_segments);
+
+      window->DrawList->AddCircleFilled(ImVec2(bx, centre.y), hw * scale, c, num_segments);
+    }
+
+    // Lift:
+    //   three tall rounded bars slide from the bottom to the top in a staggered
+    //   wave, then back (alternate). mode 1 reverses the stagger order; mode 2
+    //   reverses the timeline.
+    inline void SpinnerBarsLift(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f, top = centre.y - H * 0.5f;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      const float barH = 0.5f * H + thickness;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float ph = ImFmod((float)ImGui::GetTime() * speed, 2.f);
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
+
+      static const float kt0[] = { 0.f, 0.1f, 0.25f, 0.5f, 1.f };
+      static const float v0[] = { 1.f, 1.f, 0.5f, 0.f, 0.f };
+      static const float kt1[] = { 0.f, 0.25f, 0.5f, 0.75f, 1.f };
+      static const float v1[] = { 1.f, 1.f, 0.5f, 0.f, 0.f };
+      static const float kt2[] = { 0.f, 0.5f, 0.75f, 0.9f, 1.f };
+      static const float v2[] = { 1.f, 1.f, 0.5f, 0.f, 0.f };
+      const float *kts[] = { kt0, kt1, kt2 };
+      const float *vys[] = { v0, v1, v2 };
+      for (int i = 0; i < 3; i++) {
+        const int bi = (mode == 1) ? (2 - i) : i;
+        const float vy = bars_kf_eval(kts[bi], vys[bi], 5, t);
+        const float y0 = top + vy * (H - barH);
+        window->DrawList->AddRectFilled(ImVec2(cx[i] - hw, y0), ImVec2(cx[i] + hw, y0 + barH), c, hw);
+      }
+    }
+
+    // Gap slide:
+    //   three static bars, each with a round gap that travels along it; the gap
+    //   hops from bar to bar in sequence (alternate). mode 1 moves all gaps in
+    //   sync; mode 2 reverses the timeline.
+    inline void SpinnerBarsGapSlide(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      const float barH = 0.5f * H + thickness;
+      const float barTop = centre.y - barH * 0.5f, barBot = centre.y + barH * 0.5f;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float ph = ImFmod((float)ImGui::GetTime() * speed, 2.f);
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
+
+      static const float kt[] = { 0.f, 0.2f, 0.4f, 0.6f, 0.8f, 1.f };
+      static const float g0[] = { 0.5f, 1.f, 0.f, 0.5f, 0.5f, 0.5f };
+      static const float g1[] = { 0.5f, 0.5f, 1.f, 0.f, 0.5f, 0.5f };
+      static const float g2[] = { 0.5f, 0.5f, 0.5f, 1.f, 0.f, 0.5f };
+      const float *gv[] = { g0, g1, g2 };
+      for (int i = 0; i < 3; i++) {
+        const float gf = bars_kf_eval(kt, (mode == 1) ? g0 : gv[i], 6, t);
+        const float gy = barTop + hw + gf * (barH - 2.f * hw);
+        if (gy - hw - barTop > 1.f)
+          window->DrawList->AddRectFilled(ImVec2(cx[i] - hw, barTop), ImVec2(cx[i] + hw, gy - hw), c, hw);
+        if (barBot - (gy + hw) > 1.f)
+          window->DrawList->AddRectFilled(ImVec2(cx[i] - hw, gy + hw), ImVec2(cx[i] + hw, barBot), c, hw);
+      }
+    }
+
+    // Converge:
+    //   in each column a top bar and a bottom dot slide together to the centre and
+    //   back, in a left-to-right wave (alternate). mode 1 moves all columns in
+    //   sync; mode 2 reverses the timeline.
+    inline void SpinnerBarsConverge(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f, top = centre.y - H * 0.5f, bot = top + H;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      const float barhh = 0.15f * H, dotR = hw;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float ph = ImFmod((float)ImGui::GetTime() * speed, 2.f);
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
+
+      static const float kt[] = { 0.f, 0.2f, 0.4f, 0.6f, 0.8f, 1.f };
+      static const float c0[] = { 0.f, 1.f, 1.f, 0.f, 0.f, 0.f };
+      static const float c1[] = { 0.f, 0.f, 1.f, 1.f, 0.f, 0.f };
+      static const float c2[] = { 0.f, 0.f, 0.f, 1.f, 1.f, 0.f };
+      const float *cv[] = { c0, c1, c2 };
+      for (int i = 0; i < 3; i++) {
+        const float cf = bars_kf_eval(kt, (mode == 1) ? c0 : cv[i], 6, t);
+        const float barCY = (top + barhh) + cf * (centre.y - (top + barhh));
+        const float dotCY = (bot - dotR) + cf * ((centre.y + barhh + dotR) - (bot - dotR));
+        window->DrawList->AddRectFilled(ImVec2(cx[i] - hw, barCY - barhh), ImVec2(cx[i] + hw, barCY + barhh), c, hw);
+        window->DrawList->AddCircleFilled(ImVec2(cx[i], dotCY), dotR, c, num_segments);
+      }
+    }
+
+    // Swap ends:
+    //   in each column a bar and a dot swap top/bottom ends, flipping one column
+    //   after another in a wave (alternate). mode 1 flips all columns in sync;
+    //   mode 2 reverses the timeline.
+    inline void SpinnerBarsSwapEnds(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f, top = centre.y - H * 0.5f, bot = top + H;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      const float barhh = 0.19f * H, dotR = hw;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float ph = ImFmod((float)ImGui::GetTime() * speed, 2.f);
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
+
+      static const float kt[] = { 0.f, 0.1f, 0.33f, 0.66f, 0.9f, 1.f };
+      static const float s0[] = { 0.f, 0.f, 1.f, 1.f, 1.f, 1.f };
+      static const float s1[] = { 0.f, 0.f, 0.f, 1.f, 1.f, 1.f };
+      static const float s2[] = { 0.f, 0.f, 0.f, 0.f, 1.f, 1.f };
+      const float *sv[] = { s0, s1, s2 };
+      for (int i = 0; i < 3; i++) {
+        const float sf = bars_kf_eval(kt, (mode == 1) ? s0 : sv[i], 6, t);
+        const float barCY = (top + barhh) + sf * ((bot - barhh) - (top + barhh));
+        const float dotCY = (bot - dotR) + sf * ((top + dotR) - (bot - dotR));
+        window->DrawList->AddRectFilled(ImVec2(cx[i] - hw, barCY - barhh), ImVec2(cx[i] + hw, barCY + barhh), c, hw);
+        window->DrawList->AddCircleFilled(ImVec2(cx[i], dotCY), dotR, c, num_segments);
+      }
+    }
+
+    // Relay:
+    //   a nine-step wave (2 s loop): bars drop one by one, rise carrying their dot
+    //   underneath, then the dots drop back in turn. mode 1 mirrors the column
+    //   order; mode 2 reverses the timeline.
+    inline void SpinnerBarsRelay(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f, top = centre.y - H * 0.5f;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      const float bh = 0.375f * H, dotR = hw;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float p = ImFmod(time / 2.f, 1.f);
+      if (mode == 2) p = 1.f - p;
+
+      static const float kt[] = { 0.f, 0.1111f, 0.2222f, 0.3333f, 0.4444f, 0.5555f, 0.6666f, 0.7777f, 0.8888f, 1.f };
+      static const float b0[] = { 0.f, 0.8f, 0.8f, 0.8f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+      static const float b1[] = { 0.f, 0.f, 0.8f, 0.8f, 0.8f, 0.f, 0.f, 0.f, 0.f, 0.f };
+      static const float b2[] = { 0.f, 0.f, 0.f, 0.8f, 0.8f, 0.8f, 0.f, 0.f, 0.f, 0.f };
+      static const float d0[] = { 0.8f, 0.8f, 0.8f, 0.8f, 0.375f, 0.375f, 0.375f, 0.8f, 0.8f, 0.8f };
+      static const float d1[] = { 0.8f, 0.8f, 0.8f, 0.8f, 0.8f, 0.375f, 0.375f, 0.375f, 0.8f, 0.8f };
+      static const float d2[] = { 0.8f, 0.8f, 0.8f, 0.8f, 0.8f, 0.8f, 0.375f, 0.375f, 0.375f, 0.8f };
+      const float *bv[] = { b0, b1, b2 };
+      const float *dv[] = { d0, d1, d2 };
+      for (int i = 0; i < 3; i++) {
+        const int ci = (mode == 1) ? (2 - i) : i;
+        const float bfrac = bars_kf_eval(kt, bv[ci], 10, p);
+        const float dfrac = bars_kf_eval(kt, dv[ci], 10, p);
+        const float barTopY = top + bfrac * H;
+        window->DrawList->AddRectFilled(ImVec2(cx[i] - hw, barTopY), ImVec2(cx[i] + hw, barTopY + bh), c, hw);
+        window->DrawList->AddCircleFilled(ImVec2(cx[i], top + dfrac * H + dotR), dotR, c, num_segments);
+      }
+    }
+
+    // Push:
+    //   in each column a dot descends from the top to the centre and pushes the
+    //   bar below it, one column after another (alternate). mode 1 mirrors the
+    //   column order; mode 2 reverses the timeline.
+    inline void SpinnerBarsPush(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      const float barhh = 0.15f * H, dotR = hw;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float ph = ImFmod((float)ImGui::GetTime() * speed, 2.f);
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
+
+      static const float kt[] = { 0.f, 0.05f, 0.1667f, 0.3333f, 0.5f, 0.6667f, 0.8333f, 0.95f, 1.f };
+      static const float b0[] = { 0.f, 0.f, 0.f, 0.25f, 0.25f, 0.25f, 0.25f, 0.25f, 0.25f };
+      static const float b1[] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.25f, 0.25f, 0.25f, 0.25f };
+      static const float b2[] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.25f, 0.25f };
+      static const float dm0[] = { -0.4f, -0.4f, -0.25f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+      static const float dm1[] = { -0.4f, -0.4f, -0.4f, -0.4f, -0.25f, 0.f, 0.f, 0.f, 0.f };
+      static const float dm2[] = { -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.25f, 0.f, 0.f };
+      const float *bv[] = { b0, b1, b2 };
+      const float *dv[] = { dm0, dm1, dm2 };
+      for (int i = 0; i < 3; i++) {
+        const int ci = (mode == 1) ? (2 - i) : i;
+        const float bco = bars_kf_eval(kt, bv[ci], 9, t);
+        const float dco = bars_kf_eval(kt, dv[ci], 9, t);
+        const float barCY = centre.y + bco * H;
+        window->DrawList->AddRectFilled(ImVec2(cx[i] - hw, barCY - barhh), ImVec2(cx[i] + hw, barCY + barhh), c, hw);
+        window->DrawList->AddCircleFilled(ImVec2(cx[i], centre.y + dco * H), dotR, c, num_segments);
+      }
+    }
+
+    inline void bars_draw_rrect(ImDrawList *dl, float ccx, float ccy, float hwd, float hht,
+                                float ca, float sa, const ImColor &c)
+    {
+      const float dx[4] = { -hwd, hwd, hwd, -hwd };
+      const float dy[4] = { -hht, -hht, hht, hht };
+      ImVec2 pts[4];
+      for (int k = 0; k < 4; k++)
+        pts[k] = ImVec2(ccx + dx[k] * ca - dy[k] * sa, ccy + dx[k] * sa + dy[k] * ca);
+      dl->AddConvexPolyFilled(pts, 4, c);
+    }
+
+    // Push wave:
+    //   like Push, but a single dot-push travels across the columns one at a time
+    //   and resets before the next (linear loop). mode 1 mirrors the column order;
+    //   mode 2 reverses the timeline.
+    inline void SpinnerBarsPushWave(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float left = centre.x - W * 0.5f;
+      const float cx[] = { left + hw, centre.x, left + W - hw };
+      const float barhh = 0.15f * H, dotR = hw;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float p = ImFmod(time, 1.f);
+      if (mode == 2) p = 1.f - p;
+
+      static const float kt[] = { 0.f, 0.05f, 0.125f, 0.25f, 0.375f, 0.5f, 0.625f, 0.75f, 0.875f, 0.95f, 1.f };
+      static const float b0[] = { 0.f, 0.f, 0.f, 0.25f, 0.25f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+      static const float b1[] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.25f, 0.25f, 0.f, 0.f, 0.f, 0.f };
+      static const float b2[] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.25f, 0.25f, 0.f, 0.f };
+      static const float dm0[] = { -0.4f, -0.4f, -0.25f, 0.f, 0.f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f };
+      static const float dm1[] = { -0.4f, -0.4f, -0.4f, -0.4f, -0.25f, 0.f, 0.f, -0.4f, -0.4f, -0.4f, -0.4f };
+      static const float dm2[] = { -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.25f, 0.f, 0.f, -0.4f, -0.4f };
+      const float *bv[] = { b0, b1, b2 };
+      const float *dv[] = { dm0, dm1, dm2 };
+      for (int i = 0; i < 3; i++) {
+        const int ci = (mode == 1) ? (2 - i) : i;
+        const float bco = bars_kf_eval(kt, bv[ci], 11, p);
+        const float dco = bars_kf_eval(kt, dv[ci], 11, p);
+        const float barCY = centre.y + bco * H;
+        window->DrawList->AddRectFilled(ImVec2(cx[i] - hw, barCY - barhh), ImVec2(cx[i] + hw, barCY + barhh), c, hw);
+        window->DrawList->AddCircleFilled(ImVec2(cx[i], centre.y + dco * H), dotR, c, num_segments);
+      }
+    }
+
+    // Gather:
+    //   four arms fly in from off-screen to assemble a plus around a centre dot,
+    //   rotate 90 degrees, then fly back out (1.5 s loop). mode 1 rotates the
+    //   opposite way; mode 2 reverses the timeline.
+    inline void SpinnerBarsGather(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, hw = thickness * 0.5f;
+      const float halfLen = 0.2f * W, outDist = 0.85f * W, centerR = 0.15f * W;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float p = ImFmod(time / 1.5f, 1.f);
+      if (mode == 2) p = 1.f - p;
+
+      static const float ktg[] = { 0.f, 0.3f, 0.7f, 1.f };
+      static const float gv[] = { 0.f, 1.f, 1.f, 0.f };
+      const float g = bars_kf_eval(ktg, gv, 4, p);
+
+      static const float ktr[] = { 0.f, 0.4f, 0.6f, 1.f };
+      static const float rv[] = { 0.f, 0.f, 1.f, 1.f };
+      const float rot = bars_kf_eval(ktr, rv, 4, p) * (IM_PI * 0.5f) * (mode == 1 ? -1.f : 1.f);
+      const float ca = ImCos(rot), sa = ImSin(rot);
+
+      window->DrawList->AddCircleFilled(centre, centerR, c, num_segments);
+
+      static const float dirx[4] = { 0.f, 0.f, -1.f, 1.f };
+      static const float diry[4] = { -1.f, 1.f, 0.f, 0.f };
+      for (int i = 0; i < 4; i++) {
+        const float ox = dirx[i] * outDist * (1.f - g);
+        const float oy = diry[i] * outDist * (1.f - g);
+        const float wx = centre.x + ox * ca - oy * sa;
+        const float wy = centre.y + ox * sa + oy * ca;
+        const bool vertical = (i < 2);
+        bars_draw_rrect(window->DrawList, wx, wy,
+                        vertical ? hw : halfLen, vertical ? halfLen : hw, ca, sa, c);
+      }
+    }
+
+    // Split:
+    //   two horizontal bars spread from the centre to the edges while a dot drops
+    //   to the middle (0.5 s alternate); the whole figure rotates in 90-degree
+    //   steps. mode 1 rotates continuously; mode 2 reverses the rotation.
+    inline void SpinnerBarsSplit(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float halfLen = 0.2f * W, centerR = 0.125f * W;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      const float phs = ImFmod(time / 0.5f, 2.f);
+      const float ts = (phs <= 1.f) ? phs : 2.f - phs;
+      static const float kt[] = { 0.f, 0.1f, 0.8f, 1.f };
+      static const float sv[] = { 0.f, 0.f, 1.f, 1.f };
+      const float s = bars_kf_eval(kt, sv, 4, ts);
+
+      float rot;
+      if (mode == 1) rot = ImFmod(time / 4.f, 1.f) * 2.f * IM_PI;
+      else           rot = (float)((int)(ImFmod(time / 4.f, 1.f) * 4.f)) * (IM_PI * 0.5f);
+      if (mode == 2) rot = -rot;
+      const float ca = ImCos(rot), sa = ImSin(rot);
+
+      const float dx = -0.4f * H * (1.f - s);
+      window->DrawList->AddCircleFilled(ImVec2(centre.x - dx * sa, centre.y + dx * ca), centerR, c, num_segments);
+
+      const float bxo = 0.2f * W + s * (0.7f * W);
+      for (int i = 0; i < 2; i++) {
+        const float ox = (i == 0) ? -bxo : bxo;
+        const float wx = centre.x + ox * ca;
+        const float wy = centre.y + ox * sa;
+        bars_draw_rrect(window->DrawList, wx, wy, halfLen, hw, ca, sa, c);
+      }
+    }
+
+    // Slot:
+    //   a dot passes top->bottom through two bars that open as a gate and close
+    //   behind it (1 s linear loop), while the figure rotates in 90-degree steps.
+    //   mode 1 rotates continuously; mode 2 reverses the rotation.
+    inline void SpinnerBarsSlot(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float W = radius * 2.f, H = W, hw = thickness * 0.5f;
+      const float halfLen = 0.2f * W, centerR = 0.125f * W;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      const float p = ImFmod(time, 1.f);
+
+      static const float kt[] = { 0.f, 0.1f, 0.33f, 0.66f, 0.8f, 1.f };
+      static const float sv[] = { 0.f, 0.f, 1.f, 1.f, 0.f, 0.f };
+      static const float dv[] = { -0.9f, -0.9f, 0.f, 0.9f, 0.9f, 0.9f };
+      const float s = bars_kf_eval(kt, sv, 6, p);
+      const float dy = bars_kf_eval(kt, dv, 6, p) * H;
+
+      float rot;
+      if (mode == 1) rot = ImFmod(time / 4.f, 1.f) * 2.f * IM_PI;
+      else           rot = (float)((int)(ImFmod(time / 4.f, 1.f) * 4.f)) * (IM_PI * 0.5f);
+      if (mode == 2) rot = -rot;
+      const float ca = ImCos(rot), sa = ImSin(rot);
+
+      window->DrawList->AddCircleFilled(ImVec2(centre.x - dy * sa, centre.y + dy * ca), centerR, c, num_segments);
+
+      const float bxo = 0.2f * W + s * (0.7f * W);
+      for (int i = 0; i < 2; i++) {
+        const float ox = (i == 0) ? -bxo : bxo;
+        bars_draw_rrect(window->DrawList, centre.x + ox * ca, centre.y + ox * sa, halfLen, hw, ca, sa, c);
+      }
     }
 
 #ifndef _IMSPINNER_BARS_INTERNAL_
