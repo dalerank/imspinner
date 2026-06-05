@@ -221,6 +221,14 @@ namespace ImSpinner
       return kv[n - 1];
     }
 
+    // 0 = default; 1 = distinct alternate (see each spinner);
+    // 2 = reversed timeline.
+    inline float bars_anim_t(float t, int mode)
+    {
+      if (mode == 2) return 1.f - t;
+      return t;
+    }
+
     inline void bars_draw_v(ImDrawList *dl, float cx, float top, float bot, float hw, const ImColor &c)
     {
       dl->AddRectFilled(ImVec2(cx - hw, top), ImVec2(cx + hw, bot), c);
@@ -314,58 +322,67 @@ namespace ImSpinner
 
     // Sequential height pulse:
     //   three bars (20% width); each shrinks to 10% height in turn (33/50/66%).
-    inline void SpinnerBarsSeqPulse(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsSeqPulse(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float W = radius * 2.f, H = W, halfH = H * 0.5f, hw = thickness * 0.5f;
       const float cx[] = { centre.x - 0.4f * W, centre.x, centre.x + 0.4f * W };
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
-      static const float kt[] = { 0.f, 0.33f, 0.5f, 0.66f, 1.f };
-      static const float h0[] = { 1.f, 0.1f, 1.f, 1.f, 1.f };
-      static const float h1[] = { 1.f, 1.f, 0.1f, 1.f, 1.f };
-      static const float h2[] = { 1.f, 1.f, 1.f, 0.1f, 1.f };
-      const float hs[] = { bars_kf_eval(kt, h0, 5, t), bars_kf_eval(kt, h1, 5, t), bars_kf_eval(kt, h2, 5, t) };
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       const ImColor c = color_alpha(color, 1.f);
-      for (int i = 0; i < 3; i++) {
-        const float hh = hs[i] * halfH;
-        bars_draw_v(window->DrawList, cx[i], centre.y - hh, centre.y + hh, hw, c);
+      if (mode == 1) {
+        const float hh = (0.55f + 0.45f * ImSin(t * IM_PI * 2.f)) * halfH;
+        for (int i = 0; i < 3; i++)
+          bars_draw_v(window->DrawList, cx[i], centre.y - hh, centre.y + hh, hw, c);
+      } else {
+        static const float kt[] = { 0.f, 0.33f, 0.5f, 0.66f, 1.f };
+        static const float h0[] = { 1.f, 0.1f, 1.f, 1.f, 1.f };
+        static const float h1[] = { 1.f, 1.f, 0.1f, 1.f, 1.f };
+        static const float h2[] = { 1.f, 1.f, 1.f, 0.1f, 1.f };
+        const float hs[] = { bars_kf_eval(kt, h0, 5, t), bars_kf_eval(kt, h1, 5, t), bars_kf_eval(kt, h2, 5, t) };
+        for (int i = 0; i < 3; i++) {
+          const float hh = hs[i] * halfH;
+          bars_draw_v(window->DrawList, cx[i], centre.y - hh, centre.y + hh, hw, c);
+        }
       }
     }
 
     // Cascade grow:
     //   three bottom-anchored bars grow in sequence (60→80→100% cascade).
-    inline void SpinnerBarsCascadeGrow(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsCascadeGrow(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float W = radius * 2.f, H = W, halfH = H * 0.5f, hw = thickness * 0.5f;
       const float cx[] = { centre.x - 0.4f * W, centre.x, centre.x + 0.4f * W };
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.2f, 0.4f, 0.6f, 0.8f, 1.f };
       static const float h0[] = { 1.f, 0.6f, 0.8f, 1.f, 1.f, 1.f };
       static const float h1[] = { 1.f, 1.f, 0.6f, 0.8f, 1.f, 1.f };
       static const float h2[] = { 1.f, 1.f, 1.f, 0.6f, 0.8f, 1.f };
       const float hs[] = { bars_kf_eval(kt, h0, 6, t), bars_kf_eval(kt, h1, 6, t), bars_kf_eval(kt, h2, 6, t) };
-      const float yb = centre.y + halfH;
+      const float yt = centre.y - halfH, yb = centre.y + halfH;
       const ImColor c = color_alpha(color, 1.f);
-      for (int i = 0; i < 3; i++)
-        bars_draw_v(window->DrawList, cx[i], yb - hs[i] * H, yb, hw, c);
+      for (int i = 0; i < 3; i++) {
+        const float hh = hs[i] * H;
+        if (mode == 1) bars_draw_v(window->DrawList, cx[i], yt, yt + hh, hw, c);
+        else            bars_draw_v(window->DrawList, cx[i], yb - hh, yb, hw, c);
+      }
     }
 
     // Rising bars:
     //   three bars slide upward from the bottom (staggered 1/6 phase each).
-    inline void SpinnerBarsRise(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsRise(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float W = radius * 2.f, H = W, halfH = H * 0.5f, hw = thickness * 0.5f;
       const float cx[] = { centre.x - 0.4f * W, centre.x, centre.x + 0.4f * W };
       const float barH = H / 3.f;
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       const ImColor c = color_alpha(color, 1.f);
       for (int i = 0; i < 3; i++) {
-        const float ph = ImFmod(t + (float)(i + 1) / 6.f, 1.f);
+        const float ph = ImFmod(t + (float)((mode == 1) ? (3 - i) : (i + 1)) / 6.f, 1.f);
         const float yC = centre.y + halfH - barH * 0.5f - ph * (H - barH);
         bars_draw_v(window->DrawList, cx[i], yC - barH * 0.5f, yC + barH * 0.5f, hw, c);
       }
@@ -373,13 +390,13 @@ namespace ImSpinner
 
     // Corner hop:
     //   three bars hop diagonally from bottom-right anchor toward the top row.
-    inline void SpinnerBarsCornerHop(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsCornerHop(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float W = radius * 2.f, H = W, halfH = H * 0.5f, hw = thickness * 0.5f;
       const float cx[] = { centre.x - 0.4f * W, centre.x, centre.x + 0.4f * W };
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.33f, 0.5f, 0.66f, 1.f };
       static const float a0[] = { 1.f, 0.5f, 0.f, 0.f, 0.f };
       static const float a1[] = { 1.f, 1.f, 0.5f, 0.f, 0.f };
@@ -389,21 +406,22 @@ namespace ImSpinner
       for (int i = 0; i < 3; i++) {
         const float *av = (i == 0) ? a0 : (i == 1) ? a1 : a2;
         const float ay = bars_kf_eval(kt, av, 5, t);
-        bars_draw_v(window->DrawList, cx[i], yt + ay * H, yb, hw, c);
+        if (mode == 1) bars_draw_v(window->DrawList, cx[i], yt, yt + (1.f - ay) * H, hw, c);
+        else           bars_draw_v(window->DrawList, cx[i], yt + ay * H, yb, hw, c);
       }
     }
 
     // Diagonal grow:
     //   three bars (aspect 0.75) hop between corners via background-position steps.
-    inline void SpinnerBarsDiagonalGrow(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsDiagonalGrow(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float W = radius * 2.f, H = W / 0.75f, halfH = H * 0.5f, hw = thickness * 0.5f;
       const float cx[] = { centre.x - 0.4f * W, centre.x, centre.x + 0.4f * W };
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.2f, 0.4f, 0.6f, 0.8f, 1.f };
-      static const float ax[] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+      static const float axm[] = { 0.f, 0.f, 0.5f, 1.f, 0.5f, 0.f };
       static const float ay0[] = { 1.f, 0.5f, 0.f, 1.f, 1.f, 1.f };
       static const float ay1[] = { 1.f, 1.f, 0.5f, 0.f, 1.f, 1.f };
       static const float ay2[] = { 1.f, 1.f, 1.f, 0.5f, 0.f, 1.f };
@@ -413,21 +431,21 @@ namespace ImSpinner
       for (int i = 0; i < 3; i++) {
         const float *ayv = (i == 0) ? ay0 : (i == 1) ? ay1 : ay2;
         const float ay = bars_kf_eval(kt, ayv, 6, t);
-        const float axp = bars_kf_eval(kt, ax, 6, t);
-        const float x = cx[i] + (axp - 0.5f) * 0.4f * W;
+        const float axp = (mode == 1) ? bars_kf_eval(kt, axm, 6, t) : 0.f;
+        const float x = cx[i] + (axp - 0.5f) * 0.8f * W;
         bars_draw_v(window->DrawList, x, yt + ay * (H - bh), yt + ay * (H - bh) + bh, hw, c);
       }
     }
 
     // Bounce center:
     //   three centre-anchored bars (max 50% height) bounce between vertical slots.
-    inline void SpinnerBarsBounceCenter(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsBounceCenter(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float W = radius * 2.f, H = W / 0.75f, halfH = H * 0.5f, hw = thickness * 0.5f;
       const float cx[] = { centre.x - 0.4f * W, centre.x, centre.x + 0.4f * W };
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.2f, 0.4f, 0.6f, 0.8f, 1.f };
       static const float ay0[] = { 0.5f, 0.f, 1.f, 0.5f, 0.5f, 0.5f };
       static const float ay1[] = { 0.5f, 0.5f, 0.f, 1.f, 0.5f, 0.5f };
@@ -438,41 +456,48 @@ namespace ImSpinner
         const float *ayv = (i == 0) ? ay0 : (i == 1) ? ay1 : ay2;
         const float ay = bars_kf_eval(kt, ayv, 6, t);
         const float yC = centre.y - halfH + ay * H;
-        bars_draw_v(window->DrawList, cx[i], yC - bh * 0.5f, yC + bh * 0.5f, hw, c);
+        const float hwv = (mode == 1) ? hw * (0.35f + 0.65f * ay) : hw;
+        bars_draw_v(window->DrawList, cx[i], yC - bh * 0.5f, yC + bh * 0.5f, hwv, c);
       }
     }
 
     // Scale alternate:
     //   three bars pulse height 50%↔20%↔100% in sequence (animation-direction: alternate).
-    inline void SpinnerBarsScaleAlt(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsScaleAlt(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float W = radius * 2.f, H = W / 0.75f, halfH = H * 0.5f, hw = thickness * 0.5f;
       const float cx[] = { centre.x - 0.4f * W, centre.x, centre.x + 0.4f * W };
       const float ph = ImFmod((float)ImGui::GetTime() * speed, 2.f);
-      const float t = (ph <= 1.f) ? ph : 2.f - ph;
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
       static const float kt[] = { 0.f, 0.2f, 0.4f, 0.6f, 0.8f, 1.f };
       static const float h0[] = { 0.5f, 0.2f, 0.5f, 1.f, 0.5f, 0.5f };
       static const float h1[] = { 0.5f, 0.5f, 0.2f, 0.5f, 1.f, 0.5f };
       static const float h2[] = { 0.5f, 0.5f, 0.5f, 0.2f, 0.5f, 1.f };
-      const float hs[] = { bars_kf_eval(kt, h0, 6, t), bars_kf_eval(kt, h1, 6, t), bars_kf_eval(kt, h2, 6, t) };
       const ImColor c = color_alpha(color, 1.f);
-      for (int i = 0; i < 3; i++) {
-        const float h = hs[i] * halfH;
-        bars_draw_v(window->DrawList, cx[i], centre.y - h, centre.y + h, hw, c);
+      if (mode == 1) {
+        const float h = bars_kf_eval(kt, h0, 6, t) * halfH;
+        for (int i = 0; i < 3; i++)
+          bars_draw_v(window->DrawList, cx[i], centre.y - h, centre.y + h, hw, c);
+      } else {
+        const float hs[] = { bars_kf_eval(kt, h0, 6, t), bars_kf_eval(kt, h1, 6, t), bars_kf_eval(kt, h2, 6, t) };
+        for (int i = 0; i < 3; i++) {
+          const float h = hs[i] * halfH;
+          bars_draw_v(window->DrawList, cx[i], centre.y - h, centre.y + h, hw, c);
+        }
       }
     }
 
     // Corner wave:
     //   three bottom bars step through a corner wave (16.67% keyframes).
-    inline void SpinnerBarsCornerWave(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsCornerWave(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float W = radius * 2.f, H = W / 0.75f, halfH = H * 0.5f, hw = thickness * 0.5f;
       const float cx[] = { centre.x - 0.4f * W, centre.x, centre.x + 0.4f * W };
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.1667f, 0.3333f, 0.5f, 0.6667f, 0.8333f, 1.f };
       static const float ay0[] = { 1.f, 0.f, 0.f, 0.f, 1.f, 1.f, 1.f };
       static const float ay1[] = { 1.f, 1.f, 0.f, 0.f, 0.f, 1.f, 1.f };
@@ -480,7 +505,7 @@ namespace ImSpinner
       const float yt = centre.y - halfH, bh = 0.65f * H;
       const ImColor c = color_alpha(color, 1.f);
       for (int i = 0; i < 3; i++) {
-        const float *ayv = (i == 0) ? ay0 : (i == 1) ? ay1 : ay2;
+        const float *ayv = (mode == 1) ? ay2 : ((i == 0) ? ay0 : (i == 1) ? ay1 : ay2);
         const float ay = bars_kf_eval(kt, ayv, 7, t);
         bars_draw_v(window->DrawList, cx[i], yt + ay * (H - bh), yt + ay * (H - bh) + bh, hw, c);
       }
@@ -488,21 +513,22 @@ namespace ImSpinner
 
     // Jump bars:
     //   three bars (60% max height) swap between top and bottom at 33/66%.
-    inline void SpinnerBarsJump(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsJump(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float W = radius * 2.f, H = W / 0.75f, halfH = H * 0.5f, hw = thickness * 0.5f;
       const float cx[] = { centre.x - 0.4f * W, centre.x, centre.x + 0.4f * W };
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.33f, 0.66f, 1.f };
       static const float ay0[] = { 0.f, 1.f, 0.f, 0.f };
       static const float ay1[] = { 1.f, 0.f, 1.f, 1.f };
       static const float ay2[] = { 0.f, 1.f, 0.f, 0.f };
+      static const float ayM[] = { 0.5f, 0.f, 0.5f, 1.f };
       const float bh = 0.6f * H;
       const ImColor c = color_alpha(color, 1.f);
       for (int i = 0; i < 3; i++) {
-        const float *ayv = (i == 0) ? ay0 : (i == 1) ? ay1 : ay2;
+        const float *ayv = (mode == 1) ? ayM : ((i == 0) ? ay0 : (i == 1) ? ay1 : ay2);
         const float ay = bars_kf_eval(kt, ayv, 4, t);
         const float yC = centre.y - halfH + ay * (H - bh) + bh * 0.5f;
         bars_draw_v(window->DrawList, cx[i], yC - bh * 0.5f, yC + bh * 0.5f, hw, c);
@@ -511,13 +537,13 @@ namespace ImSpinner
 
     // Double row:
     //   two rows of three bar segments slide horizontally (33/66/100% positions).
-    inline void SpinnerBarsDoubleRow(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsDoubleRow(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
 
       const float W = radius * 2.f, H = W / 1.2f, halfH = H * 0.5f;
       const float segW = W / 6.f, bh = halfH;
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.33f, 0.66f, 1.f };
       static const float px0[] = { 0.5f, 0.f, 1.f, 0.5f };
       static const float px1[] = { 0.5f, 1.f, 0.f, 0.5f };
@@ -526,8 +552,9 @@ namespace ImSpinner
       for (int row = 0; row < 2; row++) {
         const float y0 = centre.y - halfH + row * bh;
         const float y1 = y0 + bh;
+        const float tr = (mode == 1) ? (row == 0 ? t : 1.f - t) : t;
         const float *pxv = (row == 0) ? px0 : px1;
-        const float px = bars_kf_eval(kt, pxv, 4, t);
+        const float px = bars_kf_eval(kt, pxv, 4, tr);
         const float x0 = left + px * (W - segW);
         window->DrawList->AddRectFilled(ImVec2(x0, y0), ImVec2(x0 + segW, y1), c);
         window->DrawList->AddRectFilled(ImVec2(x0 + segW * 2.f, y0), ImVec2(x0 + segW * 3.f, y1), c);
@@ -537,26 +564,38 @@ namespace ImSpinner
 
     // Six-bar pulse:
     //   six corner bars (3×2) pulse height 50%→30% at 80% of the cycle.
-    inline void SpinnerBarsSixPulse(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsSixPulse(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.8f, 0.9f, 1.f };
       static const float hf[] = { 0.5f, 0.3f, 0.5f, 0.5f };
-      const float h = bars_kf_eval(kt, hf, 4, t);
-      bars_draw_six_cols(centre.x - radius, W, centre.y - radius, H, h, color_alpha(color, 1.f), window->DrawList);
+      const ImColor c = color_alpha(color, 1.f);
+      const float left = centre.x - radius, top = centre.y - radius;
+      static const float ax[] = { 0.f, 0.f, 0.5f, 0.5f, 1.f, 1.f };
+      static const float ay[] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
+      if (mode == 1) {
+        for (int i = 0; i < 6; i++) {
+          const float ti = ImFmod(t + (float)i / 6.f, 1.f);
+          const float h = bars_kf_eval(kt, hf, 4, ti);
+          bars_draw_box(window->DrawList, left, top, W, H, ax[i], ay[i], 0.2f, h, c);
+        }
+      } else {
+        const float h = bars_kf_eval(kt, hf, 4, t);
+        bars_draw_six_cols(left, W, top, H, h, c, window->DrawList);
+      }
     }
 
     // Six-bar stagger:
     //   corner bars shrink to 30% height one-by-one, then grow back in wave order.
-    inline void SpinnerBarsSixStagger(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsSixStagger(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.1667f, 0.3333f, 0.5f, 0.6667f, 0.8333f, 1.f };
       static const float h0[] = { 0.5f, 0.3f, 0.3f, 0.3f, 0.5f, 0.5f, 0.5f };
       static const float h1[] = { 0.5f, 0.3f, 0.3f, 0.3f, 0.5f, 0.5f, 0.5f };
@@ -569,45 +608,50 @@ namespace ImSpinner
       static const float ay[] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
-      for (int i = 0; i < 6; i++)
-        bars_draw_box(window->DrawList, left, top, W, H, ax[i], ay[i], 0.2f, bars_kf_eval(kt, hs[i], 7, t), c);
+      for (int i = 0; i < 6; i++) {
+        const int si = (mode == 1) ? (5 - i) : i;
+        bars_draw_box(window->DrawList, left, top, W, H, ax[i], ay[i], 0.2f,
+                      bars_kf_eval(kt, hs[si], 7, t), c);
+      }
     }
 
     // Morph plus:
     //   five bars morph 20×100% → 20×20% → 100×20% (alternate ping-pong).
-    inline void SpinnerBarsMorphPlus(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsMorphPlus(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
       const float ph = ImFmod((float)ImGui::GetTime() * speed, 2.f);
-      const float t = (ph <= 1.f) ? ph : 2.f - ph;
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
       static const float kt[] = { 0.f, 0.1f, 0.5f, 0.9f, 1.f };
       static const float wf[] = { 0.2f, 0.2f, 0.2f, 1.f, 1.f };
       static const float hf[] = { 1.f, 1.f, 0.2f, 0.2f, 0.2f };
-      const float w = bars_kf_eval(kt, wf, 5, t), h = bars_kf_eval(kt, hf, 5, t);
       static const float ax[] = { 0.f, 0.f, 0.5f, 1.f, 1.f };
       static const float ay[] = { 0.f, 1.f, 0.5f, 0.f, 1.f };
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
-      for (int i = 0; i < 5; i++)
+      for (int i = 0; i < 5; i++) {
+        const float ti = (mode == 1) ? ImFmod(t + (float)i * 0.15f, 1.f) : t;
+        const float w = bars_kf_eval(kt, wf, 5, ti), h = bars_kf_eval(kt, hf, 5, ti);
         bars_draw_box(window->DrawList, left, top, W, H, ax[i], ay[i], w, h, c);
+      }
     }
 
     // Flip six:
     //   six bars shrink height (0.5 s alternate) while positions flip every 2 s.
-    inline void SpinnerBarsFlipSix(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsFlipSix(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
       const float time = (float)ImGui::GetTime() * speed;
       const float ph = ImFmod(time * 2.f, 2.f);
-      const float ts = (ph <= 1.f) ? ph : 2.f - ph;
+      const float ts = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
       static const float ks[] = { 0.f, 0.1f, 1.f };
       static const float hs[] = { 1.f, 1.f, 0.2f };
       const float hf = bars_kf_eval(ks, hs, 3, ts);
-      const bool flip = ImFmod(time * 0.5f, 1.f) >= 0.5f;
+      const bool flip = (mode == 1) ? (ImFmod(time, 1.f) >= 0.5f) : (ImFmod(time * 0.5f, 1.f) >= 0.5f);
       static const float ax0[] = { 0.f, 0.f, 0.5f, 0.5f, 1.f, 1.f };
       static const float ay0[] = { 0.f, 1.f, 0.5f, 0.5f, 0.f, 1.f };
       static const float ax1[] = { 0.f, 0.f, 0.5f, 0.5f, 1.f, 1.f };
@@ -621,80 +665,92 @@ namespace ImSpinner
 
     // Swap tri-bottom:
     //   three bars shrink to 40% height while bottom anchors cycle positions.
-    inline void SpinnerBarsSwapTriBottom(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsSwapTriBottom(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float ks[] = { 0.f, 0.33f, 0.66f, 1.f };
       static const float hs[] = { 1.f, 0.4f, 0.4f, 1.f };
       const float hf = bars_kf_eval(ks, hs, 4, t);
       static const float ax0[] = { 0.f, 0.5f, 1.f }, ay0[] = { 0.f, 1.f, 1.f };
       static const float ax1[] = { 1.f, 0.f, 0.5f }, ay1[] = { 0.f, 1.f, 1.f };
+      static const float axt[] = { 0.f, 0.5f, 1.f }, ayt[] = { 1.f, 1.f, 1.f };
       const bool phase2 = t >= 0.66f;
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
-      for (int i = 0; i < 3; i++)
-        bars_draw_box(window->DrawList, left, top, W, H,
-                      phase2 ? ax1[i] : ax0[i], phase2 ? ay1[i] : ay0[i], 0.2f, hf, c);
+      for (int i = 0; i < 3; i++) {
+        if (mode == 1)
+          bars_draw_box(window->DrawList, left, top, W, H, axt[i], ayt[i], 0.2f, hf, c);
+        else
+          bars_draw_box(window->DrawList, left, top, W, H,
+                        phase2 ? ax1[i] : ax0[i], phase2 ? ay1[i] : ay0[i], 0.2f, hf, c);
+      }
     }
 
     // Swap tri-zigzag:
     //   three bars shrink while anchors zigzag between corner pairs.
-    inline void SpinnerBarsSwapTriZigzag(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsSwapTriZigzag(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float ks[] = { 0.f, 0.33f, 0.66f, 1.f };
       static const float hs[] = { 1.f, 0.4f, 0.4f, 1.f };
       const float hf = bars_kf_eval(ks, hs, 4, t);
       static const float ax0[] = { 0.f, 0.5f, 1.f }, ay0[] = { 0.f, 1.f, 0.f };
       static const float ax1[] = { 0.f, 0.5f, 1.f }, ay1[] = { 1.f, 0.f, 1.f };
+      static const float axt[] = { 0.f, 0.5f, 1.f }, ayt[] = { 0.f, 0.f, 0.f };
       const bool phase2 = t >= 0.66f;
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
-      for (int i = 0; i < 3; i++)
-        bars_draw_box(window->DrawList, left, top, W, H,
-                      phase2 ? ax1[i] : ax0[i], phase2 ? ay1[i] : ay0[i], 0.2f, hf, c);
+      for (int i = 0; i < 3; i++) {
+        if (mode == 1)
+          bars_draw_box(window->DrawList, left, top, W, H, axt[i], ayt[i], 0.2f, hf, c);
+        else
+          bars_draw_box(window->DrawList, left, top, W, H,
+                        phase2 ? ax1[i] : ax0[i], phase2 ? ay1[i] : ay0[i], 0.2f, hf, c);
+      }
     }
 
     // Morph diagonal:
     //   three diagonal bars morph 20×100% → 20×20% → 100×20%.
-    inline void SpinnerBarsMorphDiagonal(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsMorphDiagonal(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
       const float ph = ImFmod((float)ImGui::GetTime() * speed, 2.f);
-      const float t = (ph <= 1.f) ? ph : 2.f - ph;
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
       static const float kt[] = { 0.f, 0.1f, 0.5f, 0.9f, 1.f };
       static const float wf[] = { 0.2f, 0.2f, 0.2f, 1.f, 1.f };
       static const float hf[] = { 1.f, 1.f, 0.2f, 0.2f, 0.2f };
-      const float w = bars_kf_eval(kt, wf, 5, t), h = bars_kf_eval(kt, hf, 5, t);
       static const float ax[] = { 0.f, 0.5f, 1.f };
       static const float ay[] = { 0.f, 0.5f, 1.f };
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
-      for (int i = 0; i < 3; i++)
+      for (int i = 0; i < 3; i++) {
+        const float ti = (mode == 1) ? ImFmod(t + (float)i / 3.f, 1.f) : t;
+        const float w = bars_kf_eval(kt, wf, 5, ti), h = bars_kf_eval(kt, hf, 5, ti);
         bars_draw_box(window->DrawList, left, top, W, H, ax[i], ay[i], w, h, c);
+      }
     }
 
     // Slide diagonal:
     //   three diagonal bars shrink to 20% height while outer positions swap.
-    inline void SpinnerBarsSlideDiagonal(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsSlideDiagonal(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float ks[] = { 0.f, 0.33f, 0.66f, 1.f };
       static const float hs[] = { 1.f, 0.2f, 0.2f, 1.f };
       const float hf = bars_kf_eval(ks, hs, 4, t);
       static const float ax0[] = { 0.f, 0.5f, 1.f }, ay0[] = { 0.f, 0.5f, 1.f };
-      static const float ax1[] = { 1.f, 0.5f, 0.f }, ay1[] = { 0.f, 0.5f, 1.f };
+      static const float ax1[] = { 1.f, 0.5f, 0.f }, ay1[] = { 1.f, 0.5f, 0.f };
       const bool phase2 = t >= 0.66f;
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
@@ -705,31 +761,36 @@ namespace ImSpinner
 
     // Conic alternate:
     //   two 40% conic-corner tiles; the second slides on a diagonal (alternate).
-    inline void SpinnerBarsConicAlternate(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsConicAlternate(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W, s = 0.4f * W;
       const float ph = ImFmod((float)ImGui::GetTime() * speed, 2.f);
-      const float t = (ph <= 1.f) ? ph : 2.f - ph;
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
       static const float kt[] = { 0.f, 0.1f, 0.5f, 0.9f, 1.f };
       static const float px[] = { 0.f, 0.f, W / 3.f, W / 3.f, 0.f };
       static const float py[] = { H / 3.f, H / 3.f, H / 3.f, 0.f, 0.f };
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
-      bars_draw_conic_tile(window->DrawList, left, top, s, c, num_segments);
-      bars_draw_conic_tile(window->DrawList, left + bars_kf_eval(kt, px, 5, t),
-                           top + bars_kf_eval(kt, py, 5, t), s, c, num_segments);
+      const float tx = bars_kf_eval(kt, px, 5, t), ty = bars_kf_eval(kt, py, 5, t);
+      if (mode == 1) {
+        bars_draw_conic_tile(window->DrawList, left + tx, top + ty, s, c, num_segments);
+        bars_draw_conic_tile(window->DrawList, left + W - s - tx, top + H - s - ty, s, c, num_segments);
+      } else {
+        bars_draw_conic_tile(window->DrawList, left, top, s, c, num_segments);
+        bars_draw_conic_tile(window->DrawList, left + tx, top + ty, s, c, num_segments);
+      }
     }
 
     // Conic walk:
     //   two conic-corner tiles step through a 2×2 corner path (1.5 s loop).
-    inline void SpinnerBarsConicWalk(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsConicWalk(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W, s = 0.4f * W, third = H / 3.f;
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.2f, 0.33f, 0.66f, 0.8f, 1.f };
       static const float x0[] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
       static const float y0[] = { 0.f, 0.f, third, third, third, third };
@@ -737,53 +798,67 @@ namespace ImSpinner
       static const float y1[] = { third, third, third, 0.f, 0.f, 0.f };
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
-      bars_draw_conic_tile(window->DrawList, left + bars_kf_eval(kt, x0, 6, t),
-                           top + bars_kf_eval(kt, y0, 6, t), s, c, num_segments);
-      bars_draw_conic_tile(window->DrawList, left + bars_kf_eval(kt, x1, 6, t),
-                           top + bars_kf_eval(kt, y1, 6, t), s, c, num_segments);
+      if (mode == 1) {
+        const float tx = bars_kf_eval(kt, x1, 6, t), ty = bars_kf_eval(kt, y1, 6, t);
+        bars_draw_conic_tile(window->DrawList, left + tx, top + ty, s, c, num_segments);
+      } else {
+        bars_draw_conic_tile(window->DrawList, left + bars_kf_eval(kt, x0, 6, t),
+                             top + bars_kf_eval(kt, y0, 6, t), s, c, num_segments);
+        bars_draw_conic_tile(window->DrawList, left + bars_kf_eval(kt, x1, 6, t),
+                             top + bars_kf_eval(kt, y1, 6, t), s, c, num_segments);
+      }
     }
 
     // March rows in:
     //   four stripe rows enter from the left, pause, then exit right (1.5 s).
-    inline void SpinnerBarsMarchIn(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsMarchIn(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
       const float period = W * 0.4f, bw = W * 0.2f;
-      const float t = ImFmod((float)ImGui::GetTime() * speed / 1.5f, 1.f);
-      bars_draw_rows4_h(window->DrawList, centre.x - radius, centre.y - radius, W, H,
-                        period, bw, t, color_alpha(color, 1.f));
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed / 1.5f, 1.f), mode);
+      const ImColor c = color_alpha(color, 1.f);
+      const float left = centre.x - radius, top = centre.y - radius;
+      const float rh = bars_rows4_rh(H);
+      if (mode == 1) {
+        const float px = bars_row_px_cascade(0, t, W);
+        for (int r = 0; r < 4; r++)
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh, px, period, bw, c);
+      } else {
+        bars_draw_rows4_h(window->DrawList, left, top, W, H, period, bw, t, c);
+      }
     }
 
     // March rows down:
     //   four stripe rows drop in from the top, pause, then exit downward (1.5 s).
-    inline void SpinnerBarsMarchDown(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsMarchDown(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
       const float rh = bars_rows4_rh(H);
       const float period = W * 0.4f, bw = W * 0.2f;
-      const float t = ImFmod((float)ImGui::GetTime() * speed / 1.5f, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed / 1.5f, 1.f), mode);
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
       for (int r = 0; r < 4; r++) {
-        const float y = top + (float)r * rh + bars_row_py_cascade(r, t, H);
+        const float py = (mode == 1) ? -bars_row_py_cascade(r, t, H) : bars_row_py_cascade(r, t, H);
+        const float y = top + (float)r * rh + py;
         bars_draw_row_stripes(window->DrawList, left, y, W, rh, 0.f, period, bw, c);
       }
     }
 
     // Wave rows skew:
     //   four rows skew diagonally (aspect 1.6) then snap back to centre.
-    inline void SpinnerBarsWaveSkew(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsWaveSkew(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float H = radius * 2.f, W = H * 1.6f;
       const float rh = bars_rows4_rh(H);
       const float period = W * 0.625f * 0.4f, bw = W * 0.625f * 0.2f;
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.1f, 0.33f, 0.66f, 0.9f, 1.f };
       static const float px0[] = { 0.5f, 0.5f, 1.f, 0.f, 0.5f, 0.5f };
       static const float px1[] = { 0.5f, 0.5f, 1.f - 9.f / 45.f, 9.f / 45.f, 0.5f, 0.5f };
@@ -792,14 +867,21 @@ namespace ImSpinner
       const float *pxv[] = { px0, px1, px2, px3 };
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - W * 0.5f, top = centre.y - radius;
-      for (int r = 0; r < 4; r++)
-        bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh,
-                              (bars_kf_eval(kt, pxv[r], 6, t) - 0.5f) * W, period, bw, c);
+      if (mode == 1) {
+        const float px = (bars_kf_eval(kt, px1, 6, t) - 0.5f) * W;
+        for (int r = 0; r < 4; r++)
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh, px, period, bw, c);
+      } else {
+        for (int r = 0; r < 4; r++) {
+          const float px = (bars_kf_eval(kt, pxv[r], 6, t) - 0.5f) * W;
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh, px, period, bw, c);
+        }
+      }
     }
 
     // Row drop stagger:
     //   four rows drop down one-by-one (aspect 0.8, alternate ping-pong).
-    inline void SpinnerBarsRowDrop(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsRowDrop(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
@@ -807,7 +889,7 @@ namespace ImSpinner
       const float rh = bars_rows4_rh(H);
       const float period = W * 0.4f, bw = W * 0.2f;
       const float ph = ImFmod((float)ImGui::GetTime() * speed / 0.75f, 2.f);
-      const float t = (ph <= 1.f) ? ph : 2.f - ph;
+      const float t = bars_anim_t((ph <= 1.f) ? ph : 2.f - ph, mode);
       static const float kt[] = { 0.f, 0.1f, 0.25f, 0.5f, 0.75f, 0.9f, 1.f };
       static const float py0[] = { 0.f, 0.f, 0.f, 0.f, 0.f, 1.f, 1.f };
       static const float py1[] = { 0.f, 0.f, 0.f, 0.f, 1.f, 1.f, 1.f };
@@ -816,22 +898,28 @@ namespace ImSpinner
       const float *pyv[] = { py0, py1, py2, py3 };
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - H * 0.5f;
-      for (int r = 0; r < 4; r++) {
-        const float band = bars_kf_eval(kt, pyv[r], 7, t) * rh;
-        bars_draw_row_stripes(window->DrawList, left, top + band, W, rh, 0.f, period, bw, c);
+      if (mode == 1) {
+        const float band = bars_kf_eval(kt, py0, 7, t) * rh;
+        for (int r = 0; r < 4; r++)
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh - band, W, rh, 0.f, period, bw, c);
+      } else {
+        for (int r = 0; r < 4; r++) {
+          const float band = bars_kf_eval(kt, pyv[r], 7, t) * rh;
+          bars_draw_row_stripes(window->DrawList, left, top + band, W, rh, 0.f, period, bw, c);
+        }
       }
     }
 
     // Zigzag rows:
     //   four rows alternate stripe alignment left/right (0.75 s).
-    inline void SpinnerBarsZigzagRows(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsZigzagRows(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
       const float rh = bars_rows4_rh(H);
       const float period = W * 1.4f * (2.f / 7.f), bw = W * 1.4f / 7.f;
-      const float t = ImFmod((float)ImGui::GetTime() * speed / 0.75f, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed / 0.75f, 1.f), mode);
       static const float kt[] = { 0.f, 0.25f, 0.5f, 0.75f, 1.f };
       static const float px0[] = { 0.f, 1.f, 1.f, 1.f, 1.f };
       static const float px1[] = { 1.f, 1.f, 0.f, 0.f, 0.f };
@@ -840,21 +928,28 @@ namespace ImSpinner
       const float *pxv[] = { px0, px1, px2, px3 };
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
-      for (int r = 0; r < 4; r++)
-        bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh,
-                              bars_kf_eval(kt, pxv[r], 5, t) * (W - bw), period, bw, c);
+      if (mode == 1) {
+        const float align = bars_kf_eval(kt, px0, 5, t);
+        for (int r = 0; r < 4; r++)
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh,
+                                align * (W - bw), period, bw, c);
+      } else {
+        for (int r = 0; r < 4; r++)
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh,
+                                bars_kf_eval(kt, pxv[r], 5, t) * (W - bw), period, bw, c);
+      }
     }
 
     // Fill cascade:
     //   stripe rows fill left→right in a staggered cascade (0.75 s linear).
-    inline void SpinnerBarsFillCascade(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsFillCascade(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
       const float rh = bars_rows4_rh(H);
       const float period = W * 1.4f * (2.f / 7.f), bw = W * 1.4f / 7.f;
-      const float t = ImFmod((float)ImGui::GetTime() * speed / 0.75f, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed / 0.75f, 1.f), mode);
       static const float kt[] = { 0.f, 0.05f, 0.2f, 0.4f, 0.6f, 0.8f, 0.95f, 1.f };
       static const float px0[] = { 0.f, 0.f, 0.5f, 1.f, 1.f, 1.f, 1.f, 1.f };
       static const float px1[] = { 0.f, 0.f, 0.f, 0.5f, 1.f, 1.f, 1.f, 1.f };
@@ -863,42 +958,56 @@ namespace ImSpinner
       const float *pxv[] = { px0, px1, px2, px3 };
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
-      for (int r = 0; r < 4; r++)
-        bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh,
-                              bars_kf_eval(kt, pxv[r], 8, t) * (W - bw), period, bw, c);
+      if (mode == 1) {
+        const float align = bars_kf_eval(kt, px0, 8, t);
+        for (int r = 0; r < 4; r++)
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh,
+                                align * (W - bw), period, bw, c);
+      } else {
+        for (int r = 0; r < 4; r++)
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh,
+                                bars_kf_eval(kt, pxv[r], 8, t) * (W - bw), period, bw, c);
+      }
     }
 
     // Ping-pong rows:
     //   four rows alternate stripe alignment (0↔100%) with a long hold.
-    inline void SpinnerBarsPingPongRows(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsPingPongRows(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float W = radius * 2.f, H = W;
       const float rh = bars_rows4_rh(H);
       const float period = W * 1.4f * (2.f / 7.f), bw = W * 1.4f / 7.f;
-      const float t = ImFmod((float)ImGui::GetTime() * speed / 0.75f, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed / 0.75f, 1.f), mode);
       static const float px0[] = { 0.f, 1.f }, px1[] = { 1.f, 0.f }, px2[] = { 0.f, 1.f }, px3[] = { 1.f, 0.f };
       const float *pxv[] = { px0, px1, px2, px3 };
-      const float u = (t < 0.2f) ? 0.f : (t > 0.8f) ? 1.f : (t - 0.2f) / 0.6f;
       static const float kt2[] = { 0.f, 1.f };
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - radius, top = centre.y - radius;
-      for (int r = 0; r < 4; r++)
-        bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh,
-                              bars_kf_eval(kt2, pxv[r], 2, u) * (W - bw), period, bw, c);
+      if (mode == 1) {
+        const float align = bars_kf_eval(kt2, px0, 2, t);
+        for (int r = 0; r < 4; r++)
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh,
+                                align * (W - bw), period, bw, c);
+      } else {
+        const float u = (t < 0.2f) ? 0.f : (t > 0.8f) ? 1.f : (t - 0.2f) / 0.6f;
+        for (int r = 0; r < 4; r++)
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh,
+                                bars_kf_eval(kt2, pxv[r], 2, u) * (W - bw), period, bw, c);
+      }
     }
 
     // Wave rows wide:
     //   four rows wave between centre, left, and right (aspect 1.4).
-    inline void SpinnerBarsWaveRowsWide(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsWaveRowsWide(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       (void)thickness;
       const float H = radius * 2.f, W = H * 1.4f;
       const float rh = bars_rows4_rh(H);
       const float period = W * 0.72f * 0.4f, bw = W * 0.72f * 0.2f;
-      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed, 1.f), mode);
       static const float kt[] = { 0.f, 0.2f, 0.4f, 0.6f, 0.8f, 1.f };
       static const float px0[] = { 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f };
       static const float px1[] = { 0.5f, 0.5f, 1.f, 0.f, 0.5f, 0.5f };
@@ -907,39 +1016,48 @@ namespace ImSpinner
       const float *pxv[] = { px0, px1, px2, px3 };
       const ImColor c = color_alpha(color, 1.f);
       const float left = centre.x - W * 0.5f, top = centre.y - radius;
-      for (int r = 0; r < 4; r++)
-        bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh,
-                              (bars_kf_eval(kt, pxv[r], 6, t) - 0.5f) * W, period, bw, c);
+      if (mode == 1) {
+        const float px = (bars_kf_eval(kt, px1, 6, t) - 0.5f) * W;
+        for (int r = 0; r < 4; r++)
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh, px, period, bw, c);
+      } else {
+        for (int r = 0; r < 4; r++) {
+          const float px = (bars_kf_eval(kt, pxv[r], 6, t) - 0.5f) * W;
+          bars_draw_row_stripes(window->DrawList, left, top + (float)r * rh, W, rh, px, period, bw, c);
+        }
+      }
     }
 
     // Grid fade:
     //   3×3 dot grid; cells fade out in a travelling wave (2 s).
-    inline void SpinnerBarsGridFade(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsGridFade(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       const float cell = (radius * 2.f) / 5.f;
       const float dot_r = thickness * 0.5f;
-      const float t = ImFmod((float)ImGui::GetTime() * speed / 2.f, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed / 2.f, 1.f), mode);
       static const uint16_t masks[] = {
         0x1FF, 0x0BF, 0x0B7, 0x077, 0x0EE, 0x1D9, 0x1B6, 0x16F, 0x1FD, 0x1FF
       };
-      const int phase = ImMin(9, (int)(t * 10.f));
+      const int step = ImMin(9, (int)(t * 10.f));
+      const int phase = (mode == 1) ? (9 - step) : step;
       bars_draw_grid3(window->DrawList, centre, cell, dot_r, color_alpha(color, 1.f), masks[phase], nullptr);
     }
 
     // Grid spread:
     //   3×3 dot grid; cells pulse box-shadow spread in a wave (2 s).
-    inline void SpinnerBarsGridSpread(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f)
+    inline void SpinnerBarsGridSpread(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
     {
       SPINNER_HEADER(pos, size, centre, num_segments);
       const float cell = (radius * 2.f) / 5.f;
       const float dot_r = thickness * 0.5f;
       const float spread_u = (2.f / 15.f) * thickness;
-      const float t = ImFmod((float)ImGui::GetTime() * speed / 2.f, 1.f);
+      const float t = bars_anim_t(ImFmod((float)ImGui::GetTime() * speed / 2.f, 1.f), mode);
       static const uint16_t spread_mask[] = {
         0x000, 0x124, 0x092, 0x049, 0x092, 0x124, 0x248, 0x091, 0x122, 0x000
       };
-      const int phase = ImMin(9, (int)(t * 10.f));
+      const int step = ImMin(9, (int)(t * 10.f));
+      const int phase = (mode == 1) ? (9 - step) : step;
       float spread[9] = {};
       const uint16_t m = spread_mask[phase];
       for (int i = 0; i < 9; i++)

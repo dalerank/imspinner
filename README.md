@@ -100,6 +100,16 @@ ImSpinner::SpinnerBarChartRainbow("rainbow", 16.f, 4.f, ImColor(255, 255, 255), 
 | `SpinnerBarsGridFade` | 3×3 dot grid fade wave (CSS bars/l29) |
 | `SpinnerBarsGridSpread` | 3×3 dot grid spread pulse (CSS bars/l30) |
 
+All CSS bar spinners above accept optional `mode` (default `0`), like text spinners:
+
+| mode | effect |
+|------|--------|
+| `0` | default CSS timing and direction |
+| `1` | alternate animation per spinner (sync pulse, reverse stagger, top anchor, single walking tile, synchronized rows, reverse grid wave, etc.) |
+| `2` | reversed timeline (`t → 1−t`) |
+
+In the demo, select a WBars spinner and use the **Mode** slider (0–2). Cases **363–392** are the same CSS bars with `mode = 1` (`*M1` names) for side-by-side comparison.
+
 # dot spinners
 
 <img width="922" height="303" alt="dots" src="https://github.com/user-attachments/assets/7956b9d3-d314-4164-8b3e-57224b7941df" />
