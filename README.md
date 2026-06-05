@@ -48,6 +48,8 @@ int main(int, char**) {
 
 # bar spinners
 
+<img width="989" height="298" alt="bars" src="https://github.com/user-attachments/assets/4d9c4560-1a3d-492a-9f55-acd2116239da" />
+
 Bar-chart and fading-bar spinners live in `imspinner_bars.h`. `SpinnerBarChartSine` is
 also wired into the core `Spinner<e_st_barchartsine>` dispatcher.
 
@@ -69,46 +71,42 @@ ImSpinner::SpinnerBarChartRainbow("rainbow", 16.f, 4.f, ImColor(255, 255, 255), 
 | `SpinnerBarChartRainbow` | rainbow bars with independent wave heights |
 | `SpinnerFluid` | fluid equalizer-style columns |
 | `SpinnerFluidPoints` | fluid columns drawn as stacked dots |
-| `SpinnerBarsSeqPulse` | three bars shrink height in sequence (CSS bars/l1) |
-| `SpinnerBarsCascadeGrow` | bottom bars grow in a cascade (CSS bars/l2) |
-| `SpinnerBarsRise` | three bars slide upward with stagger (CSS bars/l3) |
-| `SpinnerBarsCornerHop` | bars hop diagonally toward the top (CSS bars/l4) |
-| `SpinnerBarsDiagonalGrow` | bars step through corner positions (CSS bars/l5) |
-| `SpinnerBarsBounceCenter` | centre-anchored bars bounce between slots (CSS bars/l6) |
-| `SpinnerBarsScaleAlt` | bars pulse height with alternate timing (CSS bars/l7) |
-| `SpinnerBarsCornerWave` | bottom bars step in a corner wave (CSS bars/l8) |
-| `SpinnerBarsJump` | bars swap between top and bottom (CSS bars/l9) |
-| `SpinnerBarsDoubleRow` | two rows of bar segments slide horizontally (CSS bars/l10) |
-| `SpinnerBarsSixPulse` | six corner bars pulse height 50↔30% (CSS bars/l11) |
-| `SpinnerBarsSixStagger` | six bars shrink in staggered wave order (CSS bars/l12) |
-| `SpinnerBarsMorphPlus` | five bars morph tall→square→wide (CSS bars/l13) |
-| `SpinnerBarsFlipSix` | six bars shrink while positions flip every 2 s (CSS bars/l14) |
-| `SpinnerBarsSwapTriBottom` | three bars swap bottom anchors while shrinking (CSS bars/l15) |
-| `SpinnerBarsSwapTriZigzag` | three bars zigzag between corner pairs (CSS bars/l16) |
-| `SpinnerBarsMorphDiagonal` | three diagonal bars morph tall→square→wide (CSS bars/l17) |
-| `SpinnerBarsSlideDiagonal` | three diagonal bars shrink while outers swap (CSS bars/l18) |
-| `SpinnerBarsConicAlternate` | two conic-corner tiles slide diagonally (CSS bars/l19) |
-| `SpinnerBarsConicWalk` | two conic corners step a 2×2 path (CSS bars/l20) |
-| `SpinnerBarsMarchIn` | four stripe rows march in from the left (CSS bars/l21) |
-| `SpinnerBarsMarchDown` | four stripe rows drop in from the top (CSS bars/l22) |
-| `SpinnerBarsWaveSkew` | four rows skew diagonally then reset (CSS bars/l23) |
-| `SpinnerBarsRowDrop` | four rows drop one-by-one (CSS bars/l24) |
-| `SpinnerBarsZigzagRows` | four rows alternate stripe alignment (CSS bars/l25) |
-| `SpinnerBarsFillCascade` | rows fill left→right in stagger (CSS bars/l26) |
-| `SpinnerBarsPingPongRows` | rows ping-pong stripe alignment (CSS bars/l27) |
-| `SpinnerBarsWaveRowsWide` | four rows wave centre↔edges (CSS bars/l28) |
-| `SpinnerBarsGridFade` | 3×3 dot grid fade wave (CSS bars/l29) |
-| `SpinnerBarsGridSpread` | 3×3 dot grid spread pulse (CSS bars/l30) |
-
-All CSS bar spinners above accept optional `mode` (default `0`), like text spinners:
+| `SpinnerBarsSeqPulse` | three bars shrink height in sequence |
+| `SpinnerBarsCascadeGrow` | bottom bars grow in a cascade  |
+| `SpinnerBarsRise` | three bars slide upward with stagger  |
+| `SpinnerBarsCornerHop` | bars hop diagonally toward the top  |
+| `SpinnerBarsDiagonalGrow` | bars step through corner positions  |
+| `SpinnerBarsBounceCenter` | centre-anchored bars bounce between slots  |
+| `SpinnerBarsScaleAlt` | bars pulse height with alternate timing |
+| `SpinnerBarsCornerWave` | bottom bars step in a corner wave  |
+| `SpinnerBarsJump` | bars swap between top and bottom |
+| `SpinnerBarsDoubleRow` | two rows of bar segments slide horizontally  |
+| `SpinnerBarsSixPulse` | six corner bars pulse height 50↔30%  |
+| `SpinnerBarsSixStagger` | six bars shrink in staggered wave order  |
+| `SpinnerBarsMorphPlus` | five bars morph tall→square→wide |
+| `SpinnerBarsFlipSix` | six bars shrink while positions flip every 2 s  |
+| `SpinnerBarsSwapTriBottom` | three bars swap bottom anchors while shrinking  |
+| `SpinnerBarsSwapTriZigzag` | three bars zigzag between corner pairs |
+| `SpinnerBarsMorphDiagonal` | three diagonal bars morph tall→square→wide  |
+| `SpinnerBarsSlideDiagonal` | three diagonal bars shrink while outers swap  |
+| `SpinnerBarsConicAlternate` | two conic-corner tiles slide diagonally |
+| `SpinnerBarsConicWalk` | two conic corners step a 2×2 path  |
+| `SpinnerBarsMarchIn` | four stripe rows march in from the left |
+| `SpinnerBarsMarchDown` | four stripe rows drop in from the top  |
+| `SpinnerBarsWaveSkew` | four rows skew diagonally then reset |
+| `SpinnerBarsRowDrop` | four rows drop one-by-one  |
+| `SpinnerBarsZigzagRows` | four rows alternate stripe alignment  |
+| `SpinnerBarsFillCascade` | rows fill left→right in stagger  |
+| `SpinnerBarsPingPongRows` | rows ping-pong stripe alignment  |
+| `SpinnerBarsWaveRowsWide` | four rows wave centre↔edges  |
+| `SpinnerBarsGridFade` | 3×3 dot grid fade wave  |
+| `SpinnerBarsGridSpread` | 3×3 dot grid spread pulse  |
 
 | mode | effect |
 |------|--------|
-| `0` | default CSS timing and direction |
+| `0` | default timing and direction |
 | `1` | alternate animation per spinner (sync pulse, reverse stagger, top anchor, single walking tile, synchronized rows, reverse grid wave, etc.) |
 | `2` | reversed timeline (`t → 1−t`) |
-
-In the demo, select a WBars spinner and use the **Mode** slider (0–2). Cases **363–392** are the same CSS bars with `mode = 1` (`*M1` names) for side-by-side comparison.
 
 # dot spinners
 
