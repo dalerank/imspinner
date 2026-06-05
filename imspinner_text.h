@@ -589,6 +589,143 @@ namespace ImSpinner
         x += cw;
       }
     }
+
+    // Cascading letters, a port of the CSS l17:
+    //   letters drop in from above one by one (left to right) over 0..40%, hold the
+    //   whole word 40..60%, then fall out downward one by one (right to left) 60..100%.
+    //   Clipped to the line box so off-line letters are hidden.
+    inline void SpinnerTextCascade(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor c = color_alpha(color, 1.f);
+      const float H = ts.y;                                  // one line-height drop distance
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float step = 0.4f / (float)len;                  // per-letter stagger (0..40% in, 60..100% out)
+
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        const float in_s = i * step, in_e = in_s + step;                 // drops in: -H -> 0
+        const float out_s = 0.6f + (len - 1 - i) * step, out_e = out_s + step; // falls out: 0 -> +H (last letter first)
+        float y;
+        if (t < in_s)        y = -H;
+        else if (t < in_e)   y = -H + H * (t - in_s) / step;
+        else if (t < out_s)  y = 0.f;
+        else if (t < out_e)  y = H * (t - out_s) / step;
+        else                 y = H;
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y + y), c, text + i, text + i + 1);
+        x += cw;
+      }
+      window->DrawList->PopClipRect();
+    }
+
+    // Conveyor letters, a port of the CSS l18 (the horizontal twin of the cascade):
+    //   letters slide in from the right one by one (left to right) over 0..40%, hold
+    //   the whole word 40..60%, then slide out to the left one by one 60..100%.
+    //   Clipped to the text window so off-window letters are hidden.
+    inline void SpinnerTextConveyor(const char *label, float radius, const ImColor &color = white, float speed = 0.33f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell (the slide window width).
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor c = color_alpha(color, 1.f);
+      const float D = ts.x;                                  // off-window slide distance
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float step = 0.4f / (float)len;                  // per-letter stagger
+
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      float nx = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        const float in_s = i * step, in_e = in_s + step;                 // slides in from the right: +D -> 0
+        const float out_s = 0.6f + i * step, out_e = out_s + step;       // slides out to the left: 0 -> -D
+        float dx;
+        if (t < in_s)        dx = D;
+        else if (t < in_e)   dx = D * (1.f - (t - in_s) / step);
+        else if (t < out_s)  dx = 0.f;
+        else if (t < out_e)  dx = -D * (t - out_s) / step;
+        else                 dx = -D;
+        window->DrawList->AddText(font, font_size, ImVec2(nx + dx, tp.y), c, text + i, text + i + 1);
+        nx += cw;
+      }
+      window->DrawList->PopClipRect();
+    }
+
+    // Sequential fade reveal, a port of the CSS l19:
+    //   letters fade in one by one (left to right) over 0..40%, hold the whole word
+    //   40..60%, then fade out one by one (left to right) 60..100%. The letters do
+    //   not move; only their alpha changes.
+    inline void SpinnerTextReveal(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float step = 0.4f / (float)len;                  // per-letter stagger
+
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        const float in_s = i * step, in_e = in_s + step;                 // fade in:  0 -> 1
+        const float out_s = 0.6f + i * step, out_e = out_s + step;       // fade out: 1 -> 0
+        float a;
+        if (t < in_s)        a = 0.f;
+        else if (t < in_e)   a = (t - in_s) / step;
+        else if (t < out_s)  a = 1.f;
+        else if (t < out_e)  a = 1.f - (t - out_s) / step;
+        else                 a = 0.f;
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y), color_alpha(color, a), text + i, text + i + 1);
+        x += cw;
+      }
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
