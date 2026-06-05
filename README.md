@@ -48,6 +48,8 @@ int main(int, char**) {
 
 # bar spinners
 
+<img width="989" height="298" alt="bars" src="https://github.com/user-attachments/assets/7c20449b-4de8-4e0e-8d44-ac4d84668716" />
+
 Bar-chart and fading-bar spinners live in `imspinner_bars.h`. `SpinnerBarChartSine` is
 also wired into the core `Spinner<e_st_barchartsine>` dispatcher.
 
