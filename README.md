@@ -301,6 +301,8 @@ ImSpinner::SpinnerTextTyping("typing", 30.f, ImColor(255, 255, 255), 1.f, 3, "Lo
 
 # shape spinners
 
+<img width="884" height="309" alt="shapes" src="https://github.com/user-attachments/assets/0e618412-d66f-433f-91c4-6bc7ea0a2cf8" />
+
 `imspinner_shapes.h` adds a family of **shape**-morphing spinners — squares, triangles,
 discs and arrows that fold, tumble, skew and spin. They are kept out of `imspinner.h` and surface
 under the **Shapes** tab of the demo gallery. Each one shares the standard signature
