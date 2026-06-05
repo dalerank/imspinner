@@ -199,7 +199,7 @@ namespace ImSpinner
         while (height >= 0.0) {
             if (prtime >= limtime) { return height / 10.f; }
             time += 0.01f; prtime += 0.01f;
-            height = initialHeight - 0.5 * 9.81f * time * time;
+            height = initialHeight - 0.5f * 9.81f * time * time;
             if (height < 0.0) { initialHeight = 0.0; time = 0.0; }
         }
         return 0.f;
@@ -236,8 +236,8 @@ namespace ImSpinner
     inline float ease_inoutquad(float t) { if (t < 0.5f) { return 2 * t * t; } else { return -1 + (4 - 2 * t) * t; }}
     inline float ease_inoutquad(float *p) { float tr = ImMax(ImSin(p[0]) - 0.5f, 0.f) * (p[1] * 0.5f); return ease_inoutquad(tr); }
     inline float ease_outcubic(float t) { float ft = t - 1; return ft * ft * ft + 1; }
-    inline float ease_inexpo(float t) { return t == 0 ? 0 : pow(2, 10 * (t - 1)); }
-    inline float ease_inoutexpo(float t) { if (t == 0) return 0; if (t == 1) return 1; if (t < 0.5f) return 0.5f * pow(2, (20 * t) - 10); return 0.5f * (2 - pow(2, -20 * t + 10)); }
+    inline float ease_inexpo(float t) { return t == 0.f ? 0.f : float(pow(2, 10 * (t - 1))); }
+    inline float ease_inoutexpo(float t) { if (t == 0) return 0; if (t == 1) return 1; if (t < 0.5f) return 0.5f * powf(2, (20 * t) - 10); return 0.5f * (2 - powf(2, -20 * t + 10)); }
     inline float ease_inoutexpo(float *p) { float tr = ImMax(ImSin(p[0]) - 0.5f, 0.f) * (p[1] * 0.4f); return ease_inoutexpo(tr) * (p[1] * 0.3f); }
     inline float ease_spring(float *p) { return damped_spring(1, 10.f, 1.0f, ImSin(ImFmod(p[0], p[1])), p[2], p[3]);}
     inline float ease_gravity(float *p) { return damped_gravity(p[0]); }
@@ -245,12 +245,12 @@ namespace ImSpinner
     inline float ease_inoutelastic(float *p) { return damped_inoutelastic(p[1], p[2], p[3]); }
     inline float ease_sine(float *p) { return 0.5f * (1.0f - cosf(p[0] * IM_PI)); }
     inline float ease_damping(float *p) {
-        const float A = 3.14 * 2;
-        const float ma = 5.0;
-        const float k = 2.1;
-        const float b = 0.09;
-        const float theta = 0.0;
-        const float w = std::sqrt(k / ma);
+        const float A = 3.14f * 2;
+        const float ma = 5.0f;
+        const float k = 2.1f;
+        const float b = 0.09f;
+        const float theta = 0.0f;
+        const float w = std::sqrtf(k / ma);
         const float t = ImFmod(*p, 25);
         double x = A * std::exp(-b * t) * std::cos(w * t - theta);
         return x;

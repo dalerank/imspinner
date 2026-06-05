@@ -92,6 +92,44 @@ ImSpinner::SpinnerBounceDots("dots", 16.f, 6.f, ImColor(255, 255, 255), 6.f, 3);
 | `SpinnerSwingDots` | dots swinging like a pendulum |
 | `SpinnerDnaDots` | dots winding along a DNA double helix |
 | `Spinner3SmuggleDots` | three dots weaving/smuggling past each other |
+| `SpinnerDotsTyping` | a row of dots appears one by one, then resets (typing) |
+| `SpinnerDotsStep` | a single dot hops across slots left→right, then loops |
+| `SpinnerDotsGather` | a row of dots spreads apart and squeezes together |
+| `SpinnerDotsShift` | three dots; the side dots shuffle in/out around a fixed centre |
+| `SpinnerDotsOrbit` | three dots dance — one orbits a half-circle over the others |
+| `SpinnerDotsCircle` | two dots slide while a third orbits a full circle |
+| `SpinnerDotsSquare` | three dots chase around the corners of a square |
+| `SpinnerDotsShuffle` | four dots fan out into loops and shuffle back into a row |
+| `SpinnerDotsSplit` | three dot pairs open to the edges and close, in a left→right wave |
+| `SpinnerDotsLeader` | a leader dot sweeps left→right while trailing pairs shift columns |
+| `SpinnerDotsRolling` | a row of dots mirror-flips while a rotating overlay carousels them |
+| `SpinnerDotsTriangle` | three dots on a triangle rotate one corner clockwise each half-cycle |
+| `SpinnerDotsCascade` | three dots drop one-by-one into a 3×3 grid, pause, then fall to the bottom row |
+| `SpinnerDotsSwap` | a fixed centre dot; two satellites cycle horizontal → diagonal → vertical → swapped |
+| `SpinnerDotsSpread` | four dots stack left, fan into a row, pause, then collapse to the right |
+| `SpinnerDotsTwin` | two mirrored dot-halves slide −25%, spin one turn, then slide back |
+| `SpinnerDotsHop` | two dots drop in turn while a third rolls across the top with a hop |
+| `SpinnerDotsJiggle` | side dots wobble at 40%/90%; the centre dot shakes elastically |
+| `SpinnerDotsVibrate` | static side dots; the centre dot vibrates horizontally (1s) and vertically (0.5s) |
+| `SpinnerDotsWiper` | static side dots; two semicircles swing ±90° from left/right pivots |
+| `SpinnerDotsCollapse` | four dots collapse inward in turn while a spread ring grows, then snap back |
+| `SpinnerDotsFlip` | two columns of dots flip ±180° about the bottom pivot with a vertical bounce |
+| `SpinnerDotsTurn` | two columns rotate −270° — left pivots at bottom, right at top (last 30% of cycle) |
+| `SpinnerDotsCarousel` | two dot-pairs swap via rotate-translate-rotate while the row slides 37.5% |
+| `SpinnerDotsHalfTurn` | two dot-pairs at edges and thirds; both rotate ±180° in the last 20% of the cycle |
+| `SpinnerDotsSlideFlip` | two halves slide toward centre while flipping ±180° about their inner dot |
+| `SpinnerDotsStaggerTurn` | two offset dot-pairs rotate 180° in alternation (0.5 s stagger) |
+| `SpinnerDotsStretch` | two bars stretch (aspect 2.3→3.7) while bouncing ±8px in opposite directions |
+| `SpinnerDotsMirrorStretch` | like Stretch plus translateX(±19px); loader mirror-flips vertically every 2 s |
+| `SpinnerDotsPinch` | centre dot + 4 satellites pinch inward (box-shadow) while the group rotates 180° |
+| `SpinnerDotsCorners` | four corner dots chase clockwise around a square (0.5 s per edge) |
+| `SpinnerDotsNudgeRotate` | two halves nudge ±400%/14 (30–70%) while the loader rotates 180° (30–50%) |
+| `SpinnerDotsUnfold` | four dots stack left then spread to 0/⅓/⅔/100%; mirror-flips every 1.5 s |
+| `SpinnerDotsShuttle` | two fixed middle dots; end dots run a mirrored □ path (down → across → up) |
+| `SpinnerDotsSpreadShuttle` | like Shuttle but shorter hop (400%/3); middle dots spread to edges (60–100%) |
+| `SpinnerDotsTriad` | two 3-dot clusters spread vertically then swap columns (0↔⅓, ⅔↔1) |
+| `SpinnerDotsSatellite` | static end dots; two centre dots orbit them (±1 turn, 0.5 s stagger) |
+| `SpinnerDotsTrack` | static end dots; two middle dots follow translate(±37.5%)+rotate (2 s loop) |
 
 # text loaders
 

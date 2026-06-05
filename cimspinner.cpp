@@ -4,6 +4,7 @@
 #include "cimspinner_config.h"
 
 #include "imspinner.h"
+#include "imspinner_dots.h"
 #include "cimspinner.h"
 
 /*

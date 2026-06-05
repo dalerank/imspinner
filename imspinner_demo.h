@@ -20,7 +20,7 @@ namespace ImSpinner
       static float nextdot = 0, nextdot2;
       static bool show_number = false;
       static int view_mode = 0;   // 0 = graphical spinners, 1 = text animations
-      
+
       nextdot -= 0.07f;
 
       static float velocity = 1.f;
@@ -29,7 +29,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 295;
+      constexpr int num_spinners = 333;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -671,6 +671,82 @@ namespace ImSpinner
           case $(294) ImSpinner::SpinnerTextVanish      (Name("SpinnerTextVanish"),
                                                           R(30), C(white), S(0.5f) * velocity, "Loading..."); break;
 #endif
+          case $(295) ImSpinner::SpinnerDotsTyping      (Name("SpinnerDotsTyping"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity, DT(3)); break;
+          case $(296) ImSpinner::SpinnerDotsStep        (Name("SpinnerDotsStep"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity, DT(3)); break;
+          case $(297) ImSpinner::SpinnerDotsGather      (Name("SpinnerDotsGather"),
+                                                          R(16), T(4), C(white), S(0.5f) * velocity, DT(3)); break;
+          case $(298) ImSpinner::SpinnerDotsShift       (Name("SpinnerDotsShift"),
+                                                          R(16), T(4), C(white), S(0.5f) * velocity); break;
+          case $(299) ImSpinner::SpinnerDotsOrbit       (Name("SpinnerDotsOrbit"),
+                                                          R(16), T(4), C(white), S(0.66f) * velocity); break;
+          case $(300) ImSpinner::SpinnerDotsCircle      (Name("SpinnerDotsCircle"),
+                                                          R(16), T(4), C(white), S(0.66f) * velocity); break;
+          case $(301) ImSpinner::SpinnerDotsSquare      (Name("SpinnerDotsSquare"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(302) ImSpinner::SpinnerDotsShuffle     (Name("SpinnerDotsShuffle"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(303) ImSpinner::SpinnerDotsSplit       (Name("SpinnerDotsSplit"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(304) ImSpinner::SpinnerDotsLeader      (Name("SpinnerDotsLeader"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(305) ImSpinner::SpinnerDotsRolling     (Name("SpinnerDotsRolling"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(306) ImSpinner::SpinnerDotsTriangle    (Name("SpinnerDotsTriangle"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(307) ImSpinner::SpinnerDotsCascade     (Name("SpinnerDotsCascade"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(308) ImSpinner::SpinnerDotsSwap        (Name("SpinnerDotsSwap"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(309) ImSpinner::SpinnerDotsSpread      (Name("SpinnerDotsSpread"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(310) ImSpinner::SpinnerDotsTwin        (Name("SpinnerDotsTwin"),
+                                                          R(16), T(4), C(white), S(0.5f) * velocity); break;
+          case $(311) ImSpinner::SpinnerDotsHop         (Name("SpinnerDotsHop"),
+                                                          R(16), T(4), C(white), S(1.f / 1.5f) * velocity); break;
+          case $(312) ImSpinner::SpinnerDotsJiggle      (Name("SpinnerDotsJiggle"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(313) ImSpinner::SpinnerDotsVibrate     (Name("SpinnerDotsVibrate"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(314) ImSpinner::SpinnerDotsWiper       (Name("SpinnerDotsWiper"),
+                                                          R(16), T(4), C(white), S(2.f) * velocity); break;
+          case $(315) ImSpinner::SpinnerDotsCollapse    (Name("SpinnerDotsCollapse"),
+                                                          R(16), T(4), C(white), S(0.5f) * velocity); break;
+          case $(316) ImSpinner::SpinnerDotsFlip        (Name("SpinnerDotsFlip"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(317) ImSpinner::SpinnerDotsTurn        (Name("SpinnerDotsTurn"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(318) ImSpinner::SpinnerDotsCarousel    (Name("SpinnerDotsCarousel"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(319) ImSpinner::SpinnerDotsHalfTurn    (Name("SpinnerDotsHalfTurn"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(320) ImSpinner::SpinnerDotsSlideFlip    (Name("SpinnerDotsSlideFlip"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(321) ImSpinner::SpinnerDotsStaggerTurn  (Name("SpinnerDotsStaggerTurn"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(322) ImSpinner::SpinnerDotsStretch      (Name("SpinnerDotsStretch"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(323) ImSpinner::SpinnerDotsMirrorStretch(Name("SpinnerDotsMirrorStretch"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(324) ImSpinner::SpinnerDotsPinch        (Name("SpinnerDotsPinch"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(325) ImSpinner::SpinnerDotsCorners      (Name("SpinnerDotsCorners"),
+                                                          R(16), T(4), C(white), S(2.f) * velocity); break;
+          case $(326) ImSpinner::SpinnerDotsNudgeRotate  (Name("SpinnerDotsNudgeRotate"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(327) ImSpinner::SpinnerDotsUnfold        (Name("SpinnerDotsUnfold"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(328) ImSpinner::SpinnerDotsShuttle     (Name("SpinnerDotsShuttle"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(329) ImSpinner::SpinnerDotsSpreadShuttle(Name("SpinnerDotsSpreadShuttle"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(330) ImSpinner::SpinnerDotsTriad         (Name("SpinnerDotsTriad"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(331) ImSpinner::SpinnerDotsSatellite   (Name("SpinnerDotsSatellite"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
+          case $(332) ImSpinner::SpinnerDotsTrack       (Name("SpinnerDotsTrack"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity); break;
           }
 #undef $
         }
@@ -704,7 +780,7 @@ namespace ImSpinner
 
             // Text-based animation cells; everything else is a graphical spinner.
             static const int text_spinners[] = { 134, 150, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294 };
-            static const int dot_spinners[] = { 2, 3, 6, 11, 12, 13, 14, 15, 22, 23, 24, 45, 84, 85, 91, 93, 97, 98, 115, 120, 121, 122, 123, 124, 125, 132, 133, 137, 138, 139, 141, 142, 143, 145, 155, 156, 169, 170, 171, 172, 173, 175, 176, 177, 179, 185, 186, 194, 195, 196, 198, 199, 200, 204, 205, 212, 213, 214, 215, 225 };
+            static const int dot_spinners[] = { 2, 3, 6, 11, 12, 13, 14, 15, 22, 23, 24, 45, 84, 85, 91, 93, 97, 98, 115, 120, 121, 122, 123, 124, 125, 132, 133, 137, 138, 139, 141, 142, 143, 145, 155, 156, 169, 170, 171, 172, 173, 175, 176, 177, 179, 185, 186, 194, 195, 196, 198, 199, 200, 204, 205, 212, 213, 214, 215, 225, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332 };
             auto in_list = [](const int *arr, int n, int idx) { for (int k = 0; k < n; ++k) if (arr[k] == idx) return true; return false; };
             auto category = [&](int idx) {                   // 0 = spinners, 1 = text, 2 = dots
               if (in_list(text_spinners, (int)(sizeof(text_spinners) / sizeof(int)), idx)) return 1;
