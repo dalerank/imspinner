@@ -773,7 +773,7 @@ namespace ImSpinner
           ImGui::TextUnformatted("View");
           if (ImGui::RadioButton("Spinners", &view_mode, 0)) widget_size = 50.f;
           ImGui::SameLine();
-          if (ImGui::RadioButton("Dots", &view_mode, 2)) widget_size = 50.f;
+          if (ImGui::RadioButton("WDots", &view_mode, 2)) widget_size = 50.f;
           ImGui::SameLine();
           if (ImGui::RadioButton("Text", &view_mode, 1)) widget_size = 75.f;
           ImGui::Separator();
