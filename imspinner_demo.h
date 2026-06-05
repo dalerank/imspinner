@@ -5,13 +5,14 @@
  * imspinner demo showcase
  *
  * Interactive gallery of every spinner (demoSpinners()). Include this header
- * to get the demo; it pulls in "imspinner.h" and the "imspinner_text.h" add-on
- * (the text spinner is shown in the grid). Call ImSpinner::demoSpinners() once
+ * to get the demo; it pulls in "imspinner_text.h", "imspinner_dots.h", and
+ * "imspinner_bars.h" add-ons. Call ImSpinner::demoSpinners() once per frame
  * per frame inside your ImGui loop.
  */
 
 #include "imspinner_text.h"
 #include "imspinner_dots.h"
+#include "imspinner_bars.h"
 
 namespace ImSpinner
 {

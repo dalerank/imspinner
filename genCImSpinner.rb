@@ -46,6 +46,7 @@ File.open(ImSpinnerHeader){|fp|
   cppFile.push "#include \"cimspinner_config.h\""
   cppFile.push "\n#include \"imspinner.h\""
   cppFile.push "#include \"imspinner_dots.h\""
+  cppFile.push "#include \"imspinner_bars.h\""
   cppFile.push "#include \"cimspinner.h\""
   cppFile.push ""
   cppFile.push Str1

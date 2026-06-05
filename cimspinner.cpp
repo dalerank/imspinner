@@ -5,6 +5,7 @@
 
 #include "imspinner.h"
 #include "imspinner_dots.h"
+#include "imspinner_bars.h"
 #include "cimspinner.h"
 
 /*

@@ -5,15 +5,16 @@ Set of nice spinners for imgui
 
 # headers
 
-The library is header-only and split into three files; each one includes the
+The library is header-only and split into add-on files; each one includes the
 one below it, so just include the highest level you need:
 
 | header | what you get | includes |
 |--------|--------------|----------|
 | `imspinner.h` | the spinners themselves + the `Spinner<>` dispatcher | — |
+| `imspinner_bars.h` | bar-chart spinners (e.g. `SpinnerFadeBars`) | `imspinner.h` |
 | `imspinner_dots.h` | dot-based spinners (e.g. `SpinnerBounceDots`) | `imspinner.h` |
 | `imspinner_text.h` | text loaders (e.g. `SpinnerTextFade`) | `imspinner.h` |
-| `imspinner_demo.h` | the interactive demo gallery (`demoSpinners()`) | `imspinner_text.h` + `imspinner_dots.h` |
+| `imspinner_demo.h` | the interactive demo gallery (`demoSpinners()`) | `imspinner_text.h` + `imspinner_dots.h` + `imspinner_bars.h` |
 
 ```c++
 #include "../imspinner/imspinner.h"          // graphical spinners only
@@ -43,6 +44,30 @@ int main(int, char**) {
 ```
 2. enable edit mode with checkbox 'show number' or play with options
 ![image](https://github.com/dalerank/imspinner/assets/918081/dac20ca2-30ab-48a2-b4bb-36caa4676d2c)
+
+# bar spinners
+
+Bar-chart and fading-bar spinners live in `imspinner_bars.h`. `SpinnerBarChartSine` is
+also wired into the core `Spinner<e_st_barchartsine>` dispatcher.
+
+```c++
+#include "../imspinner/imspinner_bars.h"   // pulls in imspinner.h
+...
+ImSpinner::SpinnerFadeBars("bars", 6.f, ImColor(255, 255, 255), 2.8f, 3);
+ImSpinner::SpinnerBarChartRainbow("rainbow", 16.f, 4.f, ImColor(255, 255, 255), 4.f);
+```
+
+| function | effect |
+|----------|--------|
+| `SpinnerFadeBars` | vertical bars fade in sequence (`scale` stretches height) |
+| `SpinnerBarsRotateFade` | radial bars rotate with fading opacity |
+| `SpinnerBarsScaleMiddle` | bars scale from the centre outward |
+| `SpinnerBarChartSine` | sine-wave bar chart (also `Spinner<e_st_barchartsine>`) |
+| `SpinnerBarChartAdvSine` | dense sine bars with horizontal wobble |
+| `SpinnerBarChartAdvSineFade` | dense sine bars with fade |
+| `SpinnerBarChartRainbow` | rainbow bars with independent wave heights |
+| `SpinnerFluid` | fluid equalizer-style columns |
+| `SpinnerFluidPoints` | fluid columns drawn as stacked dots |
 
 # dot spinners
 
