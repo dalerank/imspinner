@@ -46,6 +46,8 @@ int main(int, char**) {
 
 # dot spinners
 
+<img width="922" height="294" alt="dots" src="https://github.com/user-attachments/assets/c59d2389-a616-4417-9997-6e80da27013a" />
+
 A large family of **dot**-based spinners lives in the `imspinner_dots.h` add-on. They
 mostly share the shape `SpinnerXxxDots(const char *label, float radius, float thickness,
 ImColor color = white, float speed = 2.8f, …)`, where the trailing count argument is
