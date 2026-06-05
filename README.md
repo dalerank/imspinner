@@ -3,8 +3,6 @@ Set of nice spinners for imgui
 
 ![spinners](https://github.com/user-attachments/assets/796d734b-eb2b-4d6f-9199-e4609a57935d)
 
-<img width="913" height="177" alt="texts" src="https://github.com/user-attachments/assets/90374d7f-6282-44e7-97c3-1e3d681fe8bb" />
-
 # headers
 
 The library is header-only and split into three files; each one includes the
@@ -46,6 +44,8 @@ int main(int, char**) {
 ![image](https://github.com/dalerank/imspinner/assets/918081/dac20ca2-30ab-48a2-b4bb-36caa4676d2c)
 
 # text loaders
+
+<img width="922" height="294" alt="texts" src="https://github.com/user-attachments/assets/0e34807d-8054-4f46-95d6-1f5bb7c3381d" />
 
 `imspinner_text.h` adds a family of animated **text** loaders "Loading…" effects. 
 They share a common signature `SpinnerTextXxx(const char *label, float radius, 
