@@ -31,7 +31,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 413;
+      constexpr int num_spinners = 418;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -909,6 +909,16 @@ namespace ImSpinner
                                                           R(16), T(6), C(white), S(1.f) * velocity, M(0)); break;
           case $(412) ImSpinner::SpinnerBarsSlot        (Name("SpinnerBarsSlot"),
                                                           R(16), T(6), C(white), S(1.f) * velocity, M(0)); break;
+          case $(413) ImSpinner::SpinnerConicGrid       (Name("SpinnerConicGrid"),
+                                                          R(16), T(6), C(white), S(1.f) * velocity, M(0)); break;
+          case $(414) ImSpinner::SpinnerArcArrow        (Name("SpinnerArcArrow"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity, M(0)); break;
+          case $(415) ImSpinner::SpinnerOrbitMoon       (Name("SpinnerOrbitMoon"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity, M(0)); break;
+          case $(416) ImSpinner::SpinnerConicWheels     (Name("SpinnerConicWheels"),
+                                                          R(16), T(4), C(white), S(1.f) * velocity, M(0)); break;
+          case $(417) ImSpinner::SpinnerDotRing         (Name("SpinnerDotRing"),
+                                                          R(16), T(3), C(white), S(1.f) * velocity, M(0)); break;
           }
 #undef $
         }

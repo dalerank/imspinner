@@ -3360,6 +3360,193 @@ namespace ImSpinner
         }, color_alpha(color, 1.f), thickness);
     }
 
+    // Conic grid:
+    //   a 2x2 block of conic-corner tiles (split by a "+" gap) with five dots at
+    //   the edge midpoints and the centre; the whole figure spins .5 turn / sec
+    //   (linear). Port of the CSS "l8" loader. mode 2 reverses the spin; mode 1
+    //   doubles it to a full turn.
+    inline void SpinnerConicGrid(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness;
+
+      const float W = radius * 2.f, H = W;
+      const float g = 0.06f * W;            // half of the "+" gap between tiles
+      const float dot_r = 0.12f * W;        // 12px dot on a 50px box
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float ang = ImFmod(time, 1.f) * IM_PI;        // .5 turn per second
+      if (mode == 1) ang *= 2.f;                    // full turn
+      if (mode == 2) ang = -ang;
+      const float ca = ImCos(ang), sa = ImSin(ang);
+
+      auto rot = [&](float x, float y) -> ImVec2 {
+        const float dx = x - centre.x, dy = y - centre.y;
+        return ImVec2(centre.x + dx * ca - dy * sa, centre.y + dx * sa + dy * ca);
+      };
+
+      const float l = centre.x - radius, t = centre.y - radius, r = l + W, b = t + H;
+      const float cx = centre.x, cy = centre.y;
+
+      // four quadrant tiles, separated by the central "+" gap
+      const ImVec2 tiles[4][4] = {
+        { {l, t},       {cx - g, t},    {cx - g, cy - g}, {l, cy - g} },     // top-left
+        { {cx + g, t},  {r, t},         {r, cy - g},      {cx + g, cy - g} },// top-right
+        { {cx + g, cy + g}, {r, cy + g}, {r, b},          {cx + g, b} },     // bottom-right
+        { {l, cy + g},  {cx - g, cy + g}, {cx - g, b},    {l, b} },          // bottom-left
+      };
+      for (int i = 0; i < 4; i++)
+        window->DrawList->AddQuadFilled(rot(tiles[i][0].x, tiles[i][0].y), rot(tiles[i][1].x, tiles[i][1].y),
+                                        rot(tiles[i][2].x, tiles[i][2].y), rot(tiles[i][3].x, tiles[i][3].y), c);
+
+      // five dots: edge midpoints (inset by the radius) and the centre
+      const ImVec2 dots[5] = {
+        { cx,            t + dot_r },     // top
+        { cx,            b - dot_r },     // bottom
+        { r - dot_r,     cy },            // right
+        { l + dot_r,     cy },            // left
+        { cx,            cy },            // centre
+      };
+      for (int i = 0; i < 5; i++) {
+        const ImVec2 p = rot(dots[i].x, dots[i].y);
+        window->DrawList->AddCircleFilled(p, dot_r, c, num_segments);
+      }
+    }
+
+    // Arc arrow:
+    //   a 270-degree ring arc with a triangular arrowhead at its leading tip,
+    //   spinning a full turn / sec (linear). Port of the CSS "l11" loader.
+    //   mode 1 drops the arrowhead (plain 3/4 ring); mode 2 reverses the spin.
+    inline void SpinnerArcArrow(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      const float R = radius - thickness * 0.5f;
+      const ImColor c = color_alpha(color, 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float rot = ImFmod(time, 1.f) * (2.f * IM_PI);   // full turn per second
+      if (mode == 2) rot = -rot;
+
+      const float a0 = -IM_PI * 0.5f + rot;            // start at the top
+      const float a1 = a0 + IM_PI * 1.5f;              // 270-degree sweep -> left end
+      window->DrawList->PathArcTo(centre, R, a0, a1, num_segments * 2);
+      detail::PathStroke(window->DrawList, c, thickness, false);
+
+      if (mode != 1) {                                 // arrowhead at the leading end
+        const float ca = ImCos(a1), sa = ImSin(a1);
+        const float aw = thickness * 1.3f, al = thickness * 2.2f;
+        const ImVec2 tip (centre.x + ca * R - sa * al, centre.y + sa * R + ca * al);
+        const ImVec2 bout(centre.x + ca * (R + aw),    centre.y + sa * (R + aw));
+        const ImVec2 bin (centre.x + ca * (R - aw),    centre.y + sa * (R - aw));
+        window->DrawList->AddTriangleFilled(tip, bout, bin, c);
+      }
+    }
+
+    // Orbit moon:
+    //   an orange hub at the centre, a green planet orbiting it once per second,
+    //   and a small grey moon circling the planet twice as fast. Port of the CSS
+    //   "l17" loader (its three signature colours are fixed). mode 2 reverses.
+    inline void SpinnerOrbitMoon(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const float s = radius / 35.f;          // CSS box is 70px (half = 35px)
+      const ImColor orange = color_alpha(ImColor(255, 165, 22), 1.f);
+      const ImColor green  = color_alpha(ImColor(0, 128, 0), 1.f);
+      const ImColor grey   = color_alpha(ImColor(204, 204, 204), 1.f);
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float th = ImFmod(time, 1.f) * (2.f * IM_PI);            // hub orbit: 1 rev/sec
+      float ph = ImFmod(time, 0.5f) / 0.5f * (2.f * IM_PI);    // moon orbit: 2 rev/sec
+      if (mode == 2) { th = -th; ph = -ph; }
+
+      auto rot = [](float x, float y, float a, float &ox, float &oy) {
+        const float ca = ImCos(a), sa = ImSin(a);
+        ox = x * ca - y * sa; oy = x * sa + y * ca;
+      };
+
+      // planet (green) orbits the hub, starting at the bottom
+      float gx, gy;
+      rot(0.f, 29.f * s, th, gx, gy);
+      window->DrawList->AddCircleFilled(ImVec2(centre.x + gx, centre.y + gy), 6.f * s, green, num_segments);
+
+      // hub (orange) sits at the centre
+      window->DrawList->AddCircleFilled(centre, 8.f * s, orange, num_segments);
+
+      // moon (grey): circle the planet, then carry the whole arm around the hub
+      float mlx, mly;
+      rot(0.f, -14.f * s, ph, mlx, mly);
+      float mx, my;
+      rot(mlx, 29.f * s + mly, th, mx, my);
+      window->DrawList->AddCircleFilled(ImVec2(centre.x + mx, centre.y + my), 4.f * s, grey, num_segments);
+    }
+
+    // Conic wheels:
+    //   three concentric four-colour pie discs spinning at different rates. In
+    //   CSS the parent's spin compounds onto the inner discs, giving effective
+    //   periods of 2s / 1s / 1.2s per turn. Port of the CSS "l22" loader (its
+    //   four signature colours are fixed). mode 2 reverses the spin.
+    inline void SpinnerConicWheels(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor cols[4] = {
+        color_alpha(ImColor(37, 176, 155), 1.f),   // #25b09b teal
+        color_alpha(ImColor(240, 51, 85), 1.f),    // #f03355 red
+        color_alpha(ImColor(81, 75, 130), 1.f),    // #514b82 purple
+        color_alpha(ImColor(255, 165, 22), 1.f),   // #ffa516 orange
+      };
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float aO = ImFmod(time, 2.f) / 2.f * (2.f * IM_PI);     // outer:  2.0s / turn
+      float aM = ImFmod(time, 1.f) * (2.f * IM_PI);           // middle: 1.0s / turn
+      float aI = ImFmod(time, 1.2f) / 1.2f * (2.f * IM_PI);   // inner:  1.2s / turn
+      if (mode == 2) { aO = -aO; aM = -aM; aI = -aI; }
+
+      auto draw_disk = [&](float r, float a) {
+        for (int i = 0; i < 4; i++) {
+          const float a0 = -IM_PI * 0.5f + a + i * (IM_PI * 0.5f);   // conic starts at top, clockwise
+          window->DrawList->PathArcTo(centre, r, a0, a0 + IM_PI * 0.5f, num_segments);
+          window->DrawList->PathLineTo(centre);
+          window->DrawList->PathFillConvex(cols[i]);
+        }
+      };
+
+      draw_disk(radius, aO);              // outer disc painted first
+      draw_disk(radius * 0.7f, aM);       // middle disc (margin 15%)
+      draw_disk(radius * 0.5f, aI);       // inner disc (margin 25%)
+    }
+
+    // Dot ring:
+    //   twelve dots evenly spaced (30 deg apart) on a circle, alternating two
+    //   colours, the whole ring spinning one turn / 2 sec counter-clockwise.
+    //   Port of the CSS "l30" loader (its two signature colours are fixed).
+    //   mode 2 reverses the spin.
+    inline void SpinnerDotRing(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)color;
+
+      const ImColor g1 = color_alpha(ImColor(81, 75, 130), 1.f);    // #514b82 purple
+      const ImColor g2 = color_alpha(ImColor(238, 238, 238), 1.f);  // #eeeeee light grey
+      const int N = 12;
+      const float ring = radius - thickness;
+
+      const float time = (float)ImGui::GetTime() * speed;
+      float spin = ImFmod(time, 2.f) / 2.f * (2.f * IM_PI);   // one turn per 2 sec
+      spin = (mode == 2) ? spin : -spin;                      // CSS rotates -1turn (CCW)
+
+      for (int k = 0; k < N; k++) {
+        const float a = -IM_PI * 0.5f + spin + k * (2.f * IM_PI / N);
+        const ImVec2 p(centre.x + ImCos(a) * ring, centre.y + ImSin(a) * ring);
+        window->DrawList->AddCircleFilled(p, thickness, (k % 2 == 0) ? g1 : g2, num_segments);
+      }
+    }
+
 }
 
 #endif // _IMSPINNER_H_
