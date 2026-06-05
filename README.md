@@ -301,8 +301,8 @@ ImSpinner::SpinnerTextTyping("typing", 30.f, ImColor(255, 255, 255), 1.f, 3, "Lo
 
 # shape spinners
 
-`imspinner_shapes.h` adds a family of **shape**-morphing spinners, triangles, discs and
-arrows that fold, tumble, skew and spin). They are kept out of `imspinner.h` and surface
+`imspinner_shapes.h` adds a family of **shape**-morphing spinners — squares, triangles,
+discs and arrows that fold, tumble, skew and spin. They are kept out of `imspinner.h` and surface
 under the **Shapes** tab of the demo gallery. Each one shares the standard signature
 `SpinnerXxx(const char *label, float radius, float thickness, const ImColor &color = white,
 float speed = 1.f, int mode = 0)`. Most use the loader's own fixed colour (the `color`
@@ -315,8 +315,8 @@ ImSpinner::SpinnerMorphShape("morph", 16.f, 1.f);
 ImSpinner::SpinnerPinwheel("pinwheel", 16.f, 1.f, ImColor(255, 255, 255), 1.f, 0);
 ```
 
-| function | effect | 
-|----------|--------|-----|
+| function | effect |
+|----------|--------|
 | `SpinnerMorphShape` | a blob morphs circle → square → triangle, recolouring at each step |
 | `SpinnerFlipTriangle` | a 3-corner triangle "rolls" around the box, one vertex sliding per quarter |
 | `SpinnerFoldSquare` | two triangles fold the square over onto the other diagonal |
