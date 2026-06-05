@@ -28,7 +28,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 272;
+      constexpr int num_spinners = 295;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -623,6 +623,52 @@ namespace ImSpinner
                                                           R(30), C(white), S(0.33f) * velocity, "Loading..."); break;
           case $(271) ImSpinner::SpinnerTextReveal      (Name("SpinnerTextReveal"),
                                                           R(30), C(white), S(0.5f) * velocity, "Loading..."); break;
+          case $(272) ImSpinner::SpinnerTextWave        (Name("SpinnerTextWave"),
+                                                          R(30), C(white), S(0.5f) * velocity, "Loading..."); break;
+          case $(273) ImSpinner::SpinnerTextSweep       (Name("SpinnerTextSweep"),
+                                                          R(30), C(white), CB(ImColor(0, 0, 0)), S(0.5f) * velocity, "Loading..."); break;
+          case $(274) ImSpinner::SpinnerTextShine       (Name("SpinnerTextShine"),
+                                                          R(30), C(white), CB(ImColor(0, 0, 0)), S(0.5f) * velocity, "Loading..."); break;
+          case $(275) ImSpinner::SpinnerTextScrollSweep (Name("SpinnerTextScrollSweep"),
+                                                          R(30), C(white), CB(ImColor(0, 0, 0)), S(0.5f) * velocity, "Loading..."); break;
+          case $(276) ImSpinner::SpinnerTextSpotlight   (Name("SpinnerTextSpotlight"),
+                                                          R(30), C(white), S(0.5f) * velocity, "Loading..."); break;
+          case $(277) ImSpinner::SpinnerTextShake       (Name("SpinnerTextShake"),
+                                                          R(30), C(white), S(1.f) * velocity, M(0), "Loading..."); break;
+          case $(278) ImSpinner::SpinnerTextShake       (Name("SpinnerTextShakeSmooth"),
+                                                          R(30), C(white), S(1.f) * velocity, M(1), "Loading..."); break;
+          case $(279) ImSpinner::SpinnerTextFlip        (Name("SpinnerTextFlip"),
+                                                          R(30), C(white), S(0.5f) * velocity, "Loading..."); break;
+          case $(280) ImSpinner::SpinnerTextSpin        (Name("SpinnerTextSpin"),
+                                                          R(30), C(white), S(0.5f) * velocity, "Loading..."); break;
+          case $(281) ImSpinner::SpinnerTextTumble      (Name("SpinnerTextTumble"),
+                                                          R(30), C(white), S(0.5f) * velocity, M(0), "Loading..."); break;
+          case $(282) ImSpinner::SpinnerTextTumble      (Name("SpinnerTextTumblePersp"),
+                                                          R(30), C(white), S(0.5f) * velocity, M(1), "Loading..."); break;
+          case $(283) ImSpinner::SpinnerTextSwirl       (Name("SpinnerTextSwirl"),
+                                                          R(30), C(white), S(0.5f) * velocity, "Loading..."); break;
+          case $(284) ImSpinner::SpinnerTextRollWave    (Name("SpinnerTextRollWave"),
+                                                          R(30), C(white), S(0.5f) * velocity, "Loading..."); break;
+          case $(285) ImSpinner::SpinnerTextVibrate     (Name("SpinnerTextVibrate"),
+                                                          R(30), C(white), S(1.f) * velocity, "Loading..."); break;
+          case $(286) ImSpinner::SpinnerTextGlitch      (Name("SpinnerTextGlitch"),
+                                                          R(30), S(1.f) * velocity, "Loading..."); break;
+          case $(287) ImSpinner::SpinnerTextBlur        (Name("SpinnerTextBlur"),
+                                                          R(30), C(white), S(1.f) * velocity, "Loading..."); break;
+          case $(288) ImSpinner::SpinnerTextDropout     (Name("SpinnerTextDropout"),
+                                                          R(30), C(white), S(1.f) * velocity, "Loading..."); break;
+          case $(289) ImSpinner::SpinnerTextScanline    (Name("SpinnerTextScanline"),
+                                                          R(30), C(white), S(1.f) * velocity, M(0), "Loading..."); break;
+          case $(290) ImSpinner::SpinnerTextScanline    (Name("SpinnerTextScanlineV"),
+                                                          R(30), C(white), S(1.f) * velocity, M(1), "Loading..."); break;
+          case $(291) ImSpinner::SpinnerTextSquash      (Name("SpinnerTextSquash"),
+                                                          R(30), C(white), S(1.f) * velocity, "Loading..."); break;
+          case $(292) ImSpinner::SpinnerTextScramble    (Name("SpinnerTextScramble"),
+                                                          R(30), C(white), S(1.f) * velocity); break;
+          case $(293) ImSpinner::SpinnerTextDecode      (Name("SpinnerTextDecode"),
+                                                          R(30), C(white), S(0.5f) * velocity, "Loading..."); break;
+          case $(294) ImSpinner::SpinnerTextVanish      (Name("SpinnerTextVanish"),
+                                                          R(30), C(white), S(0.5f) * velocity, "Loading..."); break;
 #endif
           }
 #undef $
@@ -656,7 +702,7 @@ namespace ImSpinner
             const ImVec2 item_size = ImVec2(widget_size, widget_size);
 
             // Text-based animation cells; everything else is a graphical spinner.
-            static const int text_spinners[] = { 134, 150, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271 };
+            static const int text_spinners[] = { 134, 150, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294 };
             auto is_text_spinner = [&](int idx) {
               for (int k = 0; k < (int)(sizeof(text_spinners) / sizeof(text_spinners[0])); ++k)
                 if (text_spinners[k] == idx) return true;

@@ -726,6 +726,912 @@ namespace ImSpinner
         x += cw;
       }
     }
+
+    // Traveling hop wave, a port of the CSS l20:
+    //   each letter hops up in turn (left to right), one at a time, so a wave runs
+    //   across the word and repeats. Letter i peaks at (i+1)/(len+1) of the cycle;
+    //   the linear keyframes make each hop a triangle (up then back).
+    inline void SpinnerTextWave(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor c = color_alpha(color, 1.f);
+      const float amp = ts.y * 0.35f;                        // hop height (~10px at 30px font)
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float hw = 1.f / (float)(len + 1);               // half-width of each hop window
+
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        const float peak = (i + 1) * hw;                     // this letter's peak time
+        float d = ImFabs(t - peak);
+        d = ImMin(d, 1.f - d);                               // cyclic distance
+        const float hop = ImMax(0.f, 1.f - d / hw) * amp;    // triangle hop
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y - hop), c, text + i, text + i + 1);
+        x += cw;
+      }
+    }
+
+    // Sweeping highlight, a port of the CSS l21:
+    //   a bar sweeps across the text left to right; inside the bar the text is
+    //   inverted (drawn in 'bg' over a 'color' fill), outside it stays 'color'.
+    //   The bar fills over the cycle, then restarts. (CSS is white-on-black vs
+    //   black-on-page; adapted here with a 'color' fill so it reads on a dark theme.)
+    inline void SpinnerTextSweep(const char *label, float radius, const ImColor &color = white, const ImColor &bg = ImColor(0, 0, 0), float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor cfg = color_alpha(color, 1.f);
+      const ImColor cbg = color_alpha(bg, 1.f);
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float boundary = tp.x + ts.x * t;                // bar covers [tp.x, boundary]
+
+      // The bar (filled) behind the swept part, with inverted text on it.
+      window->DrawList->AddRectFilled(ImVec2(tp.x, tp.y), ImVec2(boundary, tp.y + ts.y), cfg);
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(boundary, tp.y + ts.y), true);
+      window->DrawList->AddText(font, font_size, tp, cbg, text);
+      window->DrawList->PopClipRect();
+
+      // Normal text on the rest.
+      window->DrawList->PushClipRect(ImVec2(boundary, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      window->DrawList->AddText(font, font_size, tp, cfg, text);
+      window->DrawList->PopClipRect();
+    }
+
+    // Shine band, a port of the CSS l22:
+    //   a band (CSS: a 135deg diagonal ~1em stripe) sweeps across the text; inside
+    //   the band the text is inverted ('bg' over a 'color' fill), like a glint
+    //   passing over it. Here the band is vertical (axis-aligned clips can't tilt).
+    inline void SpinnerTextShine(const char *label, float radius, const ImColor &color = white, const ImColor &bg = ImColor(0, 0, 0), float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor cfg = color_alpha(color, 1.f);
+      const ImColor cbg = color_alpha(bg, 1.f);
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float halfw = ts.x * 0.14f;                      // band half-width (~1em)
+      const float bc = tp.x - halfw + t * (ts.x + 2.f * halfw); // band centre sweeps left -> right
+      const float x0 = ImMax(tp.x, bc - halfw);
+      const float x1 = ImMin(tp.x + ts.x, bc + halfw);
+
+      // Normal text everywhere.
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      window->DrawList->AddText(font, font_size, tp, cfg, text);
+      window->DrawList->PopClipRect();
+
+      // The shine band: fill + inverted text inside it.
+      if (x1 > x0) {
+        window->DrawList->AddRectFilled(ImVec2(x0, tp.y), ImVec2(x1, tp.y + ts.y), cfg);
+        window->DrawList->PushClipRect(ImVec2(x0, tp.y), ImVec2(x1, tp.y + ts.y), true);
+        window->DrawList->AddText(font, font_size, tp, cbg, text);
+        window->DrawList->PopClipRect();
+      }
+    }
+
+    // Scroll + inverting sweep, a port of the CSS l23:
+    //   the text scrolls left (seamless marquee) while a full-width band sweeps
+    //   across; inside the band the text is inverted ('bg' over a 'color' fill).
+    //   The band covers the whole window at mid-cycle. (CSS is white/black on a
+    //   light page; adapted here with a 'color' fill so it reads on a dark theme.)
+    inline void SpinnerTextScrollSweep(const char *label, float radius, const ImColor &color = white, const ImColor &bg = ImColor(0, 0, 0), float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      // Scale the font down so the full text fits the cell (the scroll window width).
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor cfg = color_alpha(color, 1.f);
+      const ImColor cbg = color_alpha(bg, 1.f);
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float shift = t * ts.x;                          // text scrolls left one word per cycle
+      const float bl = tp.x + ts.x - t * 2.f * ts.x;         // band left edge: off-right -> full window -> off-left
+      const float ix0 = ImMax(tp.x, bl);
+      const float ix1 = ImMin(tp.x + ts.x, bl + ts.x);
+
+      // Normal scrolling text (two copies for a seamless wrap), clipped to the window.
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x - shift, tp.y), cfg, text);
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x + ts.x - shift, tp.y), cfg, text);
+      window->DrawList->PopClipRect();
+
+      // Inverting band: fill + inverted scrolling text inside it.
+      if (ix1 > ix0) {
+        window->DrawList->AddRectFilled(ImVec2(ix0, tp.y), ImVec2(ix1, tp.y + ts.y), cfg);
+        window->DrawList->PushClipRect(ImVec2(ix0, tp.y), ImVec2(ix1, tp.y + ts.y), true);
+        window->DrawList->AddText(font, font_size, ImVec2(tp.x - shift, tp.y), cbg, text);
+        window->DrawList->AddText(font, font_size, ImVec2(tp.x + ts.x - shift, tp.y), cbg, text);
+        window->DrawList->PopClipRect();
+      }
+    }
+
+    // Scanning spotlight, a port of the CSS l24:
+    //   a round spotlight (radial gradient) sweeps back and forth across the text
+    //   (alternate), brightening the letters it passes (bright inside, dim outside).
+    //   A true round clip isn't available, so each letter's brightness is set by its
+    //   distance to the spotlight centre, giving the same scanning-glow effect.
+    inline void SpinnerTextSpotlight(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const float R = ts.y * 0.8f;                           // spotlight radius (~one line height)
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float tri = (t < 0.5f) ? t * 2.f : 2.f - t * 2.f; // ping-pong 0..1..0 (CSS alternate)
+      const float bx = tp.x + tri * ts.x;                    // spotlight centre
+
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        const float d = ImFabs((x + cw * 0.5f) - bx);        // distance from letter centre to spotlight
+        const float b = ImClamp(1.f - d / R, 0.f, 1.f);
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y), color_alpha(color, 0.2f + 0.8f * b), text + i, text + i + 1);
+        x += cw;
+      }
+    }
+
+    // Glitchy shake, a port of the CSS l25:
+    //   the whole word moves between 8 fixed offsets over the cycle (scaled from the
+    //   CSS px values at 30px font). mode 0: snap (each held for 1/8, then jumps),
+    //   like the CSS; mode 1: smoothly interpolate between offsets for a fluid wobble.
+    inline void SpinnerTextShake(const char *label, float radius, const ImColor &color = white, float speed = 1.f, int mode = 0, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const float k = font_size / 30.f;                      // CSS offsets are px at 30px font
+      const ImVec2 off[8] = {
+        ImVec2(10, 0), ImVec2(4, -4), ImVec2(2, 8), ImVec2(12, -6),
+        ImVec2(0, 12), ImVec2(-8, -4), ImVec2(-12, 6), ImVec2(6, 0)
+      };
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const int seg = ImMin(7, (int)(t * 8.f));
+      ImVec2 o = off[seg];
+      if (mode != 0) {                                       // smooth: lerp toward the next offset
+        const float u = t * 8.f - seg;
+        const ImVec2 n = off[(seg + 1) % 8];
+        o = ImVec2(o.x + (n.x - o.x) * u, o.y + (n.y - o.y) * u);
+      }
+      window->DrawList->AddText(font, font_size, ImVec2(tp.x + o.x * k, tp.y + o.y * k), color_alpha(color, 1.f), text);
+    }
+
+    // 3D-ish flip, an approximation of the CSS l26:
+    //   the word flips over X, then over Y, then scales to -1, returning to identity.
+    //   True perspective isn't available, so the text's vertices are scaled about its
+    //   centre (sx = cos(rotY)*s, sy = cos(rotX)*s): it squashes to a line and mirrors
+    //   -- a flat 'card flip' rather than a perspective rotation.
+    inline void SpinnerTextFlip(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      auto ramp = [](float v, float a, float b) { return ImClamp((v - a) / (b - a), 0.f, 1.f); };
+      const float ax = ramp(t, 0.10f, 0.30f) * IM_PI;        // rotateX 0 -> 180
+      const float ay = ramp(t, 0.36f, 0.63f) * IM_PI;        // rotateY 0 -> 180
+      const float s = 1.f - 2.f * ramp(t, 0.69f, 0.90f);     // scale 1 -> -1
+      const float sx = ImCos(ay) * s;
+      const float sy = ImCos(ax) * s;
+
+      // Draw the text, then scale its vertices about the centre (the 'flip').
+      const ImVec2 ctr(tp.x + ts.x * 0.5f, tp.y + ts.y * 0.5f);
+      const int vtx0 = window->DrawList->VtxBuffer.Size;
+      window->DrawList->AddText(font, font_size, tp, color_alpha(color, 1.f), text);
+      ImDrawVert *vtx = window->DrawList->VtxBuffer.Data;
+      for (int i = vtx0; i < window->DrawList->VtxBuffer.Size; i++) {
+        vtx[i].pos.x = ctr.x + (vtx[i].pos.x - ctr.x) * sx;
+        vtx[i].pos.y = ctr.y + (vtx[i].pos.y - ctr.y) * sy;
+      }
+    }
+
+    // Two halves spinning, a port of the CSS l27:
+    //   the text is split in two; each half rotates a full turn over the first half
+    //   of its cycle then holds, with the second half delayed by half a cycle, so the
+    //   halves spin alternately. Vertices are rotated about each half's own centre.
+    inline void SpinnerTextSpin(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor col = color_alpha(color, 1.f);
+      const int half = len / 2;
+      const float wA = font->CalcTextSizeA(font_size, 99999.f, 0.f, text, text + half).x;
+
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float angA = PI_2 * ImMin(1.f, t / 0.5f);        // spins over first half, then holds
+      const float tB = ImFmod(t + 0.5f, 1.f);                // second half delayed by half a cycle
+      const float angB = PI_2 * ImMin(1.f, tB / 0.5f);
+
+      auto drawPart = [&](const char *b, const char *e, float x, float ang) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, b, e).x;
+        const ImVec2 cc(x + cw * 0.5f, tp.y + ts.y * 0.5f);  // rotate about this half's centre
+        const float co = ImCos(ang), si = ImSin(ang);
+        const int v0 = window->DrawList->VtxBuffer.Size;
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y), col, b, e);
+        ImDrawVert *vtx = window->DrawList->VtxBuffer.Data;
+        for (int i = v0; i < window->DrawList->VtxBuffer.Size; i++) {
+          const float dx = vtx[i].pos.x - cc.x, dy = vtx[i].pos.y - cc.y;
+          vtx[i].pos.x = cc.x + dx * co - dy * si;
+          vtx[i].pos.y = cc.y + dx * si + dy * co;
+        }
+      };
+      drawPart(text, text + half, tp.x, angA);
+      drawPart(text + half, text + len, tp.x + wA, angB);
+    }
+
+    // Tumble flip, a port of the CSS l28:
+    //   the word spins 180 in-plane, then flips over Y, then over X, returning to
+    //   identity. mode 0: flat tumble (vertices scaled by the flips, then rotated);
+    //   mode 1: true 3D perspective (vertices rotated in 3D about Z/Y/X, then
+    //   projected with depth division, like CSS perspective(300px)).
+    inline void SpinnerTextTumble(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, int mode = 0, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      auto ramp = [](float v, float a, float b) { return ImClamp((v - a) / (b - a), 0.f, 1.f); };
+      const float rz = ramp(t, 0.10f, 0.30f) * IM_PI;        // in-plane rotate 0 -> 180
+      const float ay = ramp(t, 0.36f, 0.63f) * IM_PI;        // rotateY 0 -> 180
+      const float ax = ramp(t, 0.69f, 0.90f) * IM_PI;        // rotateX 0 -> 180
+      const float cz = ImCos(rz), sz = ImSin(rz);
+      const float cy = ImCos(ay), sy = ImSin(ay);
+      const float cx = ImCos(ax), sx = ImSin(ax);
+      const float P = font_size * 10.f;                      // perspective(300px) at 30px font
+
+      const ImVec2 ctr(tp.x + ts.x * 0.5f, tp.y + ts.y * 0.5f);
+      const int vtx0 = window->DrawList->VtxBuffer.Size;
+      window->DrawList->AddText(font, font_size, tp, color_alpha(color, 1.f), text);
+      ImDrawVert *vtx = window->DrawList->VtxBuffer.Data;
+      for (int i = vtx0; i < window->DrawList->VtxBuffer.Size; i++) {
+        const float rx = vtx[i].pos.x - ctr.x;
+        const float ry = vtx[i].pos.y - ctr.y;
+        if (mode == 0) {
+          // Flat: scale by the flip cosines, then rotate in-plane.
+          const float dx = rx * cy, dy = ry * cx;
+          vtx[i].pos.x = ctr.x + dx * cz - dy * sz;
+          vtx[i].pos.y = ctr.y + dx * sz + dy * cz;
+        } else {
+          // 3D: rotateZ, rotateY, rotateX, then perspective-project (z toward viewer).
+          const float x1 = rx * cz - ry * sz, y1 = rx * sz + ry * cz; // rotateZ (z=0)
+          const float x2 = x1 * cy, z2 = -x1 * sy;                    // rotateY
+          const float y3 = y1 * cx - z2 * sx, z3 = y1 * sx + z2 * cx; // rotateX
+          const float f = P / ImMax(P - z3, 1.f);                     // perspective division
+          vtx[i].pos.x = ctr.x + x2 * f;
+          vtx[i].pos.y = ctr.y + y3 * f;
+        }
+      }
+    }
+
+    // Counter-rotating swirl, a port of the CSS l29:
+    //   alternating characters spin a full turn about the WHOLE word's centre in
+    //   opposite directions (even +1 turn, odd -1 turn) over 0..80%, then hold.
+    //   Each letter's vertices are rotated about the shared centre, so the letters
+    //   swirl around it.
+    inline void SpinnerTextSwirl(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImVec2 cc(tp.x + ts.x * 0.5f, tp.y + ts.y * 0.5f); // word centre
+      const ImColor col = color_alpha(color, 1.f);
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float angle = PI_2 * ImMin(1.f, t / 0.8f);        // spin over 0..80%, then hold
+
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        const float ang = (i & 1) ? -angle : angle;          // even/odd counter-rotate
+        const float co = ImCos(ang), si = ImSin(ang);
+        const int v0 = window->DrawList->VtxBuffer.Size;
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y), col, text + i, text + i + 1);
+        ImDrawVert *vtx = window->DrawList->VtxBuffer.Data;
+        for (int j = v0; j < window->DrawList->VtxBuffer.Size; j++) {
+          const float dx = vtx[j].pos.x - cc.x, dy = vtx[j].pos.y - cc.y;
+          vtx[j].pos.x = cc.x + dx * co - dy * si;
+          vtx[j].pos.y = cc.y + dx * si + dy * co;
+        }
+        x += cw;
+      }
+    }
+
+    // Vertical roll wave, an approximation of the CSS l30:
+    //   alternating letters roll vertically by one line, half a cycle out of phase,
+    //   so a vertical wave runs across the word. Each column rolls seamlessly (a wrap
+    //   copy enters from above), clipped to the line box.
+    inline void SpinnerTextRollWave(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor col = color_alpha(color, 1.f);
+      const float H = ts.y;                                  // one line-height roll distance
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        const float ph = (i & 1) ? ImFmod(t + 0.5f, 1.f) : t; // odd columns half a cycle behind
+        const float yo = ph * H;
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y + yo), col, text + i, text + i + 1);         // rolling down
+        window->DrawList->AddText(font, font_size, ImVec2(x, tp.y + yo - H), col, text + i, text + i + 1);     // wrap copy from above
+        x += cw;
+      }
+      window->DrawList->PopClipRect();
+    }
+
+    // Vibrating text, an approximation of the CSS l31:
+    //   the wild cubic-bezier(.5,-150,.5,150) amplifies tiny per-letter offsets into a
+    //   fast buzz. Here each letter jitters with its own incommensurate x/y frequency
+    //   and phase, giving a continuous nervous vibration.
+    inline void SpinnerTextVibrate(const char *label, float radius, const ImColor &color = white, float speed = 1.f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor col = color_alpha(color, 1.f);
+      const float a = (float)ImGui::GetTime() * speed;
+      const float A = font_size * 0.12f;                     // jitter amplitude
+
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        const float ox = A * ImSin(a * 38.f + i * 1.7f);     // per-letter, incommensurate x/y
+        const float oy = A * ImSin(a * 47.f + i * 2.9f);
+        window->DrawList->AddText(font, font_size, ImVec2(x + ox, tp.y + oy), col, text + i, text + i + 1);
+        x += cw;
+      }
+    }
+
+    // RGB-split glitch, an approximation of the CSS l32:
+    //   three text copies (red/green/blue) with tiny offsets; the wild cubic-bezier
+    //   amplifies them into a chromatic-aberration buzz. Here each channel jitters
+    //   with its own phase, so the colors separate and shimmer. (Colors are fixed
+    //   R/G/B, so there is no 'color' parameter.)
+    inline void SpinnerTextGlitch(const char *label, float radius, float speed = 1.f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const float a = (float)ImGui::GetTime() * speed;
+      const float A = font_size * 0.06f;                     // split amplitude
+      const int al = (int)(255.f * ImGui::GetStyle().Alpha);
+
+      auto chan = [&](ImU32 col, float px, float py) {
+        window->DrawList->AddText(font, font_size, ImVec2(tp.x + px, tp.y + py), col, text);
+      };
+      chan(IM_COL32(255, 0, 0, al), A * ImSin(a * 55.f + 0.0f), A * 0.6f * ImSin(a * 61.f + 1.0f));
+      chan(IM_COL32(0, 255, 0, al), A * ImSin(a * 55.f + 2.1f), A * 0.6f * ImSin(a * 61.f + 3.2f));
+      chan(IM_COL32(0, 0, 255, al), A * ImSin(a * 55.f + 4.2f), A * 0.6f * ImSin(a * 61.f + 5.3f));
+    }
+
+    // Random letter blur, an approximation of the CSS l33:
+    //   single letters flicker out of focus (a text-shadow blur) one at a time during
+    //   the middle of the cycle. ImGui can't blur, so a 'blurred' letter is faked with
+    //   a translucent offset halo plus a dimmed centre. The schedule is the CSS table.
+    inline void SpinnerTextBlur(const char *label, float radius, const ImColor &color = white, float speed = 1.f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const float k = font_size / 30.f;                      // CSS blur px at 30px font
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+
+      struct Pulse { int idx; float time; float blur; };
+      static const Pulse pulses[] = {
+        { 3, 0.20f, 9 }, { 7, 0.25f, 7 }, { 5, 0.30f, 9 }, { 9, 0.35f, 7 }, { 0, 0.40f, 5 },
+        { 5, 0.45f, 7 }, { 4, 0.50f, 5 }, { 6, 0.55f, 8 }, { 8, 0.60f, 5 }, { 1, 0.65f, 7 }, { 2, 0.70f, 9 }
+      };
+      const int np = (int)(sizeof(pulses) / sizeof(pulses[0]));
+      const float hw = 0.05f;                                // pulse half-width (keyframes are 5% apart)
+
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        float bl = 0.f;                                      // this letter's blur amount (px) right now
+        for (int p = 0; p < np; p++)
+          if (pulses[p].idx == i) {
+            const float d = ImFabs(t - pulses[p].time);
+            if (d < hw) bl = ImMax(bl, (1.f - d / hw) * pulses[p].blur);
+          }
+        if (bl > 0.05f) {
+          const float r = bl * 0.4f * k;                     // halo spread
+          const ImColor halo = color_alpha(color, 0.30f);
+          window->DrawList->AddText(font, font_size, ImVec2(x + r, tp.y), halo, text + i, text + i + 1);
+          window->DrawList->AddText(font, font_size, ImVec2(x - r, tp.y), halo, text + i, text + i + 1);
+          window->DrawList->AddText(font, font_size, ImVec2(x, tp.y + r), halo, text + i, text + i + 1);
+          window->DrawList->AddText(font, font_size, ImVec2(x, tp.y - r), halo, text + i, text + i + 1);
+          window->DrawList->AddText(font, font_size, ImVec2(x, tp.y), color_alpha(color, 1.f - 0.5f * ImMin(1.f, bl / 9.f)), text + i, text + i + 1);
+        } else {
+          window->DrawList->AddText(font, font_size, ImVec2(x, tp.y), color_alpha(color, 1.f), text + i, text + i + 1);
+        }
+        x += cw;
+      }
+    }
+
+    // Character dropout glitch, a port of the CSS l34:
+    //   individual characters blink out (become spaces) at scheduled times, so the
+    //   word flickers with missing letters, then returns to whole. Char positions are
+    //   preserved (monospace). The drop schedule is the CSS table (10-char "Loading...").
+    inline void SpinnerTextDropout(const char *label, float radius, const ImColor &color = white, float speed = 1.f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor col = color_alpha(color, 1.f);
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+
+      // bit i set => char i is dropped (space); one mask per 5% keyframe from 20%..70%.
+      static const unsigned masks[11] = {
+        0u, 1u << 2, 1u << 4, 1u << 0, 1u << 1, 1u << 6, 1u << 3,
+        (1u << 7) | (1u << 8), (1u << 0) | (1u << 3), 1u << 1, (1u << 4) | (1u << 6)
+      };
+      unsigned mask = 0u;
+      if (t >= 0.20f && t < 0.75f)
+        mask = masks[ImMin(10, (int)((t - 0.20f) / 0.05f))];
+
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        if (!((mask >> i) & 1u))                             // draw unless this char is dropped
+          window->DrawList->AddText(font, font_size, ImVec2(x, tp.y), col, text + i, text + i + 1);
+        x += cw;
+      }
+    }
+
+    // Scanline glitch, an approximation of the CSS l35 / l36:
+    //   mode 0: a thin horizontal band scans vertically; the slice inside it is
+    //           displaced horizontally (a fast jitter), the rest stays crisp.
+    //   mode 1: a vertical band (1.5ch) scans horizontally; the slice is displaced
+    //           vertically. A VHS/scanline displacement glitch either way.
+    //   (CSS uses mask-composite; here clip regions.)
+    inline void SpinnerTextScanline(const char *label, float radius, const ImColor &color = white, float speed = 1.f, int mode = 0, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor col = color_alpha(color, 1.f);
+      const float k = font_size / 30.f;                      // CSS px at 30px font
+      const float a = (float)ImGui::GetTime();
+      const float t = ImFmod(a * speed, 1.f);
+      const int seg = ImMin(4, (int)(t * 5.f));
+      const float u = t * 5.f - seg;
+      const float disp = 3.f * k * ImSin(a * speed * 60.f);  // fast displacement
+
+      auto slice = [&](float lo, float hi, bool vertical) {
+        // crisp text on both sides of [lo, hi], displaced text inside it
+        if (vertical) {
+          window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(lo, tp.y + ts.y), true);
+          window->DrawList->AddText(font, font_size, tp, col, text);
+          window->DrawList->PopClipRect();
+          window->DrawList->PushClipRect(ImVec2(hi, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+          window->DrawList->AddText(font, font_size, tp, col, text);
+          window->DrawList->PopClipRect();
+          window->DrawList->PushClipRect(ImVec2(lo, tp.y), ImVec2(hi, tp.y + ts.y), true);
+          window->DrawList->AddText(font, font_size, ImVec2(tp.x, tp.y + disp), col, text);
+          window->DrawList->PopClipRect();
+        } else {
+          window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(tp.x + ts.x, lo), true);
+          window->DrawList->AddText(font, font_size, tp, col, text);
+          window->DrawList->PopClipRect();
+          window->DrawList->PushClipRect(ImVec2(tp.x, hi), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+          window->DrawList->AddText(font, font_size, tp, col, text);
+          window->DrawList->PopClipRect();
+          window->DrawList->PushClipRect(ImVec2(tp.x, lo), ImVec2(tp.x + ts.x, hi), true);
+          window->DrawList->AddText(font, font_size, ImVec2(tp.x + disp, tp.y), col, text);
+          window->DrawList->PopClipRect();
+        }
+      };
+
+      if (mode == 0) {
+        // Horizontal band scanning vertically (l35).
+        const float Yk[6] = { 20.f * k, 8.f * k, ts.y, 3.f * k, 15.f * k, 0.f };
+        const float bh = 5.f * k;
+        const float by = ImClamp(Yk[seg] + (Yk[seg + 1] - Yk[seg]) * u, 0.f, ImMax(0.f, ts.y - bh));
+        slice(tp.y + by, tp.y + by + bh, false);
+      } else {
+        // Vertical band scanning horizontally (l36).
+        const float ch = ts.x / (float)len;
+        const float Xk[6] = { 0.f, 0.5f * ch, ts.x, 4.5f * ch, 6.5f * ch, 2.5f * ch };
+        const float bw = 1.5f * ch;
+        const float bx = ImClamp(Xk[seg] + (Xk[seg + 1] - Xk[seg]) * u, 0.f, ImMax(0.f, ts.x - bw));
+        slice(tp.x + bx, tp.x + bx + bw, true);
+      }
+    }
+
+    // Squash-slice scan, an approximation of the CSS l37:
+    //   a vertical band (2ch) scans horizontally; inside the band the text is squashed
+    //   vertically (scaleY 0.5), the rest stays crisp -- a scanning vertical compression.
+    inline void SpinnerTextSquash(const char *label, float radius, const ImColor &color = white, float speed = 1.f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const ImColor col = color_alpha(color, 1.f);
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float ch = ts.x / (float)len;
+
+      // Band X schedule (ch positions; the 2nd/6th keyframes are 100% = ts.x).
+      const float Xk[9] = { 1.f * ch, ts.x, 4.f * ch, 8.f * ch, 2.f * ch, ts.x, 0.f, 6.f * ch, 3.f * ch };
+      const int seg = ImMin(7, (int)(t * 8.f));
+      const float u = t * 8.f - seg;
+      const float bw = 2.f * ch;
+      const float bx = ImClamp(Xk[seg] + (Xk[seg + 1] - Xk[seg]) * u, 0.f, ImMax(0.f, ts.x - bw));
+      const float bl = tp.x + bx, br = bl + bw;
+
+      // Crisp text on both sides of the band.
+      window->DrawList->PushClipRect(ImVec2(tp.x, tp.y), ImVec2(bl, tp.y + ts.y), true);
+      window->DrawList->AddText(font, font_size, tp, col, text);
+      window->DrawList->PopClipRect();
+      window->DrawList->PushClipRect(ImVec2(br, tp.y), ImVec2(tp.x + ts.x, tp.y + ts.y), true);
+      window->DrawList->AddText(font, font_size, tp, col, text);
+      window->DrawList->PopClipRect();
+
+      // Vertically squashed slice inside the band.
+      window->DrawList->PushClipRect(ImVec2(bl, tp.y), ImVec2(br, tp.y + ts.y), true);
+      const int v0 = window->DrawList->VtxBuffer.Size;
+      window->DrawList->AddText(font, font_size, tp, col, text);
+      const float cy = tp.y + ts.y * 0.5f;
+      ImDrawVert *vtx = window->DrawList->VtxBuffer.Data;
+      for (int i = v0; i < window->DrawList->VtxBuffer.Size; i++)
+        vtx[i].pos.y = cy + (vtx[i].pos.y - cy) * 0.5f;
+      window->DrawList->PopClipRect();
+    }
+
+    // Scramble shuffle, a port of the CSS l38:
+    //   the word snaps between 6 scrambled arrangements of "Loading..." (a slot-machine
+    //   scramble) over the cycle (steps(6)); one of them is the readable word. The
+    //   scrambles are baked in (they are authored for "Loading..."), so there is no
+    //   'text' parameter.
+    inline void SpinnerTextScramble(const char *label, float radius, const ImColor &color = white, float speed = 1.f)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      static const char *lines[6] = {
+        "Loading...", "godnLai...", "oiaglni...", "Liongad...", "gindola...", "naloidg..."
+      };
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const char *text = lines[ImMin(5, (int)(t * 6.f))];    // snap to one scramble (steps(6))
+
+      // Scale the font down so the full text fits the cell (all lines share length).
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      window->DrawList->AddText(font, font_size, tp, color_alpha(color, 1.f), text);
+    }
+
+    // Decode/encode glitch, an approximation of the CSS l39:
+    //   letters are progressively replaced by symbols left to right, then back
+    //   (steps(11) alternate), like a decoding effect. The CSS uses rare APL/alchemy
+    //   glyphs the default font lacks, so ASCII symbols are substituted here.
+    inline void SpinnerTextDecode(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+      static const char sym[] = "#@%&$*?+=~";
+      const int symn = (int)(sizeof(sym) - 1);
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      const float tri = (t < 0.5f) ? t * 2.f : 2.f - t * 2.f; // ping-pong (CSS alternate)
+      const int k = ImMin(len, (int)(tri * (len + 1)));       // 0..len chars encoded
+
+      char buf[256];
+      const int n = ImMin(len, 255);
+      for (int i = 0; i < n; i++) buf[i] = (i < k) ? sym[i % symn] : text[i];
+      buf[n] = '\0';
+
+      // Scale the font down so the full text fits the cell (length is constant).
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, buf);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, buf);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      window->DrawList->AddText(font, font_size, tp, color_alpha(color, 1.f), buf);
+    }
+
+    // Letters fly off, a port of the CSS l40:
+    //   letters float up (-20px) and fade out one by one in a scattered order until
+    //   the word is gone, then they all drop back in together. Then it repeats.
+    inline void SpinnerTextVanish(const char *label, float radius, const ImColor &color = white, float speed = 0.5f, const char *text = "Loading...")
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+
+      if (!text || !*text)
+        return;
+
+      const int len = (int)strlen(text);
+
+      // Scale the font down so the full text fits the cell.
+      ImFont *font = ImGui::GetFont();
+      float font_size = ImGui::GetFontSize();
+      const float max_width = radius * 2.f;
+      ImVec2 ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      if (ts.x > max_width && ts.x > 0.f) {
+        font_size *= max_width / ts.x;
+        ts = font->CalcTextSizeA(font_size, 99999.f, 0.f, text);
+      }
+
+      const ImVec2 tp(centre.x - ts.x * 0.5f, centre.y - ts.y * 0.5f);
+      const float k = font_size / 30.f;                      // CSS px at 30px font
+      const float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      static const float vt[10] = { 0.27f, 0.72f, 0.09f, 0.90f, 0.54f, 0.36f, 0.18f, 0.81f, 0.45f, 0.63f }; // per-letter vanish time
+
+      float x = tp.x;
+      for (int i = 0; i < len; i++) {
+        const float cw = font->CalcTextSizeA(font_size, 99999.f, 0.f, text + i, text + i + 1).x;
+        float y, a;
+        if (t >= 0.90f) {                                    // all letters drop back in together
+          const float rp = (t - 0.90f) / 0.10f;
+          y = -20.f * k * (1.f - rp);
+          a = rp;
+        } else {
+          const float tv = (i < 10) ? vt[i] : 1.0f;
+          if (t < tv - 0.09f)      { y = 0.f;          a = 1.f; }                                       // still there
+          else if (t < tv)         { const float p = (t - (tv - 0.09f)) / 0.09f; y = -20.f * k * p; a = 1.f - p; } // flying up + fading
+          else                     { y = -20.f * k;    a = 0.f; }                                       // gone
+        }
+        if (a > 0.001f)
+          window->DrawList->AddText(font, font_size, ImVec2(x, tp.y + y), color_alpha(color, a), text + i, text + i + 1);
+        x += cw;
+      }
+    }
 }
 
 #endif // _IMSPINNER_TEXT_H_
