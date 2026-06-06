@@ -1141,9 +1141,9 @@ namespace ImSpinner
         const ImColor sc = color_alpha(c, sf);
         const float th = 3.f * sf * k;
         ImVec2 sb[4] = { P(0, 18, 0, 18), P(18, 18, 0, 18), P(18, 36, 0, 18), P(0, 36, 0, 18) };
-        window->DrawList->AddPolyline(sb, 4, sc, ImDrawFlags_Closed, th);
+        detail::AddPolyline(window->DrawList, sb, 4, sc, th, ImDrawFlags_Closed);
         ImVec2 sa[4] = { P(18, 0, 36, 18), P(36, 0, 36, 18), P(36, 18, 36, 18), P(18, 18, 36, 18) };
-        window->DrawList->AddPolyline(sa, 4, sc, ImDrawFlags_Closed, th);
+        detail::AddPolyline(window->DrawList, sa, 4, sc, th, ImDrawFlags_Closed);
       }
 
       // :before triangle (bottom-left), pivot top-left (0,18)

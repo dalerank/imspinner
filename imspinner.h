@@ -167,6 +167,16 @@ namespace ImSpinner
         draw_list->PathStroke(col, flags, thickness);
 #endif
       }
+
+      // Same as the above compatibility function but for ImDrawList::AddPolyline
+      inline void AddPolyline(ImDrawList* draw_list, const ImVec2* points, const int num_points, const ImU32 col, const float thickness, const ImDrawFlags flags)
+      {
+#if IMGUI_VERSION_NUM >= 19276
+        draw_list->AddPolyline(points, num_points, col, thickness, flags);
+#else
+        draw_list->AddPolyline(points, num_points, col, flags, thickness);
+#endif
+      }
     }
 
 #define SPINNER_HEADER(pos, size, centre, num_segments) \
