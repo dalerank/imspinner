@@ -1154,6 +1154,568 @@ namespace ImSpinner
       window->DrawList->AddConvexPolyFilled(af, 3, c);
     }
 
+    // Stretch squares:
+    //   two overlapping squares (one anchored to its left edge, one to its
+    //   right) slide apart along a diagonal - one up-right, the other down-left -
+    //   then squeeze to half width and double height, ending as two offset
+    //   vertical bars. 2 sec loop. (CSS port of Temani Afif's "l24" loader.)
+    inline void SpinnerStretchSquares(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor c = color_alpha(ImColor(255, 165, 0), 1.f);   // orange
+      const float k = radius / 60.f;            // fit the full diagonal + stretch excursion
+
+      float t = ImFmod((float)ImGui::GetTime() * speed, 2.f) / 2.f;   // 0..1 over 2s
+      if (mode == 2) t = 1.f - t;
+
+      // l24 keyframes: translate (px, later signed by --s) + scale (unitless)
+      static const float kK[6]  = { 0.f, 0.1f, 0.33f, 0.66f, 0.9f, 1.f };
+      static const float txV[6] = { 0.f, 0.f, 20.f, 20.f, 20.f, 20.f };
+      static const float tyV[6] = { 0.f, 0.f, 0.f, -20.f, -20.f, -20.f };
+      static const float sxV[6] = { 1.f, 1.f, 1.f, 1.f, 0.5f, 0.5f };
+      static const float syV[6] = { 1.f, 1.f, 1.f, 1.f, 2.f, 2.f };
+      auto pwl = [](const float *K, const float *V, int n, float tt) -> float {
+        if (tt <= K[0]) return V[0];
+        for (int i = 0; i < n - 1; i++)
+          if (tt <= K[i + 1]) { const float u = (tt - K[i]) / (K[i + 1] - K[i]); return V[i] + (V[i + 1] - V[i]) * u; }
+        return V[n - 1];
+      };
+
+      const float tx = pwl(kK, txV, 6, t), ty = pwl(kK, tyV, 6, t);
+      const float sx = pwl(kK, sxV, 6, t), sy = pwl(kK, syV, 6, t);
+
+      // a 40x40 square about transform-origin O, slid by --s:
+      //   final = O + scale*(p - O) + s*translate   (CSS y-down, box centre 20,20)
+      static const float cx[4] = { 0.f, 40.f, 40.f, 0.f }, cy[4] = { 0.f, 0.f, 40.f, 40.f };
+      auto square = [&](float ox, float oy, float s) {
+        ImVec2 v[4];
+        for (int i = 0; i < 4; i++) {
+          const float fx = ox + sx * (cx[i] - ox) + s * tx;
+          const float fy = oy + sy * (cy[i] - oy) + s * ty;
+          v[i] = ImVec2(centre.x + (fx - 20.f) * k, centre.y + (fy - 20.f) * k);
+        }
+        window->DrawList->AddQuadFilled(v[0], v[1], v[2], v[3], c);
+      };
+
+      square(0.f, 20.f, 1.f);    // ::after  transform-origin left,  --s:1
+      square(40.f, 20.f, -1.f);  // ::before transform-origin right, --s:-1
+    }
+
+    // Tri-pie:
+    //   three 120-degree pie wedges that together make a solid disc. They bloom
+    //   apart into a triangular cluster (the box grows by 8px, each wedge sliding
+    //   toward its own corner), spin 180 degrees, then close back into the disc.
+    //   2 sec loop. (CSS port of Temani Afif's "l25" three-conic-gradient loader.)
+    inline void SpinnerTriPie(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor c = color_alpha(ImColor(240, 51, 85), 1.f);   // #f03355
+      const float k = radius / 28.f;            // fit the bloomed clip circle (20+8 px)
+      const float d2r = IM_PI / 180.f;
+
+      auto ease = [](float u) { const float kk = 1.f - u; return 1.f - kk * kk * kk; };  // ~cubic-bezier(.3,1,0,1)
+
+      float t = ImFmod((float)ImGui::GetTime() * speed, 2.f) / 2.f;   // 0..1 over 2s
+      if (mode == 2) t = 1.f - t;
+
+      // l25: inset 0 -> -8 -> -8 -> 0 (bloom), rotate 0 -> 0 -> 180 -> 180
+      const float th1 = 1.f / 3.f, th2 = 2.f / 3.f;
+      float e, rot;
+      if (t < th1)      { const float u = ease(t / th1);                e = 8.f * u;         rot = 0.f; }
+      else if (t < th2) { const float u = ease((t - th1) / (th2 - th1)); e = 8.f;            rot = IM_PI * u; }
+      else              { const float u = ease((t - th2) / (1.f - th2));  e = 8.f * (1.f - u); rot = IM_PI; }
+
+      const float cr = ImCos(rot), sr = ImSin(rot);
+      const float Ro = 20.f + e;                 // clip-circle radius about the box centre
+
+      // each wedge: conic from-angle (0 = up, clockwise) + bloom direction toward
+      // its background-position corner (top-right, bottom, top-left)
+      static const float fromDeg[3] = { 0.f, 120.f, 240.f };
+      static const float offx[3] = { 1.f, 0.f, -1.f }, offy[3] = { -1.f, 1.f, -1.f };
+
+      const int N = 20;                          // arc steps per 120-deg wedge
+      for (int w = 0; w < 3; w++) {
+        // wedge centre = box centre + e*offset, the whole figure rotated by rot
+        const float bx = e * offx[w], by = e * offy[w];
+        const float cx = bx * cr - by * sr, cy = bx * sr + by * cr;
+        const ImVec2 C(centre.x + cx * k, centre.y + cy * k);
+
+        const float a0 = (fromDeg[w] + 1.f) * d2r + rot;   // 1-deg gap at each seam
+        const float a1 = (fromDeg[w] + 120.f) * d2r + rot;
+
+        ImVec2 prev;
+        for (int i = 0; i <= N; i++) {
+          const float a = a0 + (a1 - a0) * ((float)i / (float)N);
+          float px = cx + ImSin(a) * 40.f, py = cy - ImCos(a) * 40.f;   // far point, box-local
+          const float dlen = ImSqrt(px * px + py * py);                 // clamp to the clip circle
+          if (dlen > Ro) { px = px * Ro / dlen; py = py * Ro / dlen; }
+          const ImVec2 P(centre.x + px * k, centre.y + py * k);
+          if (i > 0) window->DrawList->AddTriangleFilled(C, prev, P, c);
+          prev = P;
+        }
+      }
+    }
+
+    // Shuffle bars:
+    //   the 60x60 box reads as a solid square split into three 20px bands. Two
+    //   interlocking combs (::before = top bar + two middle squares, ::after =
+    //   bottom bar + one middle square) slide apart vertically (+/-12px), the
+    //   middle-band squares then shuffle one cell sideways, and the combs close
+    //   back - reassembling the square in the swapped layout. 2 sec loop.
+    //   (CSS port of Temani Afif's "l26" gradient loader.)
+    inline void SpinnerShuffleBars(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor c = color_alpha(ImColor(81, 75, 130), 1.f);   // #514b82
+      const float k = radius / 42.f;            // fit the 30px half-box + 12px slide
+
+      float t = ImFmod((float)ImGui::GetTime() * speed, 2.f) / 2.f;   // 0..1 over 2s
+      if (mode == 2) t = 1.f - t;
+
+      auto pwl = [](const float *K, const float *V, int n, float tt) -> float {
+        if (tt <= K[0]) return V[0];
+        for (int i = 0; i < n - 1; i++)
+          if (tt <= K[i + 1]) { const float u = (tt - K[i]) / (K[i + 1] - K[i]); return V[i] + (V[i + 1] - V[i]) * u; }
+        return V[n - 1];
+      };
+
+      // l26 translateY (px): rest, slide to +/-12, hold, slide back, rest
+      static const float tK[6] = { 0.f, 0.1f, 0.33f, 0.66f, 0.9f, 1.f };
+      static const float tV[6] = { 0.f, 0.f, -12.f, -12.f, 0.f, 0.f };
+      const float Vt = pwl(tK, tV, 6, t);
+      // l26 background-position x: holds, then ramps one cell (+100%) over 33..66%
+      static const float xK[4] = { 0.f, 0.33f, 0.66f, 1.f };
+      static const float xV[4] = { 0.f, 0.f, 1.f, 1.f };
+      const float ramp = pwl(xK, xV, 4, t);
+
+      // local box coords (0..60, y-down, origin top-left); clip to the box, slide ty
+      auto S = [&](float x, float y) { return ImVec2(centre.x + (x - 30.f) * k, centre.y + (y - 30.f) * k); };
+      auto rect = [&](float x0, float y0, float x1, float y1, float ty) {
+        x0 = ImMax(x0, 0.f); y0 = ImMax(y0, 0.f);     // background paints only inside the border-box
+        x1 = ImMin(x1, 60.f); y1 = ImMin(y1, 60.f);
+        if (x1 <= x0 || y1 <= y0) return;
+        window->DrawList->AddRectFilled(S(x0, y0 + ty), S(x1, y1 + ty), c);
+      };
+
+      // one pseudo: s0 selects the layer offsets, s1 the slide direction
+      auto pseudo = [&](float s0, float s1) {
+        const float ty = s1 * Vt;
+        rect(0.f, (-s0) * 40.f, 60.f, (-s0) * 40.f + 20.f, ty);   // layer 1: solid 60x20 bar
+        const float X0 = (s0 + ramp) * -20.f;                     // layer 2: tile left edge
+        rect(X0,        20.f, X0 + 20.f, 40.f, ty);               // first square (tile-local 0..20)
+        rect(X0 + 40.f, 20.f, X0 + 60.f, 40.f, ty);               // second square (tile-local 40..60)
+      };
+
+      pseudo(0.f, 1.f);     // ::before
+      pseudo(-1.f, -1.f);   // ::after  (--s:-1)
+    }
+
+    // Hinge tumble:
+    //   a solid square with two triangular flaps hinged at its top-right corner.
+    //   The flaps swing +/-90 deg (ping-ponging) while the square itself snaps to
+    //   a point reflection at half-cycle, then rotates the rest of the way around
+    //   - every piece pivoting about that one shared corner. 2 sec loop.
+    //   (CSS port of Temani Afif's "l28" loader; scale(-1) == rotate 180.)
+    inline void SpinnerHingeTumble(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor c = color_alpha(ImColor(81, 75, 130), 1.f);   // #514b82
+      const float k = radius / (20.f * 1.41421356f);             // farthest corner is 20*sqrt2 from the pivot
+      const float d2r = IM_PI / 180.f;
+
+      float t = ImFmod((float)ImGui::GetTime() * speed, 2.f) / 2.f;   // 0..1 over 2s
+      if (mode == 2) t = 1.f - t;
+
+      // l28-0: square holds, snaps to a 180-deg point reflection at half, then
+      // rotates 180 -> 360 over the last tenth (scale(-1) then rotate 180).
+      float R;
+      if (t < 0.5f)      R = 0.f;
+      else if (t < 0.9f) R = 180.f;
+      else               R = 180.f + 180.f * (t - 0.9f) / 0.1f;
+
+      // l28-1: flaps rotate 0 -> 90 over a 1s alternate (ping-pong), with holds
+      const float pp = (t < 0.5f) ? (t * 2.f) : ((1.f - t) * 2.f);
+      static const float fK[4] = { 0.f, 0.3f, 0.7f, 1.f };
+      static const float fV[4] = { 0.f, 0.f, 90.f, 90.f };
+      auto pwl = [](const float *K, const float *V, int n, float tt) -> float {
+        if (tt <= K[0]) return V[0];
+        for (int i = 0; i < n - 1; i++)
+          if (tt <= K[i + 1]) { const float u = (tt - K[i]) / (K[i + 1] - K[i]); return V[i] + (V[i + 1] - V[i]) * u; }
+        return V[n - 1];
+      };
+      const float flap = pwl(fK, fV, 4, pp);
+
+      // every piece pivots about the box's top-right corner (20,0) -> the widget centre
+      auto rot = [&](float x, float y, float deg) -> ImVec2 {
+        const float a = deg * d2r, ca = ImCos(a), sa = ImSin(a);
+        const float dx = x - 20.f, dy = y;
+        return ImVec2(centre.x + (dx * ca - dy * sa) * k, centre.y + (dx * sa + dy * ca) * k);
+      };
+
+      // main square
+      window->DrawList->AddQuadFilled(rot(0, 0, R), rot(20, 0, R), rot(20, 20, R), rot(0, 20, R), c);
+      // ::before flap (cell above the box), hinged +flap
+      window->DrawList->AddTriangleFilled(rot(0, -20, R + flap), rot(20, 0, R + flap), rot(0, 0, R + flap), c);
+      // ::after flap (cell right of the box), hinged -flap (--s:-1)
+      window->DrawList->AddTriangleFilled(rot(20, 0, R - flap), rot(40, 20, R - flap), rot(20, 20, R - flap), c);
+    }
+
+    // Diagonal flip:
+    //   a solid square split along one diagonal into two teal triangles. One half
+    //   swings out to the side on a hinge while the other slides its hypotenuse;
+    //   at two-thirds the whole square flips (scaleY -1), so it ends split along
+    //   the opposite diagonal. 1.5 sec loop. (CSS port of Temani Afif's "l30".)
+    inline void SpinnerDiagonalFlip(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor c = color_alpha(ImColor(37, 176, 155), 1.f);  // #25b09b
+      const float k = radius / (20.f * 2.23606798f);             // farthest point is 20*sqrt5 from (40,20)
+      const float d2r = IM_PI / 180.f;
+
+      float t = ImFmod((float)ImGui::GetTime() * speed, 1.5f) / 1.5f;   // 0..1 over 1.5s
+      if (mode == 2) t = 1.f - t;
+
+      // l30-1 clip: third vertex slides BR(40,40) -> TR(40,0) over 33..66%, else BR
+      float y2;
+      if (t < 0.33f)      y2 = 40.f;
+      else if (t < 0.66f) y2 = 40.f - 40.f * (t - 0.33f) / (0.66f - 0.33f);
+      else                y2 = 40.f;
+
+      // l30-1 ::after rotate about its bottom-right: hold 90, ->0, hold 0, ->90, hold 90
+      static const float aK[6] = { 0.f, 0.1f, 0.33f, 0.66f, 0.9f, 1.f };
+      static const float aV[6] = { 90.f, 90.f, 0.f, 0.f, 90.f, 90.f };
+      auto pwl = [](const float *K, const float *V, int n, float tt) -> float {
+        if (tt <= K[0]) return V[0];
+        for (int i = 0; i < n - 1; i++)
+          if (tt <= K[i + 1]) { const float u = (tt - K[i]) / (K[i + 1] - K[i]); return V[i] + (V[i + 1] - V[i]) * u; }
+        return V[n - 1];
+      };
+      const float ta = pwl(aK, aV, 6, t);
+
+      // l30-0 container scaleY flips at 66% about the box centre (20,20)
+      const float sy = (t < 0.66f) ? 1.f : -1.f;
+
+      // box-local point -> screen, centred on (40,20), with the container scaleY
+      auto M = [&](float x, float y) -> ImVec2 {
+        const float yy = 20.f + sy * (y - 20.f);
+        return ImVec2(centre.x + (x - 40.f) * k, centre.y + (yy - 20.f) * k);
+      };
+      // ::after transform: rotate(ta) then scaleX(-1), both about its corner (40,40)
+      auto A = [&](float x, float y) -> ImVec2 {
+        const float a = ta * d2r, ca = ImCos(a), sa = ImSin(a);
+        const float dx = x - 40.f, dy = y - 40.f;
+        const float rx = 40.f + dx * ca - dy * sa;
+        const float ry = 40.f + dx * sa + dy * ca;
+        return M(80.f - rx, ry);                            // scaleX(-1) about x=40
+      };
+
+      // ::before  - clip triangle, no element transform (just the container)
+      window->DrawList->AddTriangleFilled(M(0, 0), M(0, 40), M(40, y2), c);
+      // ::after   - same clip triangle, flipped + rotated about its bottom-right
+      window->DrawList->AddTriangleFilled(A(0, 0), A(0, 40), A(40, y2), c);
+    }
+
+    // Pulse grid:
+    //   a 3x3 grid of fixed 16px orange squares whose spacing pulses - packing
+    //   together into a near-solid block (45px), then spreading apart into a
+    //   dotted grid (65px). 0.5 sec alternate loop.
+    //   (CSS port of Temani Afif's "l31" nine-background loader.)
+    inline void SpinnerPulseGrid(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor c = color_alpha(ImColor(255, 165, 0), 1.f);  // orange
+      const float k = radius / 32.5f;           // expanded grid half-size (65px / 2)
+
+      float u = ImFmod((float)ImGui::GetTime() * speed, 1.f);   // 0..1 full ping-pong
+      if (mode == 2) u = 1.f - u;
+      const float p = (u < 0.5f) ? (u * 2.f) : ((1.f - u) * 2.f);   // 0.5s alternate -> triangle
+
+      static const float wK[4] = { 0.f, 0.2f, 0.9f, 1.f };       // container size: hold 45, ramp, hold 65
+      static const float wV[4] = { 45.f, 45.f, 65.f, 65.f };
+      auto pwl = [](const float *K, const float *V, int n, float tt) -> float {
+        if (tt <= K[0]) return V[0];
+        for (int i = 0; i < n - 1; i++)
+          if (tt <= K[i + 1]) { const float uu = (tt - K[i]) / (K[i + 1] - K[i]); return V[i] + (V[i + 1] - V[i]) * uu; }
+        return V[n - 1];
+      };
+      const float W = pwl(wK, wV, 4, p);
+      const float d = W * 0.5f - 8.f;           // centre-to-centre offset (each square is 16px)
+      const float h = 8.f;                      // half square
+
+      for (int gy = -1; gy <= 1; gy++)
+        for (int gx = -1; gx <= 1; gx++) {
+          const float cx = gx * d, cy = gy * d;
+          window->DrawList->AddRectFilled(ImVec2(centre.x + (cx - h) * k, centre.y + (cy - h) * k),
+                                          ImVec2(centre.x + (cx + h) * k, centre.y + (cy + h) * k), c);
+        }
+    }
+
+    // March grid:
+    //   the same 3x3 grid of 16px orange squares - the centre stays put while the
+    //   eight outer squares march one cell clockwise around the ring (sliding
+    //   along the perimeter), and the whole grid pulses larger mid-step. 1 sec
+    //   loop. (CSS port of Temani Afif's "l32" loader.)
+    inline void SpinnerMarchGrid(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor c = color_alpha(ImColor(255, 165, 0), 1.f);  // orange
+      const float k = radius / 32.5f;           // expanded grid half-size (65px / 2)
+      const float h = 8.f;                      // half square (16px)
+
+      float t = ImFmod((float)ImGui::GetTime() * speed, 1.f);
+      if (mode == 2) t = 1.f - t;
+
+      auto pwl = [](const float *K, const float *V, int n, float tt) -> float {
+        if (tt <= K[0]) return V[0];
+        for (int i = 0; i < n - 1; i++)
+          if (tt <= K[i + 1]) { const float u = (tt - K[i]) / (K[i + 1] - K[i]); return V[i] + (V[i + 1] - V[i]) * u; }
+        return V[n - 1];
+      };
+      static const float wK[4] = { 0.f, 0.35f, 0.65f, 1.f };     // l32-1 size pulse 45 -> 65 -> 45
+      static const float wV[4] = { 45.f, 65.f, 65.f, 45.f };
+      static const float mK[4] = { 0.f, 0.4f, 0.6f, 1.f };       // l32-2 ring march over 40..60%
+      static const float mV[4] = { 0.f, 0.f, 1.f, 1.f };
+      const float W = pwl(wK, wV, 4, t);
+      const float m = pwl(mK, mV, 4, t);
+      const float d = W * 0.5f - 8.f;           // centre-to-centre offset
+
+      auto box = [&](float cx, float cy) {
+        window->DrawList->AddRectFilled(ImVec2(centre.x + (cx - h) * k, centre.y + (cy - h) * k),
+                                        ImVec2(centre.x + (cx + h) * k, centre.y + (cy + h) * k), c);
+      };
+
+      // eight ring cells in the CSS layer order (clockwise); each square slides to the next
+      static const float rx[8] = { -1, -1, -1,  0,  1,  1,  1,  0 };
+      static const float ry[8] = { -1,  0,  1,  1,  1,  0, -1, -1 };
+      for (int i = 0; i < 8; i++) {
+        const int j = (i + 1) % 8;
+        const float gx = rx[i] + (rx[j] - rx[i]) * m;
+        const float gy = ry[i] + (ry[j] - ry[i]) * m;
+        box(gx * d, gy * d);
+      }
+      box(0.f, 0.f);                            // centre stays put
+    }
+
+    // Spin bars:
+    //   three vertical bars that spread apart as the box widens (45 -> 65px),
+    //   quarter-turn together, then pack back into a near-solid square - a quarter
+    //   rotation per 1.5 sec cycle. (CSS port of Temani Afif's "l33" loader.)
+    inline void SpinnerSpinBars(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor c = color_alpha(ImColor(81, 75, 130), 1.f);  // #514b82
+      const float k = radius / 39.53f;          // outer-bar corner reach at full spread: sqrt(32.5^2 + 22.5^2)
+      const float d2r = IM_PI / 180.f;
+
+      float t = ImFmod((float)ImGui::GetTime() * speed, 1.5f) / 1.5f;
+      if (mode == 2) t = 1.f - t;
+
+      auto pwl = [](const float *K, const float *V, int n, float tt) -> float {
+        if (tt <= K[0]) return V[0];
+        for (int i = 0; i < n - 1; i++)
+          if (tt <= K[i + 1]) { const float u = (tt - K[i]) / (K[i + 1] - K[i]); return V[i] + (V[i + 1] - V[i]) * u; }
+        return V[n - 1];
+      };
+      static const float wK[4] = { 0.f, 0.35f, 0.65f, 1.f };     // l33-1 width 45 -> 65 -> 45
+      static const float wV[4] = { 45.f, 65.f, 65.f, 45.f };
+      static const float rK[4] = { 0.f, 0.4f, 0.6f, 1.f };       // l33-2 rotate 0 -> 90
+      static const float rV[4] = { 0.f, 0.f, 90.f, 90.f };
+      const float W = pwl(wK, wV, 4, t);
+      const float ang = pwl(rK, rV, 4, t) * d2r;
+      const float ca = ImCos(ang), sa = ImSin(ang);
+
+      const float d = W * 0.5f - 8.f;           // bar centre offset (each bar 16px wide)
+      const float bw = 8.f, bh = 22.5f;         // half width / half height (height fixed at 45px)
+
+      auto R = [&](float x, float y) { return ImVec2(centre.x + (x * ca - y * sa) * k, centre.y + (x * sa + y * ca) * k); };
+
+      for (int i = -1; i <= 1; i++) {
+        const float cx = i * d;                 // left / centre / right bar, rotated about the box centre
+        window->DrawList->AddQuadFilled(R(cx - bw, -bh), R(cx + bw, -bh), R(cx + bw, bh), R(cx - bw, bh), c);
+      }
+    }
+
+    // Morph dots:
+    //   six tiles morph between a quincunx of squares (four corners + centre) and
+    //   a plus of squares (four edge midpoints), passing through three solid
+    //   full-width bars at mid-cycle. 2 sec alternate loop.
+    //   (CSS port of Temani Afif's "l34" six-background loader.)
+    inline void SpinnerMorphDots(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor c = color_alpha(ImColor(81, 75, 130), 1.f);  // #514b82
+      const float k = radius / 30.f;            // box half-size (60px / 2)
+
+      float cyc = ImFmod((float)ImGui::GetTime() * speed, 4.f) / 4.f;   // 2s-alternate -> 4s ping-pong
+      if (mode == 2) cyc = 1.f - cyc;
+      const float p = (cyc < 0.5f) ? (cyc * 2.f) : ((1.f - cyc) * 2.f);  // keyframe progress 0..1..0
+
+      auto pwl = [](const float *K, const float *V, int n, float tt) -> float {
+        if (tt <= K[0]) return V[0];
+        for (int i = 0; i < n - 1; i++)
+          if (tt <= K[i + 1]) { const float u = (tt - K[i]) / (K[i + 1] - K[i]); return V[i] + (V[i + 1] - V[i]) * u; }
+        return V[n - 1];
+      };
+      // l34-1: tile width 20 -> 60 (100%) -> 20; height fixed at 20
+      static const float sK[6] = { 0.f, 0.2f, 0.4f, 0.6f, 0.8f, 1.f };
+      static const float sV[6] = { 20.f, 20.f, 60.f, 60.f, 20.f, 20.f };
+      const float sw = pwl(sK, sV, 6, p);
+
+      // l34-2: each tile slides from state0 (corners + centre) to state1 (edge midpoints);
+      // only the x-fraction changes (y holds), and tile x collapses while it is a full-width bar
+      static const float pK[4]  = { 0.f, 0.4f, 0.6f, 1.f };
+      static const float fx0[6] = { 0.f, 1.f, 0.5f, 0.5f, 0.f, 1.f };
+      static const float fy[6]  = { 0.f, 0.f, 0.5f, 0.5f, 1.f, 1.f };
+      static const float fx1[6] = { 0.5f, 0.5f, 0.f, 1.f, 0.5f, 0.5f };
+
+      const float hh = 10.f, hw = sw * 0.5f;    // half height (20px) / half width
+      for (int i = 0; i < 6; i++) {
+        const float fxK[4] = { fx0[i], fx0[i], fx1[i], fx1[i] };
+        const float fx = pwl(pK, fxK, 4, p);
+        const float cx = fx * (60.f - sw) + sw * 0.5f - 30.f;   // rel centre x (depends on tile width)
+        const float cy = fy[i] * 40.f - 20.f;                   // rel centre y (height fixed)
+        window->DrawList->AddRectFilled(ImVec2(centre.x + (cx - hw) * k, centre.y + (cy - hh) * k),
+                                        ImVec2(centre.x + (cx + hw) * k, centre.y + (cy + hh) * k), c);
+      }
+    }
+
+    // Comb discs:
+    //   two striped discs (complementary horizontal combs) overlap into one solid
+    //   circle, slide apart sideways, each spins 180 deg, then slide back so the
+    //   stripes re-interlock into the full circle. 1.5 sec loop.
+    //   (CSS port of Temani Afif's "l35" masked loader; masks drawn as circle-
+    //   clipped horizontal slabs.)
+    inline void SpinnerCombDiscs(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor c = color_alpha(ImColor(240, 51, 85), 1.f);   // #f03355
+      const float k = radius / 50.f;            // discs slide to +/-25 px, +25 radius -> reach 50
+      const float R = 25.f, d2r = IM_PI / 180.f;
+
+      float t = ImFmod((float)ImGui::GetTime() * speed, 1.5f) / 1.5f;
+      if (mode == 2) t = 1.f - t;
+
+      static const float tK[6]  = { 0.f, 0.1f, 0.35f, 0.66f, 0.9f, 1.f };
+      static const float txV[6] = { 0.f, 0.f, 25.f, 25.f, 0.f, 0.f };       // translateX magnitude
+      static const float rV[6]  = { 0.f, 0.f, 0.f, 180.f, 180.f, 180.f };   // rotate magnitude
+      auto pwl = [](const float *K, const float *V, int n, float tt) -> float {
+        if (tt <= K[0]) return V[0];
+        for (int i = 0; i < n - 1; i++)
+          if (tt <= K[i + 1]) { const float u = (tt - K[i]) / (K[i + 1] - K[i]); return V[i] + (V[i + 1] - V[i]) * u; }
+        return V[n - 1];
+      };
+      const float txm = pwl(tK, txV, 6, t);
+      const float rm  = pwl(tK, rV, 6, t) * d2r;
+
+      // one disc: s = +1 (::before, even stripes) or -1 (::after, odd stripes).
+      // transform order is translate(rotate(p)): rotate about centre, then translate.
+      auto disc = [&](float s, int parity) {
+        const float tx = s * txm;
+        const float ang = s * rm, ca = ImCos(ang), sa = ImSin(ang);
+        const int NS = 10;                        // ten 5px stripes across the 50px disc
+        const int M = 8;                          // samples along each chord edge
+        for (int i = parity; i < NS; i += 2) {
+          const float y0 = ImMax((float)i * 5.f - R, -R);     // band in local centred coords
+          const float y1 = ImMin((float)(i + 1) * 5.f - R, R);
+          if (y1 <= y0) continue;
+          ImVec2 pts[2 * (M + 1)];
+          int n = 0;
+          for (int j = 0; j <= M; j++) {           // right edge of the slab, top -> bottom
+            const float y = y0 + (y1 - y0) * (float)j / (float)M;
+            const float x = ImSqrt(ImMax(0.f, R * R - y * y));
+            pts[n++] = ImVec2(centre.x + (x * ca - y * sa + tx) * k, centre.y + (x * sa + y * ca) * k);
+          }
+          for (int j = M; j >= 0; j--) {           // left edge, bottom -> top
+            const float y = y0 + (y1 - y0) * (float)j / (float)M;
+            const float x = -ImSqrt(ImMax(0.f, R * R - y * y));
+            pts[n++] = ImVec2(centre.x + (x * ca - y * sa + tx) * k, centre.y + (x * sa + y * ca) * k);
+          }
+          window->DrawList->AddConvexPolyFilled(pts, n, c);
+        }
+      };
+      disc(1.f, 0);    // ::before  even stripes
+      disc(-1.f, 1);   // ::after   odd stripes
+    }
+
+    // Orbit disc:
+    //   one striped disc sits still while its complementary-striped twin swings
+    //   out, orbits a half-circle around it (spinning 180 deg as it goes), then
+    //   pulls back to the centre and re-merges into a solid circle. 1.5 sec loop.
+    //   (CSS port of Temani Afif's "l36" masked loader; transform order
+    //   rotate() translate() = translate then rotate = an orbit.)
+    inline void SpinnerOrbitDisc(const char *label, float radius, float thickness, const ImColor &color = white, float speed = 1.f, int mode = 0)
+    {
+      SPINNER_HEADER(pos, size, centre, num_segments);
+      (void)thickness; (void)color;
+
+      const ImColor c = color_alpha(ImColor(240, 51, 85), 1.f);   // #f03355
+      const float k = radius / 75.f;            // orbit radius 50 + disc radius 25
+      const float R = 25.f, d2r = IM_PI / 180.f;
+
+      float t = ImFmod((float)ImGui::GetTime() * speed, 1.5f) / 1.5f;
+      if (mode == 2) t = 1.f - t;
+
+      static const float tK[6] = { 0.f, 0.1f, 0.35f, 0.66f, 0.9f, 1.f };
+      static const float dV[6] = { 0.f, 0.f, 50.f, 50.f, 0.f, 0.f };        // translate magnitude (100% of 50px)
+      static const float rV[6] = { 0.f, 0.f, 0.f, 180.f, 180.f, 180.f };    // rotate (deg)
+      auto pwl = [](const float *K, const float *V, int n, float tt) -> float {
+        if (tt <= K[0]) return V[0];
+        for (int i = 0; i < n - 1; i++)
+          if (tt <= K[i + 1]) { const float u = (tt - K[i]) / (K[i + 1] - K[i]); return V[i] + (V[i + 1] - V[i]) * u; }
+        return V[n - 1];
+      };
+      const float d   = pwl(tK, dV, 6, t);
+      const float ang = pwl(tK, rV, 6, t) * d2r;
+
+      // rotate(ang) translate(d): content rotates by ang, the disc centre orbits to (d*cos, d*sin)
+      auto disc = [&](float ca, float sa, float ox, float oy, int parity) {
+        const int NS = 5;                         // five 10px stripes across the 50px disc
+        const int M = 8;
+        for (int i = parity; i < NS; i += 2) {
+          const float y0 = ImMax((float)i * 10.f - R, -R);
+          const float y1 = ImMin((float)(i + 1) * 10.f - R, R);
+          if (y1 <= y0) continue;
+          ImVec2 pts[2 * (M + 1)];
+          int n = 0;
+          for (int j = 0; j <= M; j++) {           // right edge top -> bottom
+            const float y = y0 + (y1 - y0) * (float)j / (float)M;
+            const float x = ImSqrt(ImMax(0.f, R * R - y * y));
+            pts[n++] = ImVec2(centre.x + (x * ca - y * sa + ox) * k, centre.y + (x * sa + y * ca + oy) * k);
+          }
+          for (int j = M; j >= 0; j--) {           // left edge bottom -> top
+            const float y = y0 + (y1 - y0) * (float)j / (float)M;
+            const float x = -ImSqrt(ImMax(0.f, R * R - y * y));
+            pts[n++] = ImVec2(centre.x + (x * ca - y * sa + ox) * k, centre.y + (x * sa + y * ca + oy) * k);
+          }
+          window->DrawList->AddConvexPolyFilled(pts, n, c);
+        }
+      };
+
+      disc(1.f, 0.f, 0.f, 0.f, 0);                          // ::before  static, even stripes
+      const float ca = ImCos(ang), sa = ImSin(ang);
+      disc(ca, sa, d * ca, d * sa, 1);                      // ::after   orbiting, odd stripes
+    }
+
 #ifndef _IMSPINNER_SHAPES_INTERNAL_
 } // namespace ImSpinner
 #endif

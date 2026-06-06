@@ -32,7 +32,7 @@ namespace ImSpinner
       static int selected_idx = 0;
       static ImColor spinner_filling_meb_bg;
 
-      constexpr int num_spinners = 441;
+      constexpr int num_spinners = 452;
 
       static int cci = 0, last_cci = 0;
       static std::map<int, const char*> __nn; auto Name = [] (const char* v) { if (!__nn.count(cci)) { __nn[cci] = v; }; return __nn[cci]; };
@@ -966,6 +966,28 @@ namespace ImSpinner
                                                           R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
           case $(440) ImSpinner::SpinnerSkewSquares     (Name("SpinnerSkewSquares"),
                                                           R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
+          case $(441) ImSpinner::SpinnerStretchSquares  (Name("SpinnerStretchSquares"),
+                                                          R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
+          case $(442) ImSpinner::SpinnerTriPie          (Name("SpinnerTriPie"),
+                                                          R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
+          case $(443) ImSpinner::SpinnerShuffleBars     (Name("SpinnerShuffleBars"),
+                                                          R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
+          case $(444) ImSpinner::SpinnerHingeTumble     (Name("SpinnerHingeTumble"),
+                                                          R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
+          case $(445) ImSpinner::SpinnerDiagonalFlip    (Name("SpinnerDiagonalFlip"),
+                                                          R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
+          case $(446) ImSpinner::SpinnerPulseGrid       (Name("SpinnerPulseGrid"),
+                                                          R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
+          case $(447) ImSpinner::SpinnerMarchGrid       (Name("SpinnerMarchGrid"),
+                                                          R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
+          case $(448) ImSpinner::SpinnerSpinBars        (Name("SpinnerSpinBars"),
+                                                          R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
+          case $(449) ImSpinner::SpinnerMorphDots       (Name("SpinnerMorphDots"),
+                                                          R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
+          case $(450) ImSpinner::SpinnerCombDiscs       (Name("SpinnerCombDiscs"),
+                                                          R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
+          case $(451) ImSpinner::SpinnerOrbitDisc       (Name("SpinnerOrbitDisc"),
+                                                          R(16), T(1), C(white), S(1.f) * velocity, M(0)); break;
           }
 #undef $
         }
@@ -1001,7 +1023,7 @@ namespace ImSpinner
             static const int text_spinners[] = { 134, 150, 253, 254, 255, 256, 257, 258, 259, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 277, 278, 279, 280, 281, 282, 283, 284, 285, 286, 287, 288, 289, 290, 291, 292, 293, 294 };
             static const int dot_spinners[] = { 2, 3, 6, 11, 12, 13, 14, 15, 22, 23, 24, 45, 84, 85, 91, 93, 97, 98, 115, 120, 121, 122, 123, 124, 125, 132, 133, 137, 138, 139, 141, 142, 143, 145, 155, 156, 169, 170, 171, 172, 173, 175, 176, 177, 179, 185, 186, 194, 195, 196, 198, 199, 200, 204, 205, 212, 213, 214, 215, 225, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332 };
             static const int bar_spinners[] = { 10, 19, 27, 30, 31, 32, 33, 51, 140, 151, 152, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412 };
-            static const int shape_spinners[] = { 418, 419, 420, 421, 422, 423, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 434, 435, 436, 437, 438, 439, 440 };
+            static const int shape_spinners[] = { 418, 419, 420, 421, 422, 423, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 434, 435, 436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451 };
             auto in_list = [](const int *arr, int n, int idx) { for (int k = 0; k < n; ++k) if (arr[k] == idx) return true; return false; };
             auto category = [&](int idx) {                   // 0 = spinners, 1 = text, 2 = dots, 3 = bars, 4 = shapes
               if (in_list(text_spinners, (int)(sizeof(text_spinners) / sizeof(int)), idx)) return 1;

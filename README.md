@@ -342,6 +342,17 @@ ImSpinner::SpinnerPinwheel("pinwheel", 16.f, 1.f, ImColor(255, 255, 255), 1.f, 0
 | `SpinnerFoldHalfDisc` | two semicircles swap places, each rotating about a box corner |
 | `SpinnerWiperArrow` | conic-wedge arrow; two corner triangles wipe like windshield wipers; container flips/rotates |
 | `SpinnerSkewSquares` | a diagonal band skews while two corner triangles rotate 180° with a growing outline |
+| `SpinnerStretchSquares` | two overlapping squares slide apart diagonally, then squeeze to half width / double height |
+| `SpinnerTriPie` | three 120° pie wedges bloom apart from a disc, spin 180°, then close back together |
+| `SpinnerShuffleBars` | a square splits into two interlocking combs that slide apart, shuffle a cell, and reassemble |
+| `SpinnerHingeTumble` | a square with two triangular flaps hinged at one corner swings them ±90° and tumbles around it |
+| `SpinnerDiagonalFlip` | a diagonally-split square swings one half out on a hinge, then flips to split along the other diagonal |
+| `SpinnerPulseGrid` | a 3×3 grid of squares pulses between a packed solid block and a spread-apart dotted grid |
+| `SpinnerMarchGrid` | a 3×3 grid whose eight outer squares march one cell clockwise around the ring while it pulses |
+| `SpinnerSpinBars` | three vertical bars spread apart, quarter-turn together, then pack back into a square |
+| `SpinnerMorphDots` | squares morph between a quincunx and a plus, passing through three solid bars |
+| `SpinnerCombDiscs` | two complementary striped discs slide apart, spin 180°, and re-interlock into a solid circle |
+| `SpinnerOrbitDisc` | a striped disc orbits a half-circle around its static twin, spinning 180°, then re-merges |
 
 ## Contributing
 
