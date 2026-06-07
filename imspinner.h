@@ -260,7 +260,7 @@ namespace ImSpinner
         const float k = 2.1f;
         const float b = 0.09f;
         const float theta = 0.0f;
-        const float w = std::sqrtf(k / ma);
+        const float w = sqrtf(k / ma);
         const float t = ImFmod(*p, 25);
         double x = A * std::exp(-b * t) * std::cos(w * t - theta);
         return x;
