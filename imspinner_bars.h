@@ -9,6 +9,8 @@
  * Spinner<> via imspinner_compat.h (e_st_barchartsine).
  */
 
+#include <cstdint>  // for uint16_t
+
 #ifndef _IMSPINNER_BARS_INTERNAL_
 #include "imspinner.h"
 namespace ImSpinner
