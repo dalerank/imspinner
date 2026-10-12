@@ -917,8 +917,13 @@ namespace ImSpinner
       window->DrawList->PathClear();
       window->DrawList->PathArcTo(centre, radius1, abegin, aend, num_segments * 2);
 
+#if IMGUI_VERSION_NUM >= 19298 // Dear ImGui 1.93 merged ImDrawListFlags into ImDrawFlags
+      ImDrawFlags save = window->DrawList->Flags;
+      window->DrawList->Flags &= ~ImDrawFlags_AAFill;
+#else
       ImDrawListFlags save = window->DrawList->Flags;
       window->DrawList->Flags &= ~ImDrawListFlags_AntiAliasedFill;
+#endif
         
       window->DrawList->PathFillConvex(color_alpha(color, 1.f));
 
